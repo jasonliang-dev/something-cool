@@ -1,18 +1,19 @@
 #include <windows.h>
 
-#include "language_layer.c"
-#include "program_options.c"
-#include "os.c"
-#include "w32_xinput.c"
+#include "include.c"
 
-global b32 globalQuit = 0;
+global os_state globalOS;
+
+#include "w32_app_lib.c"
+#include "w32_os_utils.c"
+#include "w32_xinput.c"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
                                               LPARAM lParam)
 {
     if (message == WM_CLOSE || message == WM_DESTROY || message == WM_QUIT)
     {
-        globalQuit = 1;
+        globalOS.quit = 1;
         return 0;
     }
     else
@@ -27,6 +28,22 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     (void)previousInstance;
     (void)commandLine;
 
+    char executablePath[256];
+    char executableDirectory[256];
+    char appDllPath[256];
+    char appTempDllPath[256];
+    GetModuleFileNameA(0, executablePath, sizeof(executablePath));
+
+    _splitpath_s(executablePath,                                   // full path
+                 NULL, 0,                                          // drive
+                 executableDirectory, sizeof(executableDirectory), // directory
+                 NULL, 0,                                          // filename
+                 NULL, 0                                           // file extension
+    );
+
+    wsprintf(appDllPath, "%s%s.dll", executableDirectory, PROGRAM_FILENAME);
+    wsprintf(appTempDllPath, "%s%s_temp.dll", executableDirectory, PROGRAM_FILENAME);
+
     WNDCLASS windowClass = {0};
     windowClass.style = CS_HREDRAW | CS_VREDRAW;
     windowClass.lpfnWndProc = W32_WindowProcedure;
@@ -37,7 +54,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!RegisterClass(&windowClass))
     {
-        goto quit;
+        return 1;
     }
 
     HWND window = CreateWindow("ApplicationWindowClass", WINDOW_TITLE, WS_OVERLAPPEDWINDOW,
@@ -46,22 +63,35 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!window)
     {
-        goto quit;
+        return 1;
     }
+
+    // NOTE(rjf): Load application code
+    w32_app_code w32AppCode = {0};
+    if (!W32_AppCodeLoad(&w32AppCode, appDllPath, appTempDllPath))
+    {
+        return 1;
+    }
+
+    os = &globalOS;
+    globalOS.DebugPrint = W32_DebugPrint;
+
+    W32_LoadXInput();
+
+    w32AppCode.PermanentLoad(&globalOS);
+    w32AppCode.HotLoad(&globalOS);
 
     ShowWindow(window, commandShow);
     UpdateWindow(window);
 
-    W32_LoadXInput();
-
     MSG message;
-    while (!globalQuit)
+    while (!globalOS.quit)
     {
         while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
         {
             if (message.message == WM_QUIT)
             {
-                globalQuit = 1;
+                globalOS.quit = 1;
             }
 
             TranslateMessage(&message);
@@ -79,9 +109,14 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
                 OutputDebugStringA("A button pressed\n");
             }
         }
+
+        w32AppCode.Update();
+
+        W32_AppCodeHotUpdate(&w32AppCode, appDllPath, appTempDllPath);
     }
 
-quit:;
+    ShowWindow(window, SW_HIDE);
+    W32_AppCodeUnload(&w32AppCode);
 
     return 0;
 }

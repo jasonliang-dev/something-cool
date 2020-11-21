@@ -1,3 +1,4 @@
 #define WINDOW_TITLE "This is a title"
+#define PROGRAM_FILENAME "app"
 #define DEFAULT_WINDOW_WIDTH 1366
 #define DEFAULT_WINDOW_HEIGHT 768

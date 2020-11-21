@@ -1,4 +1,17 @@
+#include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
+
+#define MemoryCopy memcpy
+#define MemoryMove memmove
+#define MemorySet memset
+#define CStringLength (u32) strlen
+#define FMod fmodf
+#define AbsoluteValue fabsf
+#define SquareRoot sqrtf
+#define Sin sinf
+#define Cos cosf
+#define Tan tanf
 
 #define global static
 #define internal static
@@ -26,87 +39,5 @@ typedef i64 b64;
 typedef float f32;
 typedef double f64;
 
-typedef union {
-    struct
-    {
-        f32 x;
-        f32 y;
-    };
-
-    struct
-    {
-        f32 width;
-        f32 height;
-    };
-
-    float elements[2];
-} v2;
-
-typedef union {
-    struct
-    {
-        f32 x;
-        f32 y;
-        f32 z;
-    };
-
-    struct
-    {
-        f32 r;
-        f32 g;
-        f32 b;
-    };
-
-    f32 elements[3];
-} v3;
-
-typedef union {
-    struct
-    {
-        f32 x;
-        f32 y;
-        union {
-            struct
-            {
-                f32 z;
-                f32 w;
-            };
-            struct
-            {
-                f32 width;
-                f32 height;
-            };
-        };
-    };
-
-    struct
-    {
-        f32 r;
-        f32 g;
-        f32 b;
-        f32 a;
-    };
-
-    f32 elements[4];
-} v4;
-
-typedef struct
-{
-    f32 elements[4][4];
-} m4;
-
-#define v2(...)                                                                                    \
-    (v2)                                                                                           \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
-#define v3(...)                                                                                    \
-    (v3)                                                                                           \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
-#define v4(...)                                                                                    \
-    (v4)                                                                                           \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
+#define Min(x, y) (((x) < (y)) ? (x) : (y))
+#define Max(x, y) (((x) > (y)) ? (x) : (y))
