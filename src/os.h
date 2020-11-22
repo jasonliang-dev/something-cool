@@ -19,7 +19,8 @@ struct os_state
 
 global os_state *os = 0;
 
-typedef enum
+typedef enum os_keys os_keys;
+enum os_keys
 {
     Key_Null,
     Key_Esc,
@@ -97,9 +98,10 @@ typedef enum
     Key_LeftBracket,
     Key_RightBracket,
     Key_Max
-} os_keys;
+};
 
-typedef enum
+typedef enum os_gamepad_button os_gamepad_button;
+enum os_gamepad_button
 {
     GamepadButton_Null,
     GamepadButton_DPadUp,
@@ -117,7 +119,7 @@ typedef enum
     GamepadButton_X,
     GamepadButton_Y,
     GamepadButton_Max
-} os_gamepad_button;
+};
 
 #ifdef _MSC_VER
 #define APP_EXPORT __declspec(dllexport)

@@ -7,6 +7,7 @@ struct w32_sound_output
     u32 bufferSize;
     u32 samplesPerSecond;
     u32 bytesPerSample;
+    u32 sampleIndex;
     IDirectSoundBuffer8 *buffer;
 };
 

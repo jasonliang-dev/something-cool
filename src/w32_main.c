@@ -109,7 +109,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     ShowWindow(window, commandShow);
     UpdateWindow(window);
 
-    soundOutput->buffer->lpVtbl->Play(soundOutput->buffer, 0, 0, DSBPLAY_LOOPING);
+    soundOutput.buffer->lpVtbl->Play(soundOutput.buffer, 0, 0, DSBPLAY_LOOPING);
 
     MSG message;
     while (globalOS.running)

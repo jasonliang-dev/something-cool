@@ -3,7 +3,7 @@
 set build_options= -DDEBUG=1
 set compile_flags= -nologo -W4 -wd4201 -Z7
 set common_link_flags= opengl32.lib -opt:ref -incremental:no -Debug:fastlink
-set platform_link_flags= user32.lib dsound.lib
+set platform_link_flags= user32.lib dsound.lib dxguid.lib
 
 if not exist build mkdir build
 pushd build
