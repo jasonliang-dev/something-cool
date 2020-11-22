@@ -1,123 +1,123 @@
-typedef enum
-{
-#define Key(name, str) Key_##name
-    Key(Null, "Invalid Key"),
-    Key(Esc, "Escape"),
-    Key(F1, "F1"),
-    Key(F2, "F2"),
-    Key(F3, "F3"),
-    Key(F4, "F4"),
-    Key(F5, "F5"),
-    Key(F6, "F6"),
-    Key(F7, "F7"),
-    Key(F8, "F8"),
-    Key(F9, "F9"),
-    Key(F10, "F10"),
-    Key(F11, "F11"),
-    Key(F12, "F12"),
-    Key(GraveAccent, "Grave Accent"),
-    Key(0, "0"),
-    Key(1, "1"),
-    Key(2, "2"),
-    Key(3, "3"),
-    Key(4, "4"),
-    Key(5, "5"),
-    Key(6, "6"),
-    Key(7, "7"),
-    Key(8, "8"),
-    Key(9, "9"),
-    Key(Minus, "Minus"),
-    Key(Equal, "Equal"),
-    Key(Backspace, "Backspace"),
-    Key(Delete, "Delete"),
-    Key(Tab, "Tab"),
-    Key(A, "A"),
-    Key(B, "B"),
-    Key(C, "C"),
-    Key(D, "D"),
-    Key(E, "E"),
-    Key(F, "F"),
-    Key(G, "G"),
-    Key(H, "H"),
-    Key(I, "I"),
-    Key(J, "J"),
-    Key(K, "K"),
-    Key(L, "L"),
-    Key(M, "M"),
-    Key(N, "N"),
-    Key(O, "O"),
-    Key(P, "P"),
-    Key(Q, "Q"),
-    Key(R, "R"),
-    Key(S, "S"),
-    Key(T, "T"),
-    Key(U, "U"),
-    Key(V, "V"),
-    Key(W, "W"),
-    Key(X, "X"),
-    Key(Y, "Y"),
-    Key(Z, "Z"),
-    Key(Space, "Space"),
-    Key(Enter, "Enter"),
-    Key(Ctrl, "Ctrl"),
-    Key(Shift, "Shift"),
-    Key(Alt, "Alt"),
-    Key(Up, "Up"),
-    Key(Left, "Left"),
-    Key(Down, "Down"),
-    Key(Right, "Right"),
-    Key(PageUp, "Page Up"),
-    Key(PageDown, "Page Down"),
-    Key(Home, "Home"),
-    Key(End, "End"),
-    Key(ForwardSlash, "Forward Slash"),
-    Key(Period, "Period"),
-    Key(Comma, "Comma"),
-    Key(Quote, "Quote"),
-    Key(LeftBracket, "Left Bracket"),
-    Key(RightBracket, "Right Bracket"),
-#undef Key
-    Key_Max
-} os_keys;
-
-typedef enum
-{
-#define GamepadButton(name, str) GamepadButton_##name
-    GamepadButton(Null, "Invalid Gamepad Button"),
-    GamepadButton(DPadUp, "D-Pad Up"),
-    GamepadButton(DPadDown, "D-Pad Down"),
-    GamepadButton(DPadLeft, "D-Pad Left"),
-    GamepadButton(DPadRight, "D-Pad Right"),
-    GamepadButton(Start, "Start"),
-    GamepadButton(Back, "Back"),
-    GamepadButton(LeftThumb, "Left Thumb"),
-    GamepadButton(RightThumb, "Right Thumb"),
-    GamepadButton(LeftShoulder, "Left Shoulder"),
-    GamepadButton(RightShoulder, "Right Shoulder"),
-    GamepadButton(A, "A"),
-    GamepadButton(B, "B"),
-    GamepadButton(X, "X"),
-    GamepadButton(Y, "Y"),
-#undef GamepadButton
-    GamepadButton_Max
-} os_gamepad_button;
-
 typedef struct os_state os_state;
 struct os_state
 {
-    memory_arena permanentArena;
-    memory_arena frameArena;
-
     volatile b32 running;
+
+    i16 *sampleOut;
+    u32 sampleCount;
+    u32 samplesPerSecond;
 
     void *(*Reserve)(u64 size);
     void (*Release)(void *memory);
     void (*Commit)(void *memory, u64 size);
     void (*Decommit)(void *memory, u64 size);
     void (*DebugPrint)(char *str);
+
+    memory_arena permanentArena;
+    memory_arena frameArena;
 };
 
 global os_state *os = 0;
+
+typedef enum
+{
+    Key_Null,
+    Key_Esc,
+    Key_F1,
+    Key_F2,
+    Key_F3,
+    Key_F4,
+    Key_F5,
+    Key_F6,
+    Key_F7,
+    Key_F8,
+    Key_F9,
+    Key_F10,
+    Key_F11,
+    Key_F12,
+    Key_GraveAccent,
+    Key_0,
+    Key_1,
+    Key_2,
+    Key_3,
+    Key_4,
+    Key_5,
+    Key_6,
+    Key_7,
+    Key_8,
+    Key_9,
+    Key_Minus,
+    Key_Equal,
+    Key_Backspace,
+    Key_Delete,
+    Key_Tab,
+    Key_A,
+    Key_B,
+    Key_C,
+    Key_D,
+    Key_E,
+    Key_F,
+    Key_G,
+    Key_H,
+    Key_I,
+    Key_J,
+    Key_K,
+    Key_L,
+    Key_M,
+    Key_N,
+    Key_O,
+    Key_P,
+    Key_Q,
+    Key_R,
+    Key_S,
+    Key_T,
+    Key_U,
+    Key_V,
+    Key_W,
+    Key_X,
+    Key_Y,
+    Key_Z,
+    Key_Space,
+    Key_Enter,
+    Key_Ctrl,
+    Key_Shift,
+    Key_Alt,
+    Key_Up,
+    Key_Left,
+    Key_Down,
+    Key_Right,
+    Key_PageUp,
+    Key_PageDown,
+    Key_Home,
+    Key_End,
+    Key_ForwardSlash,
+    Key_Period,
+    Key_Comma,
+    Key_Quote,
+    Key_LeftBracket,
+    Key_RightBracket,
+    Key_Max
+} os_keys;
+
+typedef enum
+{
+    GamepadButton_Null,
+    GamepadButton_DPadUp,
+    GamepadButton_DPadDown,
+    GamepadButton_DPadLeft,
+    GamepadButton_DPadRight,
+    GamepadButton_Start,
+    GamepadButton_Back,
+    GamepadButton_LeftThumb,
+    GamepadButton_RightThumb,
+    GamepadButton_LeftShoulder,
+    GamepadButton_RightShoulder,
+    GamepadButton_A,
+    GamepadButton_B,
+    GamepadButton_X,
+    GamepadButton_Y,
+    GamepadButton_Max
+} os_gamepad_button;
 
 #ifdef _MSC_VER
 #define APP_EXPORT __declspec(dllexport)

@@ -13,6 +13,7 @@ global os_state globalOS;
 
 #include "w32_app_code.c"
 #include "w32_os_utils.c"
+#include "w32_dsound.c"
 #include "w32_xinput.c"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
@@ -73,14 +74,23 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         return 1;
     }
 
-    w32_app_code w32AppCode = {0};
-    if (!W32_AppCodeLoad(&w32AppCode, appDllPath, appTempDllPath))
+    w32_app_code appCode = {0};
+    if (!W32_AppCodeLoad(&appCode, appDllPath, appTempDllPath))
     {
         return 1;
     }
 
+    w32_sound_output soundOutput = {0};
+    W32_LoadDirectSound();
+    W32_InitDirectSound(window, &soundOutput);
+
     os = &globalOS;
     globalOS.running = 1;
+
+    globalOS.sampleOut =
+        HeapAlloc(GetProcessHeap(), 0, soundOutput.samplesPerSecond * sizeof(f32) * 2);
+    globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
+    globalOS.sampleCount = 0;
 
     globalOS.Reserve = W32_Reserve;
     globalOS.Release = W32_Release;
@@ -93,11 +103,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     W32_LoadXInput();
 
-    w32AppCode.PermanentLoad(&globalOS);
-    w32AppCode.HotLoad(&globalOS);
+    appCode.PermanentLoad(&globalOS);
+    appCode.HotLoad(&globalOS);
 
     ShowWindow(window, commandShow);
     UpdateWindow(window);
+
+    soundOutput->buffer->lpVtbl->Play(soundOutput->buffer, 0, 0, DSBPLAY_LOOPING);
 
     MSG message;
     while (globalOS.running)
@@ -114,12 +126,12 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         }
 
         W32_UpdateXInput();
-        w32AppCode.Update();
-        W32_AppCodeHotUpdate(&w32AppCode, appDllPath, appTempDllPath);
+        appCode.Update();
+        W32_AppCodeHotUpdate(&appCode, appDllPath, appTempDllPath);
     }
 
     ShowWindow(window, SW_HIDE);
-    W32_AppCodeUnload(&w32AppCode);
+    W32_AppCodeUnload(&appCode);
 
     return 0;
 }
