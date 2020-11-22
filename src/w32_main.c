@@ -4,7 +4,7 @@
 
 global os_state globalOS;
 
-#include "w32_app_lib.c"
+#include "w32_app_code.c"
 #include "w32_os_utils.c"
 #include "w32_xinput.c"
 
@@ -66,7 +66,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         return 1;
     }
 
-    // NOTE(rjf): Load application code
     w32_app_code w32AppCode = {0};
     if (!W32_AppCodeLoad(&w32AppCode, appDllPath, appTempDllPath))
     {

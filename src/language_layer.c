@@ -41,3 +41,13 @@ typedef double f64;
 
 #define Min(x, y) (((x) < (y)) ? (x) : (y))
 #define Max(x, y) (((x) > (y)) ? (x) : (y))
+
+#if DEBUG
+#define Assert(b)                                                                                  \
+    if (!(b))                                                                                      \
+    {                                                                                              \
+        *(int *)0 = 0;                                                                             \
+    }
+#else
+#define Assert(b)
+#endif

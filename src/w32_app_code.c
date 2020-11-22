@@ -6,6 +6,7 @@ typedef struct
     app_update_fn *Update;
     HMODULE dll;
     FILETIME lastDllWriteTime;
+    b32 isValid;
 } w32_app_code;
 
 internal FILETIME W32_GetLastWriteTime(char *filename)
@@ -23,23 +24,34 @@ internal FILETIME W32_GetLastWriteTime(char *filename)
     return last_write_time;
 }
 
+#define LOCK_FILENAME "lock.tmp"
+
 internal b32 W32_AppCodeLoad(w32_app_code *appCode, char *dllPath, char *tempDllPath)
 {
-    appCode->lastDllWriteTime = W32_GetLastWriteTime(dllPath);
-    CopyFile(dllPath, tempDllPath, FALSE);
-    appCode->dll = LoadLibraryA(tempDllPath);
+    Assert(!appCode->isValid);
 
-    if (!appCode->dll)
+    WIN32_FILE_ATTRIBUTE_DATA ignored;
+
+    if (!GetFileAttributesEx(LOCK_FILENAME, GetFileExInfoStandard, &ignored))
     {
-        return 0;
+        appCode->lastDllWriteTime = W32_GetLastWriteTime(dllPath);
+        CopyFile(dllPath, tempDllPath, FALSE);
+        appCode->dll = LoadLibraryA(tempDllPath);
+
+        if (appCode->dll)
+        {
+            appCode->PermanentLoad =
+                (app_permanent_load_fn *)GetProcAddress(appCode->dll, "PermanentLoad");
+            appCode->HotLoad = (app_hot_load_fn *)GetProcAddress(appCode->dll, "HotLoad");
+            appCode->HotUnload = (app_hot_unload_fn *)GetProcAddress(appCode->dll, "HotUnload");
+            appCode->Update = (app_update_fn *)GetProcAddress(appCode->dll, "Update");
+
+            appCode->isValid =
+                appCode->PermanentLoad && appCode->HotLoad && appCode->HotUnload && appCode->Update;
+        }
     }
 
-    appCode->PermanentLoad = (app_permanent_load_fn *)GetProcAddress(appCode->dll, "PermanentLoad");
-    appCode->HotLoad = (app_hot_load_fn *)GetProcAddress(appCode->dll, "HotLoad");
-    appCode->HotUnload = (app_hot_unload_fn *)GetProcAddress(appCode->dll, "HotUnload");
-    appCode->Update = (app_update_fn *)GetProcAddress(appCode->dll, "Update");
-
-    if (!appCode->PermanentLoad || !appCode->HotLoad || !appCode->HotUnload || !appCode->Update)
+    if (!appCode->isValid)
     {
         appCode->PermanentLoad = AppPermanentLoadStub;
         appCode->HotLoad = AppHotLoadStub;
@@ -56,9 +68,10 @@ internal void W32_AppCodeUnload(w32_app_code *appCode)
     if (appCode->dll)
     {
         FreeLibrary(appCode->dll);
+        appCode->dll = NULL;
     }
 
-    appCode->dll = 0;
+    appCode->isValid = 0;
     appCode->PermanentLoad = AppPermanentLoadStub;
     appCode->HotLoad = AppHotLoadStub;
     appCode->HotUnload = AppHotUnloadStub;
