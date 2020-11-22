@@ -102,11 +102,20 @@ typedef enum
     GamepadButton_Max
 } os_gamepad_button;
 
-typedef struct
+typedef struct os_state os_state;
+struct os_state
 {
-    volatile b32 quit;
+    memory_arena permanentArena;
+    memory_arena frameArena;
+
+    volatile b32 running;
+
+    void *(*Reserve)(u64 size);
+    void (*Release)(void *memory);
+    void (*Commit)(void *memory, u64 size);
+    void (*Decommit)(void *memory, u64 size);
     void (*DebugPrint)(char *str);
-} os_state;
+};
 
 global os_state *os = 0;
 

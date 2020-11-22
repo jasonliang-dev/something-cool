@@ -1,4 +1,11 @@
-#include "include.c"
+#include "language_layer.h"
+#include "program_options.h"
+#include "maths.h"
+#include "memory.h"
+#include "os.h"
+
+#include "maths.c"
+#include "memory.c"
 
 APP_PERMANENT_LOAD
 {
@@ -19,5 +26,4 @@ APP_HOT_UNLOAD
 
 APP_UPDATE
 {
-    os->DebugPrint("BLUE");
 }

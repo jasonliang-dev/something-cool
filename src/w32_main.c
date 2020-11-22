@@ -1,6 +1,13 @@
 #include <windows.h>
 
-#include "include.c"
+#include "language_layer.h"
+#include "program_options.h"
+#include "maths.h"
+#include "memory.h"
+#include "os.h"
+
+#include "maths.c"
+#include "memory.c"
 
 global os_state globalOS;
 
@@ -13,7 +20,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
 {
     if (message == WM_CLOSE || message == WM_DESTROY || message == WM_QUIT)
     {
-        globalOS.quit = 1;
+        globalOS.running = 0;
         return 0;
     }
     else
@@ -73,7 +80,16 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     }
 
     os = &globalOS;
+    globalOS.running = 1;
+
+    globalOS.Reserve = W32_Reserve;
+    globalOS.Release = W32_Release;
+    globalOS.Commit = W32_Commit;
+    globalOS.Decommit = W32_Decommit;
     globalOS.DebugPrint = W32_DebugPrint;
+
+    globalOS.permanentArena = MemoryArenaInitialize();
+    globalOS.frameArena = MemoryArenaInitialize();
 
     W32_LoadXInput();
 
@@ -84,13 +100,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     UpdateWindow(window);
 
     MSG message;
-    while (!globalOS.quit)
+    while (globalOS.running)
     {
         while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
         {
             if (message.message == WM_QUIT)
             {
-                globalOS.quit = 1;
+                globalOS.running = 0;
             }
 
             TranslateMessage(&message);
@@ -98,19 +114,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         }
 
         W32_UpdateXInput();
-
-        if (globalGamepads[0].connected)
-        {
-            OutputDebugStringA("connected\n");
-
-            if (globalGamepads[0].buttonStates[GamepadButton_A])
-            {
-                OutputDebugStringA("A button pressed\n");
-            }
-        }
-
         w32AppCode.Update();
-
         W32_AppCodeHotUpdate(&w32AppCode, appDllPath, appTempDllPath);
     }
 

@@ -1,4 +1,5 @@
-typedef struct
+typedef struct w32_app_code w32_app_code;
+struct w32_app_code
 {
     app_permanent_load_fn *PermanentLoad;
     app_hot_load_fn *HotLoad;
@@ -7,7 +8,7 @@ typedef struct
     HMODULE dll;
     FILETIME lastDllWriteTime;
     b32 isValid;
-} w32_app_code;
+};
 
 internal FILETIME W32_GetLastWriteTime(char *filename)
 {
