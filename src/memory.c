@@ -1,10 +1,9 @@
-#define MEMORY_ARENA_MAX Gigabytes(4)
 #define MEMORY_ARENA_COMMIT_SIZE Kilobytes(4)
 
-internal memory_arena MemoryArenaInitialize(void)
+internal memory_arena MemoryArenaInitialize(u64 cap)
 {
     memory_arena arena = {0};
-    arena.max = MEMORY_ARENA_MAX;
+    arena.max = cap;
     arena.base = os->Reserve(arena.max);
     arena.allocPosition = 0;
     arena.commitPosition = 0;

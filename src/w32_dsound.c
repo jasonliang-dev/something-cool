@@ -28,13 +28,11 @@ internal void W32_LoadDirectSound(void)
 {
     HMODULE dsoundLib = LoadLibraryA("dsound.dll");
 
-    if (dsoundLib == NULL)
+    if (dsoundLib)
     {
-        return;
+        DirectSoundCreate8Proc =
+            (direct_sound_create_8_fn *)GetProcAddress(dsoundLib, "DirectSoundCreate8");
     }
-
-    DirectSoundCreate8Proc =
-        (direct_sound_create_8_fn *)GetProcAddress(dsoundLib, "DirectSoundCreate8");
 }
 
 internal void W32_InitDirectSound(HWND window, w32_sound_output *output)
@@ -140,9 +138,35 @@ internal void W32_ClearSoundBuffer(w32_sound_output *soundOutput)
     }
 }
 
-internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source, u32 lockOffset,
-                                  u32 bytesToLock)
+internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source)
 {
+    DWORD playCursor;
+    DWORD writeCursor;
+    if (!SUCCEEDED(soundOutput->buffer->lpVtbl->GetCurrentPosition(soundOutput->buffer, &playCursor,
+                                                                   &writeCursor)))
+    {
+        return;
+    }
+
+    DWORD bytesToLock = 0;
+    DWORD lockOffset =
+        soundOutput->sampleIndex * soundOutput->bytesPerSample % soundOutput->bufferSize;
+
+    i32 latencySampleCount = soundOutput->samplesPerSecond / 20;
+    DWORD targetCursor =
+        (playCursor + latencySampleCount * soundOutput->bytesPerSample) % soundOutput->bufferSize;
+
+    if (lockOffset > targetCursor)
+    {
+        bytesToLock = soundOutput->bufferSize - lockOffset + targetCursor;
+    }
+    else
+    {
+        bytesToLock = targetCursor - lockOffset;
+    }
+
+    os->sampleCount = bytesToLock / soundOutput->bytesPerSample;
+
     void *region1;
     DWORD region1Size;
     void *region2;
@@ -153,8 +177,8 @@ internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source, u3
                                                     0)))
     {
         i16 *dest = (i16 *)region1;
-
-        for (DWORD i = 0; i < region1Size / soundOutput->bytesPerSample; i++)
+        DWORD region1Count = region1Size / soundOutput->bytesPerSample;
+        for (DWORD i = 0; i < region1Count; i++)
         {
             *dest++ = *source++;
             *dest++ = *source++;
@@ -162,7 +186,8 @@ internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source, u3
         }
 
         dest = (i16 *)region2;
-        for (DWORD i = 0; i < region2Size / soundOutput->bytesPerSample; i++)
+        DWORD region2Count = region2Size / soundOutput->bytesPerSample;
+        for (DWORD i = 0; i < region2Count; i++)
         {
             *dest++ = *source++;
             *dest++ = *source++;

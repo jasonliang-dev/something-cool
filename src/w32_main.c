@@ -83,12 +83,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     w32_sound_output soundOutput = {0};
     W32_LoadDirectSound();
     W32_InitDirectSound(window, &soundOutput);
+    W32_ClearSoundBuffer(&soundOutput);
 
     os = &globalOS;
     globalOS.running = 1;
 
     globalOS.sampleOut =
-        HeapAlloc(GetProcessHeap(), 0, soundOutput.samplesPerSecond * sizeof(f32) * 2);
+        VirtualAlloc(0, soundOutput.bufferSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
     globalOS.sampleCount = 0;
 
@@ -98,18 +99,18 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.Decommit = W32_Decommit;
     globalOS.DebugPrint = W32_DebugPrint;
 
-    globalOS.permanentArena = MemoryArenaInitialize();
-    globalOS.frameArena = MemoryArenaInitialize();
+    globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
+    globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));
 
     W32_LoadXInput();
 
     appCode.PermanentLoad(&globalOS);
     appCode.HotLoad(&globalOS);
 
+    soundOutput.buffer->lpVtbl->Play(soundOutput.buffer, 0, 0, DSBPLAY_LOOPING);
+
     ShowWindow(window, commandShow);
     UpdateWindow(window);
-
-    soundOutput.buffer->lpVtbl->Play(soundOutput.buffer, 0, 0, DSBPLAY_LOOPING);
 
     MSG message;
     while (globalOS.running)
@@ -126,6 +127,12 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         }
 
         W32_UpdateXInput();
+
+        if (soundOutput.initialized)
+        {
+            W32_FillSoundBuffer(&soundOutput, globalOS.sampleOut);
+        }
+
         appCode.Update();
         W32_AppCodeHotUpdate(&appCode, appDllPath, appTempDllPath);
     }
