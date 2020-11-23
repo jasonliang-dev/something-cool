@@ -19,7 +19,9 @@ APP_HOT_UNLOAD
 
 APP_UPDATE
 {
-    glClearColor(0, 0, 1, 1);
+    local_persist f32 t = 0;
+    f32 bri = Sin(t += 0.1f) + 0.5f;
+    glClearColor(bri, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     os->OpenGLSwapBuffers();
 
