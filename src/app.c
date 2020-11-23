@@ -38,6 +38,6 @@ APP_UPDATE
         i16 value = (i16)(Sin((f32)tSine) * toneVolume);
         *output++ = value;
         *output++ = value;
-        tSine += (2.0f * PI * (f32)wavePeriod);
+        tSine += 2.0f * PI * (1.f / (f32)wavePeriod);
     }
 }
