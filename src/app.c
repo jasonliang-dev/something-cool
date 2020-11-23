@@ -1,11 +1,4 @@
-#include "language_layer.h"
-#include "program_options.h"
-#include "maths.h"
-#include "memory.h"
-#include "os.h"
-
-#include "maths.c"
-#include "memory.c"
+#include "app.h"
 
 APP_PERMANENT_LOAD
 {
@@ -26,10 +19,14 @@ APP_HOT_UNLOAD
 
 APP_UPDATE
 {
+    glClearColor(0, 0, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    os->OpenGLSwapBuffers();
+
     local_persist f32 tSine = 0;
 
     i32 toneHz = 262; // about middle c (261.63 hz)
-    i32 toneVolume = 1000;
+    i32 toneVolume = 0;
     i32 wavePeriod = os->samplesPerSecond / toneHz;
 
     i16 *output = os->sampleOut;

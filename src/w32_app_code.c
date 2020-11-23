@@ -25,15 +25,13 @@ internal FILETIME W32_GetLastWriteTime(char *filename)
     return last_write_time;
 }
 
-#define LOCK_FILENAME "lock.tmp"
-
 internal b32 W32_AppCodeLoad(w32_app_code *appCode, char *dllPath, char *tempDllPath)
 {
     Assert(!appCode->isValid);
 
     WIN32_FILE_ATTRIBUTE_DATA ignored;
 
-    if (!GetFileAttributesEx(LOCK_FILENAME, GetFileExInfoStandard, &ignored))
+    if (!GetFileAttributesEx("lock.tmp", GetFileExInfoStandard, &ignored))
     {
         appCode->lastDllWriteTime = W32_GetLastWriteTime(dllPath);
         CopyFile(dllPath, tempDllPath, FALSE);
@@ -79,7 +77,7 @@ internal void W32_AppCodeUnload(w32_app_code *appCode)
     appCode->Update = AppUpdateStub;
 }
 
-internal void W32_AppCodeHotUpdate(w32_app_code *appCode, char *dllPath, char *tempDllPath)
+internal void W32_AppCodeMaybeHotLoad(w32_app_code *appCode, char *dllPath, char *tempDllPath)
 {
     FILETIME lastWriteTime = W32_GetLastWriteTime(dllPath);
 

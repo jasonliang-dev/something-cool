@@ -19,7 +19,7 @@ DIRECT_SOUND_CREATE_8(DirectSoundCreate8Stub)
     (void)lpcGuidDevice;
     (void)ppDS8;
     (void)pUnkOuter;
-    return E_NOTIMPL;
+    return DSERR_INVALIDCALL;
 }
 
 global direct_sound_create_8_fn *DirectSoundCreate8Proc = DirectSoundCreate8Stub;
@@ -138,7 +138,7 @@ internal void W32_ClearSoundBuffer(w32_sound_output *soundOutput)
     }
 }
 
-internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source)
+internal void W32_FindBytesToLockSoundBuffer(w32_sound_output *soundOutput, DWORD *bytesToLock)
 {
     DWORD playCursor;
     DWORD writeCursor;
@@ -148,7 +148,6 @@ internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source)
         return;
     }
 
-    DWORD bytesToLock = 0;
     DWORD lockOffset =
         soundOutput->sampleIndex * soundOutput->bytesPerSample % soundOutput->bufferSize;
 
@@ -158,19 +157,25 @@ internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source)
 
     if (lockOffset > targetCursor)
     {
-        bytesToLock = soundOutput->bufferSize - lockOffset + targetCursor;
+        *bytesToLock = soundOutput->bufferSize - lockOffset + targetCursor;
     }
     else
     {
-        bytesToLock = targetCursor - lockOffset;
+        *bytesToLock = targetCursor - lockOffset;
     }
 
-    os->sampleCount = bytesToLock / soundOutput->bytesPerSample;
+    os->sampleCount = *bytesToLock / soundOutput->bytesPerSample;
+}
 
+internal void W32_FillSoundBuffer(w32_sound_output *soundOutput, i16 *source, DWORD bytesToLock)
+{
     void *region1;
     DWORD region1Size;
     void *region2;
     DWORD region2Size;
+
+    DWORD lockOffset =
+        soundOutput->sampleIndex * soundOutput->bytesPerSample % soundOutput->bufferSize;
 
     if (SUCCEEDED(soundOutput->buffer->lpVtbl->Lock(soundOutput->buffer, lockOffset, bytesToLock,
                                                     &region1, &region1Size, &region2, &region2Size,

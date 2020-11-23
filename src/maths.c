@@ -170,43 +170,37 @@ internal v3 HSVToRGB(v3 hsv)
 
         switch (i)
         {
-        case 0: {
+        case 0:
             rgb.r = v;
             rgb.g = t;
             rgb.b = p;
             break;
-        }
-        case 1: {
+        case 1:
             rgb.r = q;
             rgb.g = v;
             rgb.b = p;
             break;
-        }
-        case 2: {
+        case 2:
             rgb.r = p;
             rgb.g = v;
             rgb.b = t;
             break;
-        }
-        case 3: {
+        case 3:
             rgb.r = p;
             rgb.g = q;
             rgb.b = v;
             break;
-        }
-        case 4: {
+        case 4:
             rgb.r = t;
             rgb.g = p;
             rgb.b = v;
             break;
-        }
-        case 5: {
+        case 5:
         default:
             rgb.r = v;
             rgb.g = p;
             rgb.b = q;
             break;
-        }
         }
     }
 

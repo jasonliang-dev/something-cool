@@ -107,8 +107,18 @@ union iv4 {
     {
         i32 x;
         i32 y;
-        i32 z;
-        i32 w;
+        union {
+            struct
+            {
+                i32 z;
+                i32 w;
+            };
+            struct
+            {
+                i32 width;
+                i32 height;
+            };
+        };
     };
 
     struct

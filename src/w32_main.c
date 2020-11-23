@@ -1,20 +1,15 @@
 #include <windows.h>
 
-#include "language_layer.h"
-#include "program_options.h"
-#include "maths.h"
-#include "memory.h"
-#include "os.h"
-
-#include "maths.c"
-#include "memory.c"
+#include "app.h"
 
 global os_state globalOS;
+global HDC globalHDC;
 
 #include "w32_app_code.c"
 #include "w32_os_utils.c"
 #include "w32_dsound.c"
 #include "w32_xinput.c"
+#include "w32_opengl.c"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
                                               LPARAM lParam)
@@ -36,24 +31,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     (void)previousInstance;
     (void)commandLine;
 
-    char executablePath[256];
-    char executableDirectory[256];
-    char appDllPath[256];
-    char appTempDllPath[256];
-    GetModuleFileNameA(0, executablePath, sizeof(executablePath));
-
-    _splitpath_s(executablePath,                                   // full path
-                 NULL, 0,                                          // drive
-                 executableDirectory, sizeof(executableDirectory), // directory
-                 NULL, 0,                                          // filename
-                 NULL, 0                                           // file extension
-    );
-
-    wsprintf(appDllPath, "%s%s.dll", executableDirectory, PROGRAM_FILENAME);
-    wsprintf(appTempDllPath, "%s%s_temp.dll", executableDirectory, PROGRAM_FILENAME);
-
     WNDCLASS windowClass = {0};
-    windowClass.style = CS_HREDRAW | CS_VREDRAW;
+    windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     windowClass.lpfnWndProc = W32_WindowProcedure;
     windowClass.hInstance = instance;
     windowClass.lpszClassName = "ApplicationWindowClass";
@@ -73,6 +52,22 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     {
         return 1;
     }
+
+    char executablePath[256];
+    char executableDirectory[256];
+    char appDllPath[256];
+    char appTempDllPath[256];
+    GetModuleFileNameA(0, executablePath, sizeof(executablePath));
+
+    _splitpath_s(executablePath,                                   // full path
+                 NULL, 0,                                          // drive
+                 executableDirectory, sizeof(executableDirectory), // directory
+                 NULL, 0,                                          // filename
+                 NULL, 0                                           // file extension
+    );
+
+    wsprintf(appDllPath, "%s%s.dll", executableDirectory, PROGRAM_FILENAME);
+    wsprintf(appTempDllPath, "%s%s_temp.dll", executableDirectory, PROGRAM_FILENAME);
 
     w32_app_code appCode = {0};
     if (!W32_AppCodeLoad(&appCode, appDllPath, appTempDllPath))
@@ -98,9 +93,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.Commit = W32_Commit;
     globalOS.Decommit = W32_Decommit;
     globalOS.DebugPrint = W32_DebugPrint;
+    globalOS.OpenGLSwapBuffers = W32_OpenGLSwapBuffers;
 
     globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
     globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));
+
+    globalHDC = GetDC(window);
+    HGLRC glContext = W32_InitOpenGL(globalHDC);
 
     W32_LoadXInput();
 
@@ -113,6 +112,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     UpdateWindow(window);
 
     MSG message;
+    DWORD bytesToLockSoundBuffer;
     while (globalOS.running)
     {
         while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -127,18 +127,21 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         }
 
         W32_UpdateXInput();
+        W32_FindBytesToLockSoundBuffer(&soundOutput, &bytesToLockSoundBuffer);
+
+        appCode.Update();
 
         if (soundOutput.initialized)
         {
-            W32_FillSoundBuffer(&soundOutput, globalOS.sampleOut);
+            W32_FillSoundBuffer(&soundOutput, globalOS.sampleOut, bytesToLockSoundBuffer);
         }
 
-        appCode.Update();
-        W32_AppCodeHotUpdate(&appCode, appDllPath, appTempDllPath);
+        W32_AppCodeMaybeHotLoad(&appCode, appDllPath, appTempDllPath);
     }
 
     ShowWindow(window, SW_HIDE);
     W32_AppCodeUnload(&appCode);
+    W32_CleanUpOpenGL(&globalHDC, glContext);
 
     return 0;
 }

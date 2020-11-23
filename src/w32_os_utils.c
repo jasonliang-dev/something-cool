@@ -23,3 +23,9 @@ internal void W32_DebugPrint(char *str)
 {
     OutputDebugStringA(str);
 }
+
+internal void W32_FatalError(char *str)
+{
+    MessageBoxA(NULL, str, "Error", MB_OK | MB_ICONEXCLAMATION);
+    exit(EXIT_FAILURE);
+}
