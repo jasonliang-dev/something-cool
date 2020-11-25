@@ -24,8 +24,15 @@ internal void W32_DebugPrint(char *str)
     OutputDebugStringA(str);
 }
 
-internal void W32_FatalError(char *str)
+internal void W32_DisplayError(char *str)
 {
     MessageBoxA(NULL, str, "Error", MB_OK | MB_ICONEXCLAMATION);
-    exit(EXIT_FAILURE);
+}
+
+internal v2 W32_GetMousePosition(HWND window)
+{
+    POINT mouse;
+    GetCursorPos(&mouse);
+    ScreenToClient(window, &mouse);
+    return v2((f32)mouse.x, (f32)mouse.y);
 }

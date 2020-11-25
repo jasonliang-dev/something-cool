@@ -30,7 +30,7 @@ internal void W32_TimerEndFrame(w32_timer *timer)
 
     StringCbPrintfA(timingBuff, 256 * sizeof(TCHAR), TEXT("%.02f ms/f,  %.02f fps,  %.02f mc/f\n"),
                     mspf, fps, mcpf);
-    OutputDebugStringA(timingBuff);
+    // OutputDebugStringA(timingBuff);
 
     timer->lastCounter = endCounter;
 }

@@ -5,6 +5,7 @@
 #include "opengl.h"
 #include "os.h"
 
+#include "os.c"
 #include "maths.c"
 #include "memory.c"
 

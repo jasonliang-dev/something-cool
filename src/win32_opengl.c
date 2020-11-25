@@ -1,16 +1,5 @@
 #include <gl/gl.h>
 
-#define WGL_CHOOSE_PIXEL_FORMAT_ARB(name)                                                          \
-    BOOL WINAPI name(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList,                \
-                     UINT nMaxFormats, int *piFormats, UINT *nNumFormats)
-typedef WGL_CHOOSE_PIXEL_FORMAT_ARB(wgl_choose_pixel_format_arb_fn);
-global wgl_choose_pixel_format_arb_fn *wglChoosePixelFormatARB;
-
-#define WGL_CREATE_CONTEXT_ATTRIBS_ARB(name)                                                       \
-    HGLRC WINAPI name(HDC hdc, HGLRC hShareContext, const int *attribList)
-typedef WGL_CREATE_CONTEXT_ATTRIBS_ARB(wgl_create_context_attribs_arb_fn);
-global wgl_create_context_attribs_arb_fn *wglCreateContextAttribsARB;
-
 #define WGL_CONTEXT_MAJOR_VERSION_ARB 0x2091
 #define WGL_CONTEXT_MINOR_VERSION_ARB 0x2092
 #define WGL_CONTEXT_PROFILE_MASK_ARB 0x9126
@@ -28,6 +17,17 @@ global wgl_create_context_attribs_arb_fn *wglCreateContextAttribsARB;
 
 #define WGL_FULL_ACCELERATION_ARB 0x2027
 #define WGL_TYPE_RGBA_ARB 0x202B
+
+#define WGL_CHOOSE_PIXEL_FORMAT_ARB(name)                                                          \
+    BOOL WINAPI name(HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList,                \
+                     UINT nMaxFormats, int *piFormats, UINT *nNumFormats)
+typedef WGL_CHOOSE_PIXEL_FORMAT_ARB(wgl_choose_pixel_format_arb_fn);
+global wgl_choose_pixel_format_arb_fn *wglChoosePixelFormatARB;
+
+#define WGL_CREATE_CONTEXT_ATTRIBS_ARB(name)                                                       \
+    HGLRC WINAPI name(HDC hdc, HGLRC hShareContext, const int *attribList)
+typedef WGL_CREATE_CONTEXT_ATTRIBS_ARB(wgl_create_context_attribs_arb_fn);
+global wgl_create_context_attribs_arb_fn *wglCreateContextAttribsARB;
 
 internal void *W32_LoadOpenGLProcedure(char *name)
 {
@@ -146,7 +146,7 @@ internal void W32_CleanUpOpenGL(HDC *hdc, HGLRC glContext)
     wglDeleteContext(glContext);
 }
 
-internal void W32_OpenGLSwapBuffers(void)
+internal void W32_GLSwapBuffers(void)
 {
     wglSwapLayerBuffers(globalHDC, WGL_SWAP_MAIN_PLANE);
 }

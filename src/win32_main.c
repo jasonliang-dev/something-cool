@@ -6,17 +6,33 @@
 global os_state globalOS;
 global HDC globalHDC;
 
+#include "win32_utils.c"
+
 #include "win32_app_code.c"
-#include "win32_dsound.c"
 #include "win32_opengl.c"
-#include "win32_os_utils.c"
 #include "win32_timer.c"
-// #include "win32_xaudio2.c"
+#include "win32_wasapi.c"
 #include "win32_xinput.c"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
                                               LPARAM lParam)
 {
+    u32 modifiers = 0;
+    os_event event;
+
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+    {
+        modifiers |= KeyModifier_Ctrl;
+    }
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+    {
+        modifiers |= KeyModifier_Shift;
+    }
+    if (GetKeyState(VK_MENU) & 0x8000)
+    {
+        modifiers |= KeyModifier_Alt;
+    }
+
     if (message == WM_CLOSE || message == WM_DESTROY || message == WM_QUIT)
     {
         globalOS.running = 0;
@@ -26,10 +42,46 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     {
         return MAKELRESULT(0, MNC_CLOSE);
     }
-    else
+    else if (message == WM_LBUTTONDOWN)
     {
-        return DefWindowProc(window, message, wParam, lParam);
+        event.type = OS_EventType_MousePress;
+        event.mouseButton = MouseButton_Left;
+        OS_PushEvent(event);
+        return 0;
     }
+    else if (message == WM_LBUTTONUP)
+    {
+        event.type = OS_EventType_MouseRelease;
+        event.mouseButton = MouseButton_Left;
+        OS_PushEvent(event);
+        return 0;
+    }
+    else if (message == WM_RBUTTONDOWN)
+    {
+        event.type = OS_EventType_MousePress;
+        event.mouseButton = MouseButton_Right;
+        OS_PushEvent(event);
+        return 0;
+    }
+    else if (message == WM_RBUTTONUP)
+    {
+        event.type = OS_EventType_MouseRelease;
+        event.mouseButton = MouseButton_Right;
+        OS_PushEvent(event);
+        return 0;
+    }
+    else if (message == WM_MOUSEMOVE)
+    {
+        v2 lastMouse = globalOS.mousePosition;
+        event.type = OS_EventType_MouseMove;
+        event.delta =
+            v2(globalOS.mousePosition.x - lastMouse.x, globalOS.mousePosition.y - lastMouse.y);
+        globalOS.mousePosition = W32_GetMousePosition(window);
+        OS_PushEvent(event);
+        return 0;
+    }
+
+    return DefWindowProc(window, message, wParam, lParam);
 }
 
 int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR commandLine,
@@ -83,25 +135,27 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     }
 
     w32_sound_output soundOutput = {0};
-    W32_LoadDirectSound();
-    W32_InitDirectSound(window, &soundOutput);
-    W32_ClearSoundBuffer(&soundOutput);
+    soundOutput.channels = 2;
+    soundOutput.samplesPerSecond = 48000;
+    soundOutput.latencyFrameCount = 48000;
+    W32_LoadWASAPI();
+    W32_InitWASAPI(&soundOutput);
 
     os = &globalOS;
     globalOS.running = 1;
-    globalOS.windowResolution = iv2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+    globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
+    globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
 
-    globalOS.sampleOut =
-        VirtualAlloc(0, soundOutput.bufferSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(f32) * 2,
+                                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
-    globalOS.sampleCount = 0;
 
     globalOS.Reserve = W32_Reserve;
     globalOS.Release = W32_Release;
     globalOS.Commit = W32_Commit;
     globalOS.Decommit = W32_Decommit;
     globalOS.DebugPrint = W32_DebugPrint;
-    globalOS.OpenGLSwapBuffers = W32_OpenGLSwapBuffers;
+    globalOS.GLSwapBuffers = W32_GLSwapBuffers;
 
     globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
     globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));
@@ -114,8 +168,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     appCode.PermanentLoad(&globalOS);
     appCode.HotLoad(&globalOS);
 
-    soundOutput.buffer->lpVtbl->Play(soundOutput.buffer, 0, 0, DSBPLAY_LOOPING);
-
     ShowWindow(window, commandShow);
     UpdateWindow(window);
 
@@ -123,7 +175,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     W32_InitTimer(&timer);
 
     MSG message;
-    DWORD bytesToLockSoundBuffer;
     while (globalOS.running)
     {
         while (PeekMessageA(&message, 0, 0, 0, PM_REMOVE))
@@ -143,13 +194,33 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         globalOS.windowResolution.y = clientRect.bottom - clientRect.top;
 
         W32_UpdateXInput();
-        W32_FindBytesToLockSoundBuffer(&soundOutput, &bytesToLockSoundBuffer);
+
+        if (soundOutput.initialized)
+        {
+            globalOS.sampleCount = 0;
+            UINT32 soundPaddingSize;
+            if (SUCCEEDED(soundOutput.audioClient->lpVtbl->GetCurrentPadding(
+                    soundOutput.audioClient, &soundPaddingSize)))
+            {
+                globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
+                globalOS.sampleCount = (u32)(soundOutput.latencyFrameCount - soundPaddingSize);
+                if (globalOS.sampleCount > soundOutput.latencyFrameCount)
+                {
+                    globalOS.sampleCount = soundOutput.latencyFrameCount;
+                }
+            }
+
+            for (u32 i = 0; i < soundOutput.bufferFrameCount; i++)
+            {
+                globalOS.sampleOut[i] = 0;
+            }
+        }
 
         appCode.Update();
 
         if (soundOutput.initialized)
         {
-            W32_FillSoundBuffer(&soundOutput, globalOS.sampleOut, bytesToLockSoundBuffer);
+            W32_FillSoundBuffer(globalOS.sampleCount, globalOS.sampleOut, &soundOutput);
         }
 
         W32_AppCodeMaybeHotLoad(&appCode, appDllPath, appTempDllPath);

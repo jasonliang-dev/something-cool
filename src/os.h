@@ -1,19 +1,68 @@
+typedef enum os_event_type os_event_type;
+enum os_event_type
+{
+    OS_EventType_Null,
+
+    OS_EventType_KeyStart,
+    OS_EventType_CharacterInput,
+    OS_EventType_KeyPress,
+    OS_EventType_KeyRelease,
+    OS_EventType_KeyEnd,
+
+    OS_EventType_MouseStart,
+    OS_EventType_MousePress,
+    OS_EventType_MouseRelease,
+    OS_EventType_MouseMove,
+    OS_EventType_MouseScroll,
+    OS_EventType_MouseEnd,
+
+    OS_EventType_GamepadStart,
+    OS_EventType_GamepadConnect,
+    OS_EventType_GamepadDisconnect,
+    OS_EventType_GamepadButtonPress,
+    OS_EventType_GamepadButtonRelease,
+    OS_EventType_GamepadJoystickMove,
+    OS_EventType_GamepadTrigger,
+    OS_EventType_GamepadEnd,
+
+    OS_EventType_Max
+};
+
+typedef struct os_event os_event;
+struct os_event
+{
+    os_event_type type;
+    // os_key key;
+    // os_gamepad_button gamepadButton;
+    u32 mouseButton;
+    // u32 modifiers;
+    // i32 gamepadIndex;
+    // u64 character;
+    // v2 position;
+    v2 delta;
+    // v2 scroll;
+};
+
 typedef struct os_state os_state;
 struct os_state
 {
     volatile b32 running;
     iv2 windowResolution;
 
-    i16 *sampleOut;
+    f32 *sampleOut;
     u32 sampleCount;
     u32 samplesPerSecond;
+
+    v2 mousePosition;
+    i32 eventCount;
+    os_event events[4096];
 
     void *(*Reserve)(u64 size);
     void (*Release)(void *memory);
     void (*Commit)(void *memory, u64 size);
     void (*Decommit)(void *memory, u64 size);
     void (*DebugPrint)(char *str);
-    void (*OpenGLSwapBuffers)(void);
+    void (*GLSwapBuffers)(void);
 
     memory_arena permanentArena;
     memory_arena frameArena;
@@ -21,8 +70,28 @@ struct os_state
 
 global os_state *os = 0;
 
-typedef enum os_keys os_keys;
-enum os_keys
+typedef enum os_mouse_button os_mouse_button;
+enum os_mouse_button
+{
+    MouseButton_Null,
+    MouseButton_Left,
+    MouseButton_Right,
+    MouseButton_Middle,
+    MouseButton_4,
+    MouseButton_5,
+    MouseButton_Max
+};
+
+typedef enum os_key_modifiers os_key_modifiers;
+enum os_key_modifiers
+{
+    KeyModifier_Ctrl = (1 << 0),
+    KeyModifier_Shift = (1 << 1),
+    KeyModifier_Alt = (1 << 2)
+};
+
+typedef enum os_key os_key;
+enum os_key
 {
     Key_Null,
     Key_Esc,
