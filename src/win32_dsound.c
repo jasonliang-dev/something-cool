@@ -39,12 +39,12 @@ internal void W32_InitDirectSound(HWND window, w32_sound_output *output)
 {
     IDirectSound8 *dsound = NULL;
 
-    if (!DirectSoundCreate8Proc || !SUCCEEDED(DirectSoundCreate8Proc(NULL, &dsound, NULL)))
+    if (!DirectSoundCreate8Proc || FAILED(DirectSoundCreate8Proc(NULL, &dsound, NULL)))
     {
         return;
     }
 
-    if (!SUCCEEDED(dsound->lpVtbl->SetCooperativeLevel(dsound, window, DSSCL_PRIORITY)))
+    if (FAILED(dsound->lpVtbl->SetCooperativeLevel(dsound, window, DSSCL_PRIORITY)))
     {
         return;
     }
@@ -74,13 +74,12 @@ internal void W32_InitDirectSound(HWND window, w32_sound_output *output)
     waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
     waveFormat.cbSize = 0;
 
-    if (!SUCCEEDED(
-            dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDescription, &primaryBuffer, NULL)))
+    if (FAILED(dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDescription, &primaryBuffer, NULL)))
     {
         return;
     }
 
-    if (!SUCCEEDED(primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &waveFormat)))
+    if (FAILED(primaryBuffer->lpVtbl->SetFormat(primaryBuffer, &waveFormat)))
     {
         return;
     }
@@ -89,8 +88,7 @@ internal void W32_InitDirectSound(HWND window, w32_sound_output *output)
     bufferDescription.dwBufferBytes = output->bufferSize;
     bufferDescription.lpwfxFormat = &waveFormat;
 
-    if (!SUCCEEDED(
-            dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDescription, &tempBuffer, NULL)))
+    if (FAILED(dsound->lpVtbl->CreateSoundBuffer(dsound, &bufferDescription, &tempBuffer, NULL)))
     {
         return;
     }
@@ -140,10 +138,11 @@ internal void W32_ClearSoundBuffer(w32_sound_output *soundOutput)
 
 internal void W32_FindBytesToLockSoundBuffer(w32_sound_output *soundOutput, DWORD *bytesToLock)
 {
+    *bytesToLock = 0;
     DWORD playCursor;
     DWORD writeCursor;
-    if (!SUCCEEDED(soundOutput->buffer->lpVtbl->GetCurrentPosition(soundOutput->buffer, &playCursor,
-                                                                   &writeCursor)))
+    if (FAILED(soundOutput->buffer->lpVtbl->GetCurrentPosition(soundOutput->buffer, &playCursor,
+                                                               &writeCursor)))
     {
         return;
     }

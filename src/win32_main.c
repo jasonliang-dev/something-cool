@@ -1,15 +1,18 @@
 #include <windows.h>
+#include <strsafe.h>
 
 #include "app.h"
 
 global os_state globalOS;
 global HDC globalHDC;
 
-#include "w32_app_code.c"
-#include "w32_os_utils.c"
-#include "w32_dsound.c"
-#include "w32_xinput.c"
-#include "w32_opengl.c"
+#include "win32_app_code.c"
+#include "win32_dsound.c"
+#include "win32_opengl.c"
+#include "win32_os_utils.c"
+#include "win32_timer.c"
+// #include "win32_xaudio2.c"
+#include "win32_xinput.c"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
                                               LPARAM lParam)
@@ -18,6 +21,10 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     {
         globalOS.running = 0;
         return 0;
+    }
+    else if (message == WM_MENUCHAR)
+    {
+        return MAKELRESULT(0, MNC_CLOSE);
     }
     else
     {
@@ -82,6 +89,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     os = &globalOS;
     globalOS.running = 1;
+    globalOS.windowResolution = iv2(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
 
     globalOS.sampleOut =
         VirtualAlloc(0, soundOutput.bufferSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -111,6 +119,9 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     ShowWindow(window, commandShow);
     UpdateWindow(window);
 
+    w32_timer timer;
+    W32_InitTimer(&timer);
+
     MSG message;
     DWORD bytesToLockSoundBuffer;
     while (globalOS.running)
@@ -126,6 +137,11 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
             DispatchMessage(&message);
         }
 
+        RECT clientRect;
+        GetClientRect(window, &clientRect);
+        globalOS.windowResolution.x = clientRect.right - clientRect.left;
+        globalOS.windowResolution.y = clientRect.bottom - clientRect.top;
+
         W32_UpdateXInput();
         W32_FindBytesToLockSoundBuffer(&soundOutput, &bytesToLockSoundBuffer);
 
@@ -137,6 +153,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         }
 
         W32_AppCodeMaybeHotLoad(&appCode, appDllPath, appTempDllPath);
+        W32_TimerEndFrame(&timer);
     }
 
     ShowWindow(window, SW_HIDE);

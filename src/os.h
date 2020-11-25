@@ -2,6 +2,7 @@ typedef struct os_state os_state;
 struct os_state
 {
     volatile b32 running;
+    iv2 windowResolution;
 
     i16 *sampleOut;
     u32 sampleCount;

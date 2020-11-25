@@ -2,8 +2,8 @@
 #include "program_options.h"
 #include "maths.h"
 #include "memory.h"
-#include "os.h"
 #include "opengl.h"
+#include "os.h"
 
 #include "maths.c"
 #include "memory.c"
