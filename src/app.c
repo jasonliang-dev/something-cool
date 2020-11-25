@@ -27,7 +27,7 @@ APP_UPDATE
         {
             os->DebugPrint("Mouse clicked!\n");
         }
-        if (event.type == OS_EventType_MouseMove)
+        else if (event.type == OS_EventType_MouseMove)
         {
             TCHAR buff[256];
 
