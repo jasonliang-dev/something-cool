@@ -100,6 +100,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!RegisterClass(&windowClass))
     {
+        W32_DisplayError("Cannot register window class");
         return 1;
     }
 
@@ -109,6 +110,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!window)
     {
+        W32_DisplayError("Cannot create window");
         return 1;
     }
 
@@ -131,6 +133,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     w32_app_code appCode = {0};
     if (!W32_AppCodeLoad(&appCode, appDllPath, appTempDllPath))
     {
+        W32_DisplayError("Cannot load application code");
         return 1;
     }
 
@@ -155,7 +158,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.Commit = W32_Commit;
     globalOS.Decommit = W32_Decommit;
     globalOS.DebugPrint = W32_DebugPrint;
-    globalOS.GLSwapBuffers = W32_GLSwapBuffers;
+    globalOS.SwapBuffers = W32_GLSwapBuffers;
+    globalOS.LoadOpenGLProcedure = W32_LoadOpenGLProcedure;
 
     globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
     globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));
@@ -228,8 +232,9 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     }
 
     ShowWindow(window, SW_HIDE);
-    W32_AppCodeUnload(&appCode);
     W32_CleanUpOpenGL(&globalHDC, glContext);
+    appCode.Close();
+    W32_AppCodeUnload(&appCode);
 
     return 0;
 }

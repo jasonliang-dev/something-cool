@@ -5,6 +5,7 @@ struct w32_app_code
     app_hot_load_fn *HotLoad;
     app_hot_unload_fn *HotUnload;
     app_update_fn *Update;
+    app_close_fn *Close;
     HMODULE dll;
     FILETIME lastDllWriteTime;
     b32 isValid;
@@ -40,13 +41,14 @@ internal b32 W32_AppCodeLoad(w32_app_code *appCode, char *dllPath, char *tempDll
         if (appCode->dll)
         {
             appCode->PermanentLoad =
-                (app_permanent_load_fn *)GetProcAddress(appCode->dll, "PermanentLoad");
-            appCode->HotLoad = (app_hot_load_fn *)GetProcAddress(appCode->dll, "HotLoad");
-            appCode->HotUnload = (app_hot_unload_fn *)GetProcAddress(appCode->dll, "HotUnload");
-            appCode->Update = (app_update_fn *)GetProcAddress(appCode->dll, "Update");
+                (app_permanent_load_fn *)GetProcAddress(appCode->dll, "AppPermanentLoad");
+            appCode->HotLoad = (app_hot_load_fn *)GetProcAddress(appCode->dll, "AppHotLoad");
+            appCode->HotUnload = (app_hot_unload_fn *)GetProcAddress(appCode->dll, "AppHotUnload");
+            appCode->Update = (app_update_fn *)GetProcAddress(appCode->dll, "AppUpdate");
+            appCode->Close = (app_update_fn *)GetProcAddress(appCode->dll, "AppClose");
 
-            appCode->isValid =
-                appCode->PermanentLoad && appCode->HotLoad && appCode->HotUnload && appCode->Update;
+            appCode->isValid = appCode->PermanentLoad && appCode->HotLoad && appCode->HotUnload &&
+                               appCode->Update && appCode->Close;
         }
     }
 
@@ -56,6 +58,7 @@ internal b32 W32_AppCodeLoad(w32_app_code *appCode, char *dllPath, char *tempDll
         appCode->HotLoad = AppHotLoadStub;
         appCode->HotUnload = AppHotUnloadStub;
         appCode->Update = AppUpdateStub;
+        appCode->Close = AppCloseStub;
         return 0;
     }
 
@@ -75,6 +78,7 @@ internal void W32_AppCodeUnload(w32_app_code *appCode)
     appCode->HotLoad = AppHotLoadStub;
     appCode->HotUnload = AppHotUnloadStub;
     appCode->Update = AppUpdateStub;
+    appCode->Close = AppCloseStub;
 }
 
 internal void W32_AppCodeMaybeHotLoad(w32_app_code *appCode, char *dllPath, char *tempDllPath)
