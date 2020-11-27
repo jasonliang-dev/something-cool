@@ -61,9 +61,11 @@ struct os_state
     void (*Release)(void *memory);
     void (*Commit)(void *memory, u64 size);
     void (*Decommit)(void *memory, u64 size);
-    void (*DebugPrint)(char *str);
     void (*SwapBuffers)(void);
     void *(*LoadOpenGLProcedure)(char *name);
+
+    void (*DebugPrint)(char *str);
+    void (*DebugDisplayError)(char *str);
 
     memory_arena permanentArena;
     memory_arena frameArena;

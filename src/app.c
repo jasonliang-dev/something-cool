@@ -1,23 +1,22 @@
 #include "app.h"
 
-// Shader sources
-const GLchar *vertexSource = "glsl(\n"
-                             " #version 150 core\n"
-                             " in vec2 position;\n"
-                             " void main()\n"
-                             " {\n"
-                             "  gl_Position = vec4(position, 0.0, 1.0);\n"
-                             " }\n"
-                             ")glsl\n";
+char *vertexSource = "\
+    #version 330 core                          \n\
+    layout(location = 0) in vec2 position;     \n\
+    void main()                                \n\
+    {                                          \n\
+        gl_Position = vec4(position, 0.0, 1.0);\n\
+    }                                          \n\
+";
 
-const GLchar *fragmentSource = "glsl(\n"
-                               " #version 150 core\n"
-                               " out vec4 outColor;\n"
-                               " void main()\n"
-                               " {\n"
-                               "  outColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
-                               " }\n"
-                               ")glsl\n";
+char *fragmentSource = "\
+    #version 330 core                    \n\
+    layout(location = 0) out vec4 color; \n\
+    void main()                          \n\
+    {                                    \n\
+        color = vec4(1.0, 0.0, 0.0, 1.0);\n\
+    }                                    \n\
+";
 
 APP_PERMANENT_LOAD
 {
@@ -25,42 +24,26 @@ APP_PERMANENT_LOAD
     os->DebugPrint("APP_PERMANENT_LOAD\n");
     LoadOpenGLProcedures();
 
-    // Create Vertex Array Object
-    GLuint vao;
+    f32 positions[] = {
+        -0.5f, -0.5f, //
+        0.0f,  0.5f,  //
+        0.5f,  -0.5f  //
+    };
+
+    u32 vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    // Create a Vertex Buffer Object and copy the vertex data to it
-    GLuint vbo;
+    u32 vbo;
     glGenBuffers(1, &vbo);
-
-    GLfloat vertices[] = {0.0f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f};
-
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(f32), positions, GL_STATIC_DRAW);
 
-    // Create and compile the vertex shader
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexSource, NULL);
-    glCompileShader(vertexShader);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, 0, sizeof(f32) * 2, 0);
 
-    // Create and compile the fragment shader
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-    glCompileShader(fragmentShader);
-
-    // Link the vertex and fragment shader into a shader program
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glBindFragDataLocation(shaderProgram, 0, "outColor");
-    glLinkProgram(shaderProgram);
-    glUseProgram(shaderProgram);
-
-    // Specify the layout of the vertex data
-    GLint posAttrib = glGetAttribLocation(shaderProgram, "position");
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    u32 shader = R_CreateShader(vertexSource, fragmentSource);
+    glUseProgram(shader);
 }
 
 APP_HOT_LOAD
@@ -93,14 +76,9 @@ APP_UPDATE
         }
     }
 
-    // Clear the screen to black
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    // Draw a triangle from the 3 vertices
     glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    // Swap buffers
     os->SwapBuffers();
 }
 

@@ -157,9 +157,11 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.Release = W32_Release;
     globalOS.Commit = W32_Commit;
     globalOS.Decommit = W32_Decommit;
-    globalOS.DebugPrint = W32_DebugPrint;
     globalOS.SwapBuffers = W32_GLSwapBuffers;
     globalOS.LoadOpenGLProcedure = W32_LoadOpenGLProcedure;
+
+    globalOS.DebugPrint = W32_DebugPrint;
+    globalOS.DebugDisplayError = W32_DisplayError;
 
     globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
     globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));

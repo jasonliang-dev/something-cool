@@ -19,10 +19,10 @@
 #define local_persist static
 #define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
 #define Bytes(n) (n)
-#define Kilobytes(n) (n << 10)
-#define Megabytes(n) (n << 20)
-#define Gigabytes(n) (((u64)n) << 30)
-#define Terabytes(n) (((u64)n) << 40)
+#define Kilobytes(n) ((n) << 10)
+#define Megabytes(n) ((n) << 20)
+#define Gigabytes(n) (((u64)(n)) << 30)
+#define Terabytes(n) (((u64)(n)) << 40)
 #define PI (3.1415926535897f)
 
 typedef int8_t i8;

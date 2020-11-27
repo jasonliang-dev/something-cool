@@ -11,6 +11,7 @@
 #include "maths.c"
 #include "memory.c"
 #include "opengl.c"
+#include "render.c"
 
 #ifdef _MSC_VER
 #define APP_EXPORT __declspec(dllexport)
