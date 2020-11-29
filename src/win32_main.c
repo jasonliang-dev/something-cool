@@ -165,8 +165,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.DebugPrint = W32_DebugPrint;
     globalOS.DebugDisplayError = W32_DisplayError;
 
-    globalOS.permanentArena = MemoryArenaInitialize(Gigabytes(4));
-    globalOS.frameArena = MemoryArenaInitialize(Gigabytes(4));
+    globalOS.permanentArena = M_ArenaInitialize(Gigabytes(4));
+    globalOS.frameArena = M_ArenaInitialize(Gigabytes(4));
 
     globalHDC = GetDC(window);
     HGLRC glContext = W32_InitOpenGL(globalHDC);

@@ -9,6 +9,7 @@
 #include "memory.h"
 #include "os.h"
 #include "opengl.h"
+#include "render.h"
 
 #include "os.c"
 #include "maths.c"

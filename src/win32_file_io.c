@@ -29,7 +29,7 @@ internal void W32_ReadFile(memory_arena *arena, char *path, void **data, u64 *le
         goto cleanup;
     }
 
-    void *read_data = MemoryArenaPush(arena, read_bytes + 1);
+    void *read_data = M_ArenaPush(arena, read_bytes + 1);
     DWORD bytes_read = 0;
     OVERLAPPED overlapped = {0};
 

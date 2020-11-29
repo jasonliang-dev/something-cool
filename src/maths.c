@@ -42,6 +42,12 @@ internal f32 V2Dot(v2 a, v2 b)
     return a.x * b.x + a.y * b.y;
 }
 
+internal v2 V2FromIV2(iv2 a)
+{
+    v2 result = {(f32)a.x, (f32)a.y};
+    return result;
+}
+
 internal v3 V3AddV3(v3 a, v3 b)
 {
     v3 c = {a.x + b.x, a.y + b.y, a.z + b.z};
@@ -206,6 +212,16 @@ internal m4 M4Scale(v3 scale)
     result.elements[0][0] = scale.x;
     result.elements[1][1] = scale.y;
     result.elements[2][2] = scale.z;
+    return result;
+}
+
+internal m4 M4RotateZ(f32 angle)
+{
+    m4 result = M4Identity();
+    result.elements[0][0] = Cos(angle);
+    result.elements[0][1] = -Sin(angle);
+    result.elements[1][0] = Sin(angle);
+    result.elements[1][1] = Cos(angle);
     return result;
 }
 
