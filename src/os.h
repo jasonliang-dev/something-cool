@@ -61,6 +61,7 @@ struct os_state
     void (*Release)(void *memory);
     void (*Commit)(void *memory, u64 size);
     void (*Decommit)(void *memory, u64 size);
+    void (*ReadFile)(memory_arena *arena, char * path, void **data, u64 *len);
     void (*SwapBuffers)(void);
     void *(*LoadOpenGLProcedure)(char *name);
 

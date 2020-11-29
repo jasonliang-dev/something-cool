@@ -103,6 +103,131 @@ internal b32 V4HasPoint(v4 v, v2 p)
     return p.x >= v.x && p.x <= v.x + v.width && p.y >= v.y && p.y <= v.y + v.height;
 }
 
+internal f32 V4Dot(v4 a, v4 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+}
+
+internal v4 V4AddV4(v4 a, v4 b)
+{
+    v4 c = {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+    return c;
+}
+
+internal v4 V4MinusV4(v4 a, v4 b)
+{
+    v4 c = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
+    return c;
+}
+
+internal v4 V4MultiplyV4(v4 a, v4 b)
+{
+    v4 c = {a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w};
+    return c;
+}
+
+internal v4 V4MultiplyM4(v4 v, m4 m)
+{
+    v4 result = {0};
+
+    for (int i = 0; i < 4; i++)
+    {
+        result.elements[i] = (v.elements[0] * m.elements[0][i] + v.elements[1] * m.elements[1][i] +
+                              v.elements[2] * m.elements[2][i] + v.elements[3] * m.elements[3][i]);
+    }
+
+    return result;
+}
+
+internal m4 M4Diagonal(f32 diagonal)
+{
+    m4 m = {{
+        {diagonal},
+        {0.0f, diagonal},
+        {0.0f, 0.0f, diagonal},
+        {0.0f, 0.0f, 0.0f, diagonal},
+    }};
+    return m;
+}
+
+internal m4 M4Identity()
+{
+    m4 m = {{
+        {1.0f},
+        {0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f},
+    }};
+    return m;
+}
+
+internal m4 M4MultiplyM4(m4 a, m4 b)
+{
+    m4 m = {0};
+
+    for (int r = 0; r < 4; r++)
+    {
+        for (int c = 0; c < 4; c++)
+        {
+            m.elements[c][r] =
+                (a.elements[0][r] * b.elements[c][0] + a.elements[1][r] * b.elements[c][1] +
+                 a.elements[2][r] * b.elements[c][2] + a.elements[3][r] * b.elements[c][3]);
+        }
+    }
+
+    return m;
+}
+
+internal m4 M4MultiplyF32(m4 a, f32 b)
+{
+    for (int r = 0; r < 4; r++)
+    {
+        for (int c = 0; c < 4; c++)
+        {
+            a.elements[r][c] *= b;
+        }
+    }
+
+    return a;
+}
+
+internal m4 M4Translate(v3 translation)
+{
+    m4 result = M4Identity();
+    result.elements[3][0] = translation.x;
+    result.elements[3][1] = translation.y;
+    result.elements[3][2] = translation.z;
+    return result;
+}
+
+internal m4 M4Scale(v3 scale)
+{
+    m4 result = M4Identity();
+    result.elements[0][0] = scale.x;
+    result.elements[1][1] = scale.y;
+    result.elements[2][2] = scale.z;
+    return result;
+}
+
+internal m4 M4Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
+{
+    m4 result = {0};
+
+    f32 rl = 1.0f / (right - left);
+    f32 tb = 1.0f / (top - bottom);
+    f32 fn = -1.0f / (zFar - zNear);
+
+    result.elements[0][0] = 2.0f * rl;
+    result.elements[1][1] = 2.0f * tb;
+    result.elements[2][2] = 2.0f * fn;
+    result.elements[3][0] = -(right + left) * rl;
+    result.elements[3][1] = -(top + bottom) * tb;
+    result.elements[3][2] = (zFar + zNear) * fn;
+    result.elements[3][3] = 1.0f;
+
+    return result;
+}
+
 internal v3 RGBToHSV(v3 rgb)
 {
     f32 r = rgb.r;

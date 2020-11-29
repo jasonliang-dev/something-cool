@@ -1,22 +1,9 @@
 #include "app.h"
 
-char *vertexSource = "\
-    #version 330 core                          \n\
-    layout(location = 0) in vec2 position;     \n\
-    void main()                                \n\
-    {                                          \n\
-        gl_Position = vec4(position, 0.0, 1.0);\n\
-    }                                          \n\
-";
-
-char *fragmentSource = "\
-    #version 330 core                    \n\
-    layout(location = 0) out vec4 color; \n\
-    void main()                          \n\
-    {                                    \n\
-        color = vec4(1.0, 0.0, 0.0, 1.0);\n\
-    }                                    \n\
-";
+u32 shader;
+m4 projection;
+u32 spriteVAO;
+u32 spriteTexture;
 
 APP_PERMANENT_LOAD
 {
@@ -24,26 +11,17 @@ APP_PERMANENT_LOAD
     os->DebugPrint("APP_PERMANENT_LOAD\n");
     LoadOpenGLProcedures();
 
-    f32 positions[] = {
-        -0.5f, -0.5f, //
-        0.0f,  0.5f,  //
-        0.5f,  -0.5f  //
-    };
-
-    u32 vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    u32 vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(f32), positions, GL_STATIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, 0, sizeof(f32) * 2, 0);
-
-    u32 shader = R_CreateShader(vertexSource, fragmentSource);
+    shader = R_CreateShader(globalSpriteVertexShader, globalSpriteFragmentShader);
     glUseProgram(shader);
+
+    projection =
+        M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
+    glUniform1i(glGetUniformLocation(shader, "image"), 0);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, 0,
+                       (f32 *)projection.elements);
+
+    spriteVAO = R_InitSpriteRenderer();
+    spriteTexture = R_CreateTextureFromFile("res/awesomeface.png");
 }
 
 APP_HOT_LOAD
@@ -62,23 +40,11 @@ APP_UPDATE
     os_event event;
     while (OS_GetNextEvent(&event))
     {
-        if (event.type == OS_EventType_MousePress)
-        {
-            os->DebugPrint("Mouse clicked!\n");
-        }
-        else if (event.type == OS_EventType_MouseMove)
-        {
-            char buff[256];
-
-            sprintf_s(buff, sizeof(buff), "x = %.02f, y = %.02f\n", os->mousePosition.x,
-                      os->mousePosition.y);
-            os->DebugPrint(buff);
-        }
     }
 
-    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    R_DrawSprite(spriteVAO, shader, spriteTexture, v2(200.0f, 200.0f),
+                 v2(300.0f, 400.0f), 45.0f, v3(0.0f, 1.0f, 0.0f));
     os->SwapBuffers();
 }
 

@@ -9,6 +9,7 @@ global HDC globalHDC;
 #include "win32_utils.c"
 
 #include "win32_app_code.c"
+#include "win32_file_io.c"
 #include "win32_opengl.c"
 #include "win32_timer.c"
 #include "win32_wasapi.c"
@@ -157,6 +158,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.Release = W32_Release;
     globalOS.Commit = W32_Commit;
     globalOS.Decommit = W32_Decommit;
+    globalOS.ReadFile = W32_ReadFile;
     globalOS.SwapBuffers = W32_GLSwapBuffers;
     globalOS.LoadOpenGLProcedure = W32_LoadOpenGLProcedure;
 

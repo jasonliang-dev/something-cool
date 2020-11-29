@@ -1,5 +1,8 @@
 #include <stdio.h> // sprintf_s
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "ext/stb_image.h"
+
 #include "language_layer.h"
 #include "program_options.h"
 #include "maths.h"

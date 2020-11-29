@@ -1,6 +1,6 @@
 @echo off
 
-set build_options= -DDEBUG=1 -DBUILD_WIN32=1
+set build_options= -DDEBUG=1 -DBUILD_WIN32=1 -DWIN32_LEAN_AND_MEAN=1
 set compile_flags= -nologo -W4 -wd4201 -Z7 /I ../src/
 set common_link_flags= opengl32.lib -opt:ref -incremental:no -Debug:fastlink
 set platform_link_flags= gdi32.lib user32.lib winmm.lib
