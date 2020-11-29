@@ -1,6 +1,6 @@
 #include "app.h"
 
-sprite_data sprite;
+global sprite_data sprite;
 
 APP_PERMANENT_LOAD
 {
@@ -8,7 +8,7 @@ APP_PERMANENT_LOAD
     os->DebugPrint("APP_PERMANENT_LOAD\n");
 
     GL_LoadProcedures();
-    R_InitializeShaders();
+    R_InitSpriteShader();
 
     sprite = R_CreateSprite("res/awesomeface.png");
 }
@@ -26,13 +26,22 @@ APP_HOT_UNLOAD
 
 APP_UPDATE
 {
+    local_persist f32 angle = 0;
+
     os_event event;
     while (OS_GetNextEvent(&event))
     {
+        if (event.type == OS_EventType_WindowResize)
+        {
+        }
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
     R_DrawSprite(sprite, v2(0, 0), 0);
+    R_DrawSprite(sprite,
+                 v2(((f32)os->windowResolution.x / 2.0f) - ((f32)sprite.size.width / 2.0f),
+                    ((f32)os->windowResolution.y / 2.0f) - ((f32)sprite.size.height / 2.0f)),
+                 angle += 0.1f);
     os->SwapBuffers();
 }
 

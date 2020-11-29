@@ -171,13 +171,14 @@ internal m4 M4MultiplyM4(m4 a, m4 b)
 {
     m4 m = {0};
 
-    for (int r = 0; r < 4; r++)
+    for (int slow = 0; slow < 4; slow++)
     {
-        for (int c = 0; c < 4; c++)
+        for (int fast = 0; fast < 4; fast++)
         {
-            m.elements[c][r] =
-                (a.elements[0][r] * b.elements[c][0] + a.elements[1][r] * b.elements[c][1] +
-                 a.elements[2][r] * b.elements[c][2] + a.elements[3][r] * b.elements[c][3]);
+            m.elements[fast][slow] = (a.elements[0][slow] * b.elements[fast][0] +
+                                      a.elements[1][slow] * b.elements[fast][1] +
+                                      a.elements[2][slow] * b.elements[fast][2] +
+                                      a.elements[3][slow] * b.elements[fast][3]);
         }
     }
 
@@ -186,11 +187,11 @@ internal m4 M4MultiplyM4(m4 a, m4 b)
 
 internal m4 M4MultiplyF32(m4 a, f32 b)
 {
-    for (int r = 0; r < 4; r++)
+    for (int slow = 0; slow < 4; slow++)
     {
-        for (int c = 0; c < 4; c++)
+        for (int fast = 0; fast < 4; fast++)
         {
-            a.elements[r][c] *= b;
+            a.elements[slow][fast] *= b;
         }
     }
 
@@ -215,13 +216,68 @@ internal m4 M4Scale(v3 scale)
     return result;
 }
 
+internal m4 M4RotateX(f32 angle)
+{
+    m4 result = M4Identity();
+    f32 c = Cos(angle);
+    f32 s = Sin(angle);
+
+    result.elements[1][1] = c;
+    result.elements[1][2] = -s;
+    result.elements[2][1] = s;
+    result.elements[2][2] = c;
+
+    return result;
+}
+
+internal m4 M4RotateY(f32 angle)
+{
+    m4 result = M4Identity();
+    f32 c = Cos(angle);
+    f32 s = Sin(angle);
+
+    result.elements[0][0] = c;
+    result.elements[0][2] = s;
+    result.elements[2][0] = -s;
+    result.elements[2][2] = c;
+
+    return result;
+}
+
 internal m4 M4RotateZ(f32 angle)
 {
     m4 result = M4Identity();
-    result.elements[0][0] = Cos(angle);
-    result.elements[0][1] = -Sin(angle);
-    result.elements[1][0] = Sin(angle);
-    result.elements[1][1] = Cos(angle);
+    f32 c = Cos(angle);
+    f32 s = Sin(angle);
+
+    result.elements[0][0] = c;
+    result.elements[0][1] = -s;
+    result.elements[1][0] = s;
+    result.elements[1][1] = c;
+
+    return result;
+}
+
+internal m4 M4Rotate(f32 angle, v3 axis)
+{
+    m4 result = {0};
+    f32 c = Cos(angle);
+    f32 s = Sin(angle);
+
+    result.elements[0][0] = c + (axis.x * axis.x) * (1 - c);
+    result.elements[0][1] = (axis.x * axis.y) * (1 - c) - (axis.z * s);
+    result.elements[0][2] = (axis.x * axis.z) * (1 - c) + (axis.y * s);
+
+    result.elements[1][0] = (axis.y * axis.x) * (1 - c) + (axis.z * s);
+    result.elements[1][1] = c + (axis.y * axis.y) * (1 - c);
+    result.elements[1][2] = (axis.y * axis.z) * (1 - c) - (axis.x * s);
+
+    result.elements[2][0] = (axis.z * axis.x) * (1 - c) - (axis.y * s);
+    result.elements[2][1] = (axis.z * axis.y) * (1 - c) + (axis.x * s);
+    result.elements[2][2] = c + (axis.z * axis.z) * (1 - c);
+
+    result.elements[3][3] = 1;
+
     return result;
 }
 

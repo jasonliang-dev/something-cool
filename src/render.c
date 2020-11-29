@@ -54,76 +54,69 @@ internal u32 R_CompileShader(u32 type, char *source)
     return shader;
 }
 
-internal u32 R_CreateShader(char *vertexSource, char *fragmentSource)
+internal void R_InitSpriteShader()
 {
-    u32 program = glCreateProgram();
-    u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, vertexSource);
-    u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+    globalSpriteShader = glCreateProgram();
+    u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, spriteVertexShaderSource);
+    u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, spriteFragmentShaderSource);
 
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-    glValidateProgram(program);
+    glAttachShader(globalSpriteShader, vertexShader);
+    glAttachShader(globalSpriteShader, fragmentShader);
+    glLinkProgram(globalSpriteShader);
+    glValidateProgram(globalSpriteShader);
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    return program;
-}
-
-internal void R_InitializeShaders()
-{
-    globalSpriteShader = R_CreateShader(spriteVertexShaderSource, spriteFragmentShaderSource);
     glUseProgram(globalSpriteShader);
 
     m4 projection =
         M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
-    glUniform1i(glGetUniformLocation(globalSpriteShader, "image"), 0);
     glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "projection"), 1, 0,
                        (f32 *)projection.elements);
+    glUniform1i(glGetUniformLocation(globalSpriteShader, "image"), 0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 internal sprite_data R_CreateSprite(char *imagePath)
 {
     sprite_data result;
-
-    u32 vao;
     u32 vbo;
 
-    v2 vertices[] = {
-        // position     texture
-        v2(0.0f, 1.0f), v2(0.0f, 1.0f), //
-        v2(1.0f, 0.0f), v2(1.0f, 0.0f), //
-        v2(0.0f, 0.0f), v2(0.0f, 0.0f), //
+    v4 vertices[] = {
+        // position    texture
+        v4(0.0f, 1.0f, 0.0f, 1.0f), //
+        v4(1.0f, 0.0f, 1.0f, 0.0f), //
+        v4(0.0f, 0.0f, 0.0f, 0.0f), //
 
-        v2(0.0f, 1.0f), v2(0.0f, 1.0f), //
-        v2(1.0f, 1.0f), v2(1.0f, 1.0f), //
-        v2(1.0f, 0.0f), v2(1.0f, 0.0f)  //
+        v4(0.0f, 1.0f, 0.0f, 1.0f), //
+        v4(1.0f, 1.0f, 1.0f, 1.0f), //
+        v4(1.0f, 0.0f, 1.0f, 0.0f)  //
     };
 
-    glGenVertexArrays(1, &vao);
+    glGenVertexArrays(1, &result.vao);
     glGenBuffers(1, &vbo);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindVertexArray(vao);
+    glBindVertexArray(result.vao);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(v2) * 2, 0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(v4), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    i32 width;
-    i32 height;
     i32 channels;
-    u8 *imageData = stbi_load(imagePath, &width, &height, &channels, 0);
+    u8 *imageData = stbi_load(imagePath, &result.size.width, &result.size.height, &channels, 0);
 
-    u32 texture;
-    glGenTextures(1, &texture);
+    glGenTextures(1, &result.texture);
 
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+    glBindTexture(GL_TEXTURE_2D, result.texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.size.width, result.size.height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, imageData);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -133,10 +126,6 @@ internal sprite_data R_CreateSprite(char *imagePath)
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(imageData);
 
-    result.vao = vao;
-    result.texture = texture;
-    result.size.width = width;
-    result.size.height = height;
     return result;
 }
 
@@ -154,8 +143,7 @@ internal void R_DrawSprite(sprite_data sprite, v2 position, f32 rotation)
 
     model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
 
-    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "model"), 1, 0,
-                       (f32 *)model.elements);
+    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "model"), 1, 0, model.elements[0]);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, sprite.texture);

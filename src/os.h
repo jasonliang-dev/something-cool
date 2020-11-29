@@ -3,6 +3,8 @@ enum os_event_type
 {
     OS_EventType_Null,
 
+    OS_EventType_WindowResize,
+
     OS_EventType_KeyStart,
     OS_EventType_CharacterInput,
     OS_EventType_KeyPress,
@@ -32,14 +34,14 @@ typedef struct os_event os_event;
 struct os_event
 {
     os_event_type type;
+    u32 mouseButton;
+    v2 delta;
     // os_key key;
     // os_gamepad_button gamepadButton;
-    u32 mouseButton;
     // u32 modifiers;
     // i32 gamepadIndex;
     // u64 character;
     // v2 position;
-    v2 delta;
     // v2 scroll;
 };
 

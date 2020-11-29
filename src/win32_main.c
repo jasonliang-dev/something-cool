@@ -43,6 +43,18 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     {
         return MAKELRESULT(0, MNC_CLOSE);
     }
+    else if (message == WM_SIZE)
+    {
+        i32 width = LOWORD(lParam);
+        i32 height = HIWORD(lParam);
+        event.type = OS_EventType_WindowResize;
+        event.delta = v2((f32)(width - globalOS.windowResolution.x),
+                         (f32)(height - globalOS.windowResolution.y));
+        globalOS.windowResolution.x = width;
+        globalOS.windowResolution.y = height;
+        OS_PushEvent(event);
+        return 0;
+    }
     else if (message == WM_LBUTTONDOWN)
     {
         event.type = OS_EventType_MousePress;
@@ -75,8 +87,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     {
         v2 lastMouse = globalOS.mousePosition;
         event.type = OS_EventType_MouseMove;
-        event.delta =
-            v2(globalOS.mousePosition.x - lastMouse.x, globalOS.mousePosition.y - lastMouse.y);
+        event.delta = V2MinusV2(globalOS.mousePosition, lastMouse);
         globalOS.mousePosition = W32_GetMousePosition(window);
         OS_PushEvent(event);
         return 0;
