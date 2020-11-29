@@ -9,7 +9,7 @@ APP_PERMANENT_LOAD
 {
     os = os_;
     os->DebugPrint("APP_PERMANENT_LOAD\n");
-    LoadOpenGLProcedures();
+    GL_LoadProcedures();
 
     shader = R_CreateShader(globalSpriteVertexShader, globalSpriteFragmentShader);
     glUseProgram(shader);
