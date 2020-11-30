@@ -33,6 +33,8 @@ APP_UPDATE
     {
         if (event.type == OS_EventType_WindowResize)
         {
+            glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
+            R_UpdateSpriteProjection();
         }
     }
 
@@ -41,7 +43,7 @@ APP_UPDATE
     R_DrawSprite(sprite,
                  v2(((f32)os->windowResolution.x / 2.0f) - ((f32)sprite.size.width / 2.0f),
                     ((f32)os->windowResolution.y / 2.0f) - ((f32)sprite.size.height / 2.0f)),
-                 angle += 0.1f);
+                 angle += 0.05f);
     os->SwapBuffers();
 }
 

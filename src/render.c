@@ -54,6 +54,14 @@ internal u32 R_CompileShader(u32 type, char *source)
     return shader;
 }
 
+internal void R_UpdateSpriteProjection()
+{
+    m4 projection =
+        M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "projection"), 1, 0,
+                       (f32 *)projection.elements);
+}
+
 internal void R_InitSpriteShader()
 {
     globalSpriteShader = glCreateProgram();
@@ -70,10 +78,7 @@ internal void R_InitSpriteShader()
 
     glUseProgram(globalSpriteShader);
 
-    m4 projection =
-        M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "projection"), 1, 0,
-                       (f32 *)projection.elements);
+    R_UpdateSpriteProjection();
     glUniform1i(glGetUniformLocation(globalSpriteShader, "image"), 0);
 
     glEnable(GL_BLEND);
