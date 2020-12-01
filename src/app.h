@@ -7,6 +7,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "ext/stb_image.h"
 
+#define CUTE_TILED_IMPLEMENTATION
+#include "ext/cute_tiled.h"
+
 #include "language_layer.h"
 #include "program_options.h"
 #include "maths.h"
@@ -20,12 +23,6 @@
 #include "memory.c"
 #include "opengl.c"
 #include "render.c"
-
-typedef struct app_state app_state;
-struct app_state {
-    sprite_data sprite;
-    u32 spriteShader;
-};
 
 #ifdef _MSC_VER
 #define APP_EXPORT __declspec(dllexport)

@@ -85,11 +85,8 @@ internal u32 R_InitSpriteShader()
     return spriteShader;
 }
 
-internal sprite_data R_CreateSprite(char *imagePath)
+internal u32 R_CreateSpriteVAO(void)
 {
-    sprite_data result;
-    u32 vbo;
-
     v4 vertices[] = {
         // position    texture
         v4(0.0f, 1.0f, 0.0f, 1.0f), //
@@ -101,26 +98,36 @@ internal sprite_data R_CreateSprite(char *imagePath)
         v4(1.0f, 0.0f, 1.0f, 0.0f)  //
     };
 
-    glGenVertexArrays(1, &result.vao);
+    u32 vao;
+    u32 vbo;
+
+    glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindVertexArray(result.vao);
+    glBindVertexArray(vao);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(v4), 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    return vao;
+}
+
+internal texture R_CreateTexture(char *imagePath)
+{
+    texture result;
+
     i32 channels;
-    u8 *imageData = stbi_load(imagePath, &result.size.width, &result.size.height, &channels, 0);
+    u8 *imageData = stbi_load(imagePath, (i32 *)&result.width, (i32 *)&result.height, &channels, 0);
 
-    glGenTextures(1, &result.texture);
+    glGenTextures(1, &result.textureID);
 
-    glBindTexture(GL_TEXTURE_2D, result.texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.size.width, result.size.height, 0, GL_RGBA,
+    glBindTexture(GL_TEXTURE_2D, result.textureID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, imageData);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -134,26 +141,47 @@ internal sprite_data R_CreateSprite(char *imagePath)
     return result;
 }
 
-internal void R_DrawSprite(u32 spriteShader, sprite_data sprite, v2 position, f32 rotation)
+internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 position,
+                           f32 rotation)
 {
     glUseProgram(spriteShader);
 
     m4 model = M4Identity();
     model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
 
-    v2 size = V2FromIV2(sprite.size);
-    model = M4MultiplyM4(model, M4Translate(v3(0.5f * size.x, 0.5f * size.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(0.5f * sprite.width, 0.5f * sprite.height, 0.0f)));
     model = M4MultiplyM4(model, M4RotateZ(rotation));
-    model = M4MultiplyM4(model, M4Translate(v3(-0.5f * size.x, -0.5f * size.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(-0.5f * sprite.width, -0.5f * sprite.height, 0.0f)));
 
-    model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3((f32)sprite.width, (f32)sprite.height, 1.0f)));
 
     glUniformMatrix4fv(glGetUniformLocation(spriteShader, "model"), 1, 0, model.elements[0]);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sprite.texture);
+    glBindTexture(GL_TEXTURE_2D, sprite.textureID);
 
-    glBindVertexArray(sprite.vao);
+    glBindVertexArray(spriteVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+}
+
+internal tilemap *R_LoadTilemap(char *jsonPath, u32 atlas)
+{
+    cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
+
+    cute_tiled_layer_t *layer = tiledMap->layers;
+    Assert(layer->next == NULL);
+
+    tilemap *result =
+        M_ArenaPush(&os->permanentArena, sizeof(tilemap) + (sizeof(u32) * layer->data_count));
+
+    result->width = layer->width;
+    result->height = layer->height;
+    result->atlas = atlas;
+    result->dataLength = layer->data_count;
+    MemoryCopy(result->data, layer->data, sizeof(u32) * layer->data_count);
+
+    cute_tiled_free_map(tiledMap);
+
+    return result;
 }

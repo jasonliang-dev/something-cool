@@ -64,13 +64,13 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
             keyInput = (vkeyCode >= 'A' && vkeyCode <= 'Z') ? Key_A + (vkeyCode - 'A')
                                                             : Key_0 + (vkeyCode - '0');
         }
-        else if (vkeyCode == VK_ESCAPE)
-        {
-            keyInput = Key_Esc;
-        }
         else if (vkeyCode >= VK_F1 && vkeyCode <= VK_F12)
         {
             keyInput = Key_F1 + vkeyCode - VK_F1;
+        }
+        else if (vkeyCode == VK_ESCAPE)
+        {
+            keyInput = Key_Esc;
         }
         else if (vkeyCode == VK_OEM_3)
         {
@@ -254,22 +254,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         OS_DisplayError("Cannot create window");
         return 1;
     }
-
-    char executablePath[256];
-    char executableDirectory[256];
-    char appDllPath[256];
-    char appTempDllPath[256];
-    GetModuleFileNameA(0, executablePath, sizeof(executablePath));
-
-    _splitpath_s(executablePath,                                   // full path
-                 NULL, 0,                                          // drive
-                 executableDirectory, sizeof(executableDirectory), // directory
-                 NULL, 0,                                          // filename
-                 NULL, 0                                           // file extension
-    );
-
-    wsprintf(appDllPath, "%s%s.dll", executableDirectory, PROGRAM_FILENAME);
-    wsprintf(appTempDllPath, "%s%s_temp.dll", executableDirectory, PROGRAM_FILENAME);
 
     w32_sound_output soundOutput = {0};
     soundOutput.channels = 2;

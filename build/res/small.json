@@ -1,0 +1,32 @@
+{ "compressionlevel":-1,
+ "height":10,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 17, 18, 19, 43, 43, 17, 18, 19, 43, 43, 33, 34, 35, 43, 43, 33, 34, 35, 43, 43, 49, 50, 51, 43, 43, 49, 50, 51, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 17, 18, 19, 43, 43, 17, 18, 19, 43, 43, 33, 34, 35, 43, 43, 33, 34, 35, 43, 43, 49, 50, 51, 43, 43, 49, 50, 51, 43, 43, 149, 150, 151, 43, 43, 120, 121, 122, 43, 43, 165, 166, 167, 43, 43, 136, 137, 138, 43],
+         "height":10,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.4.3",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"..\/..\/..\/..\/Users\/Jason\/Downloads\/art\/tiles\/first 8bit tileset.tsx"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":1.4,
+ "width":10
+}

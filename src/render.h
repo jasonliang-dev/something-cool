@@ -1,7 +1,17 @@
-typedef struct sprite_data sprite_data;
-struct sprite_data
+typedef struct texture texture;
+struct texture
 {
-    u32 vao;
-    u32 texture;
-    iv2 size;
+    u32 width;
+    u32 height;
+    u32 textureID;
+};
+
+typedef struct tilemap tilemap;
+struct tilemap
+{
+    u32 width;
+    u32 height;
+    u32 atlas;
+    u32 dataLength;
+    u32 data[1];
 };
