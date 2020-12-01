@@ -67,12 +67,14 @@ int main(void)
     while (globalOS.running)
     {
         XEvent event;
-        XNextEvent(globalDpy, &event);
-
-        // WM close button pushed, exit.
-        if (event.type == ClientMessage && event.xclient.data.l[0] == winClosedID)
+        while (XPending(globalDpy))
         {
-            return 0;
+            XNextEvent(globalDpy, &event);
+
+            if (event.type == ClientMessage && event.xclient.data.l[0] == winClosedID)
+            {
+                globalOS.running = 0;
+            }
         }
 
         AppUpdate();

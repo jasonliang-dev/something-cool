@@ -10,7 +10,7 @@ internal void *Linux_LoadOpenGLProcedure(char *name)
     return p;
 }
 
-internal Bool Linux_WaitForNotify(Display *dpy, XEvent *event, XPointer arg)
+internal b32 Linux_WaitForNotify(Display *dpy, XEvent *event, XPointer arg)
 {
     return (event->type == MapNotify) && (event->xmap.window == (Window)arg);
 }
@@ -34,8 +34,6 @@ internal void Linux_CreateWindowWithOpenGL(Window *xWin, GLXWindow *glxWin)
     GLXFBConfig *fbConfigs =
         glXChooseFBConfig(globalDpy, DefaultScreen(globalDpy), fbAttribs, &fbConfigsCount);
 
-    /* Create an X colormap and window with a visual matching the first
-    ** returned framebuffer config */
     XVisualInfo *vInfo = glXGetVisualFromFBConfig(globalDpy, fbConfigs[0]);
 
     XSetWindowAttributes swa = {0};
@@ -47,8 +45,8 @@ internal void Linux_CreateWindowWithOpenGL(Window *xWin, GLXWindow *glxWin)
     i32 swaMask = CWBorderPixel | CWColormap | CWEventMask;
 
     *xWin = XCreateWindow(globalDpy, RootWindow(globalDpy, vInfo->screen), 0, 0,
-                                DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, vInfo->depth,
-                                InputOutput, vInfo->visual, swaMask, &swa);
+                          DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, 0, vInfo->depth, InputOutput,
+                          vInfo->visual, swaMask, &swa);
 
     GLXContext glxContext = glXCreateNewContext(globalDpy, fbConfigs[0], GLX_RGBA_TYPE, NULL, True);
 
