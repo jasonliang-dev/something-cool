@@ -40,7 +40,7 @@ internal void GL_CheckForErrorsReal(char *file, u32 line)
         if (error)
         {
             char buff[256];
-            sprintf_s(buff, sizeof(buff), "%s: %s line %d\n", error, file, line);
+            sprintf(buff, "%s: %s line %d\n", error, file, line);
             os->DebugPrint(buff);
         }
     }

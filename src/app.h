@@ -1,4 +1,8 @@
-#include <stdio.h> // sprintf_s
+#include <stdio.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "ext/stb_image.h"

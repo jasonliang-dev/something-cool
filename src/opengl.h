@@ -1,6 +1,8 @@
 #if BUILD_WIN32
-#include <windows.h>
 #include <gl/gl.h>
+#elif BUILD_LINUX
+#include <GL/gl.h>
+#include <GL/glx.h>
 #else
 #error "OpenGL includes for platform not supported."
 #endif

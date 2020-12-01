@@ -30,7 +30,7 @@ char *spriteFragmentShaderSource = "       \n\
 
 global u32 globalSpriteShader;
 
-internal u32 R_CompileShader(u32 type, char *source)
+internal u32 R_CompileShader(u32 type, const char *source)
 {
     u32 shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);

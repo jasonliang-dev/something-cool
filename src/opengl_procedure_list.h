@@ -21,5 +21,8 @@ GLProc(glValidateProgram, GLVALIDATEPROGRAM)
 GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER)
 GLProc(glGetUniformLocation, GLGETUNIFORMLOCATION)
 GLProc(glUniform3f, GLUNIFORM3F)
-GLProc(glActiveTexture, GLACTIVETEXTURE)
 GLProc(glUniform1i, GLUNIFORM1I)
+
+#if BUILD_WIN32
+GLProc(glActiveTexture, GLACTIVETEXTURE)
+#endif

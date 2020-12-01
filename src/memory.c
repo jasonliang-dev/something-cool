@@ -52,5 +52,5 @@ internal void M_ArenaClear(memory_arena *arena)
 
 internal void M_ArenaRelease(memory_arena *arena)
 {
-    os->Release(arena->base);
+    os->Release(arena->base, arena->max);
 }

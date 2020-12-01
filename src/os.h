@@ -60,7 +60,7 @@ struct os_state
     os_event events[4096];
 
     void *(*Reserve)(u64 size);
-    void (*Release)(void *memory);
+    void (*Release)(void *memory, u64 size);
     void (*Commit)(void *memory, u64 size);
     void (*Decommit)(void *memory, u64 size);
     void (*ReadFile)(memory_arena *arena, char * path, void **data, u64 *len);

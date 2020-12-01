@@ -4,8 +4,9 @@ internal void *W32_Reserve(u64 size)
     return memory;
 }
 
-internal void W32_Release(void *memory)
+internal void W32_Release(void *memory, u64 size)
 {
+    (void)size;
     VirtualFree(memory, 0, MEM_RELEASE);
 }
 
