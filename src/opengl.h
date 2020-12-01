@@ -1,4 +1,5 @@
 #if BUILD_WIN32
+#include <windows.h>
 #include <gl/gl.h>
 #elif BUILD_LINUX
 #include <GL/gl.h>

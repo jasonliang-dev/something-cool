@@ -1,14 +1,12 @@
 #include <windows.h>
 #include <strsafe.h>
 
-#include "app.h"
+#include "app.c"
 
 global os_state globalOS;
 global HDC globalHDC;
 
 #include "win32_utils.c"
-
-#include "win32_app_code.c"
 #include "win32_file_io.c"
 #include "win32_opengl.c"
 #include "win32_timer.c"
@@ -112,7 +110,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!RegisterClass(&windowClass))
     {
-        W32_DisplayError("Cannot register window class");
+        OS_DisplayError("Cannot register window class");
         return 1;
     }
 
@@ -122,7 +120,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     if (!window)
     {
-        W32_DisplayError("Cannot create window");
+        OS_DisplayError("Cannot create window");
         return 1;
     }
 
@@ -142,13 +140,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     wsprintf(appDllPath, "%s%s.dll", executableDirectory, PROGRAM_FILENAME);
     wsprintf(appTempDllPath, "%s%s_temp.dll", executableDirectory, PROGRAM_FILENAME);
 
-    w32_app_code appCode = {0};
-    if (!W32_AppCodeLoad(&appCode, appDllPath, appTempDllPath))
-    {
-        W32_DisplayError("Cannot load application code");
-        return 1;
-    }
-
     w32_sound_output soundOutput = {0};
     soundOutput.channels = 2;
     soundOutput.samplesPerSecond = 48000;
@@ -165,17 +156,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
 
-    globalOS.Reserve = W32_Reserve;
-    globalOS.Release = W32_Release;
-    globalOS.Commit = W32_Commit;
-    globalOS.Decommit = W32_Decommit;
-    globalOS.ReadFile = W32_ReadFile;
-    globalOS.SwapBuffers = W32_GLSwapBuffers;
-    globalOS.LoadOpenGLProcedure = W32_LoadOpenGLProcedure;
-
-    globalOS.DebugPrint = W32_DebugPrint;
-    globalOS.DebugDisplayError = W32_DisplayError;
-
     globalOS.permanentArena = M_ArenaInitialize(Gigabytes(4));
     globalOS.frameArena = M_ArenaInitialize(Gigabytes(4));
 
@@ -184,8 +164,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     W32_LoadXInput();
 
-    appCode.PermanentLoad(&globalOS);
-    appCode.HotLoad(&globalOS);
+    AppPermanentLoad(&globalOS);
 
     ShowWindow(window, commandShow);
     UpdateWindow(window);
@@ -235,21 +214,19 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
             }
         }
 
-        appCode.Update();
+        AppUpdate();
 
         if (soundOutput.initialized)
         {
             W32_FillSoundBuffer(globalOS.sampleCount, globalOS.sampleOut, &soundOutput);
         }
 
-        W32_AppCodeMaybeHotLoad(&appCode, appDllPath, appTempDllPath);
         W32_TimerEndFrame(&timer);
     }
 
+    AppClose();
     ShowWindow(window, SW_HIDE);
     W32_CleanUpOpenGL(&globalHDC, glContext);
-    appCode.Close();
-    W32_AppCodeUnload(&appCode);
 
     return 0;
 }

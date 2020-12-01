@@ -4,7 +4,7 @@ internal memory_arena M_ArenaInitialize(u64 cap)
 {
     memory_arena arena = {0};
     arena.max = cap;
-    arena.base = os->Reserve(arena.max);
+    arena.base = OS_Reserve(arena.max);
     arena.allocPosition = 0;
     arena.commitPosition = 0;
     return arena;
@@ -19,7 +19,7 @@ internal void *M_ArenaPush(memory_arena *arena, u64 size)
         u64 commitSize = size;
         commitSize += MEMORY_ARENA_COMMIT_SIZE - 1;
         commitSize -= commitSize % MEMORY_ARENA_COMMIT_SIZE;
-        os->Commit((u8 *)arena->base + arena->commitPosition, commitSize);
+        OS_Commit((u8 *)arena->base + arena->commitPosition, commitSize);
         arena->commitPosition += commitSize;
     }
 
@@ -52,5 +52,5 @@ internal void M_ArenaClear(memory_arena *arena)
 
 internal void M_ArenaRelease(memory_arena *arena)
 {
-    os->Release(arena->base, arena->max);
+    OS_Release(arena->base, arena->max);
 }

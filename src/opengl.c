@@ -1,6 +1,6 @@
 internal void GL_LoadProcedures(void)
 {
-#define GLProc(name, type) name = (PFN##type##PROC)os->LoadOpenGLProcedure(#name);
+#define GLProc(name, type) name = (PFN##type##PROC)OS_LoadOpenGLProcedure(#name);
 #include "opengl_procedure_list.h"
 #undef GLProc
 }
@@ -41,7 +41,7 @@ internal void GL_CheckForErrorsReal(char *file, u32 line)
         {
             char buff[256];
             sprintf(buff, "%s: %s line %d\n", error, file, line);
-            os->DebugPrint(buff);
+            OS_DebugPrint(buff);
         }
     }
 }

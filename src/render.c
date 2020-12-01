@@ -28,8 +28,6 @@ char *spriteFragmentShaderSource = "       \n\
     }                                      \n\
 ";
 
-global u32 globalSpriteShader;
-
 internal u32 R_CompileShader(u32 type, const char *source)
 {
     u32 shader = glCreateShader(type);
@@ -46,7 +44,7 @@ internal u32 R_CompileShader(u32 type, const char *source)
         char message[512] = {0};
         length = Max(length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
-        os->DebugDisplayError(message);
+        OS_DisplayError(message);
 
         return 0;
     }
@@ -54,35 +52,37 @@ internal u32 R_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void R_UpdateSpriteProjection()
+internal void R_UpdateSpriteProjection(u32 spriteShader)
 {
     m4 projection =
         M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "projection"), 1, 0,
+    glUniformMatrix4fv(glGetUniformLocation(spriteShader, "projection"), 1, 0,
                        (f32 *)projection.elements);
 }
 
-internal void R_InitSpriteShader()
+internal u32 R_InitSpriteShader()
 {
-    globalSpriteShader = glCreateProgram();
+    u32 spriteShader = glCreateProgram();
     u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, spriteVertexShaderSource);
     u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, spriteFragmentShaderSource);
 
-    glAttachShader(globalSpriteShader, vertexShader);
-    glAttachShader(globalSpriteShader, fragmentShader);
-    glLinkProgram(globalSpriteShader);
-    glValidateProgram(globalSpriteShader);
+    glAttachShader(spriteShader, vertexShader);
+    glAttachShader(spriteShader, fragmentShader);
+    glLinkProgram(spriteShader);
+    glValidateProgram(spriteShader);
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    glUseProgram(globalSpriteShader);
+    glUseProgram(spriteShader);
 
-    R_UpdateSpriteProjection();
-    glUniform1i(glGetUniformLocation(globalSpriteShader, "image"), 0);
+    R_UpdateSpriteProjection(spriteShader);
+    glUniform1i(glGetUniformLocation(spriteShader, "image"), 0);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    return spriteShader;
 }
 
 internal sprite_data R_CreateSprite(char *imagePath)
@@ -134,9 +134,9 @@ internal sprite_data R_CreateSprite(char *imagePath)
     return result;
 }
 
-internal void R_DrawSprite(sprite_data sprite, v2 position, f32 rotation)
+internal void R_DrawSprite(u32 spriteShader, sprite_data sprite, v2 position, f32 rotation)
 {
-    glUseProgram(globalSpriteShader);
+    glUseProgram(spriteShader);
 
     m4 model = M4Identity();
     model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
@@ -148,7 +148,7 @@ internal void R_DrawSprite(sprite_data sprite, v2 position, f32 rotation)
 
     model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
 
-    glUniformMatrix4fv(glGetUniformLocation(globalSpriteShader, "model"), 1, 0, model.elements[0]);
+    glUniformMatrix4fv(glGetUniformLocation(spriteShader, "model"), 1, 0, model.elements[0]);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, sprite.texture);

@@ -21,6 +21,12 @@
 #include "opengl.c"
 #include "render.c"
 
+typedef struct app_state app_state;
+struct app_state {
+    sprite_data sprite;
+    u32 spriteShader;
+};
+
 #ifdef _MSC_VER
 #define APP_EXPORT __declspec(dllexport)
 #else

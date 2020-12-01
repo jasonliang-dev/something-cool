@@ -1,32 +1,33 @@
 #include "app.h"
 
-global sprite_data sprite;
-
 APP_PERMANENT_LOAD
 {
     os = os_;
-    os->DebugPrint("APP_PERMANENT_LOAD\n");
+    OS_DebugPrint("APP_PERMANENT_LOAD\n");
+
+    app_state *appState = M_ArenaPush(&os->permanentArena, sizeof(app_state));
 
     GL_LoadProcedures();
-    R_InitSpriteShader();
+    appState->spriteShader = R_InitSpriteShader();
 
-    sprite = R_CreateSprite("res/awesomeface.png");
+    appState->sprite = R_CreateSprite("res/awesomeface.png");
 }
 
 APP_HOT_LOAD
 {
     os = os_;
-    os->DebugPrint("APP_HOT_LOAD\n");
+    OS_DebugPrint("APP_HOT_LOAD\n");
 }
 
 APP_HOT_UNLOAD
 {
-    os->DebugPrint("APP_HOT_UNLOAD\n");
+    OS_DebugPrint("APP_HOT_UNLOAD\n");
 }
 
 APP_UPDATE
 {
     local_persist f32 angle = 0;
+    app_state *appState = os->permanentArena.base;
 
     os_event event;
     while (OS_GetNextEvent(&event))
@@ -34,20 +35,16 @@ APP_UPDATE
         if (event.type == OS_EventType_WindowResize)
         {
             glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
-            R_UpdateSpriteProjection();
+            R_UpdateSpriteProjection(appState->spriteShader);
         }
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
-    R_DrawSprite(sprite, v2(0, 0), 0);
-    R_DrawSprite(sprite,
-                 v2(((f32)os->windowResolution.x / 2.0f) - ((f32)sprite.size.width / 2.0f),
-                    ((f32)os->windowResolution.y / 2.0f) - ((f32)sprite.size.height / 2.0f)),
-                 angle += 0.05f);
-    os->SwapBuffers();
+    R_DrawSprite(appState->spriteShader, appState->sprite, v2(10, 0), angle += 0.1f);
+    OS_GLSwapBuffers();
 }
 
 APP_CLOSE
 {
-    os->DebugPrint("APP_CLOSE\n");
+    OS_DebugPrint("APP_CLOSE\n");
 }

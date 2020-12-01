@@ -85,21 +85,21 @@ internal void W32_InitWASAPI(w32_sound_output *output)
     if (FAILED(CoCreateInstanceProc(&CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL,
                                     &IID_IMMDeviceEnumerator, (void **)(&output->device_enum))))
     {
-        W32_DisplayError("WASAPI Error: Device enumerator retrieval failed.");
+        OS_DisplayError("WASAPI Error: Device enumerator retrieval failed.");
         return;
     }
 
     if (FAILED(output->device_enum->lpVtbl->GetDefaultAudioEndpoint(output->device_enum, eRender,
                                                                     eConsole, &output->device)))
     {
-        W32_DisplayError("WASAPI Error: Default audio endpoint was not found.");
+        OS_DisplayError("WASAPI Error: Default audio endpoint was not found.");
         return;
     }
 
     if (FAILED(output->device->lpVtbl->Activate(output->device, &IID_IAudioClient, CLSCTX_ALL, 0,
                                                 (void **)&output->audioClient)))
     {
-        W32_DisplayError("WASAPI Error: Could not activate audio device.");
+        OS_DisplayError("WASAPI Error: Could not activate audio device.");
         return;
     }
 
@@ -129,14 +129,14 @@ internal void W32_InitWASAPI(w32_sound_output *output)
                 AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
             requested_sound_duration, 0, &new_wave_format, 0)))
     {
-        W32_DisplayError("WASAPI Error: Audio client initialization failed.");
+        OS_DisplayError("WASAPI Error: Audio client initialization failed.");
         return;
     }
 
     if (FAILED(output->audioClient->lpVtbl->GetService(output->audioClient, &IID_IAudioRenderClient,
                                                        (void **)&output->audioRenderClient)))
     {
-        W32_DisplayError("WASAPI Error: Request for audio render service failed.");
+        OS_DisplayError("WASAPI Error: Request for audio render service failed.");
         return;
     }
 

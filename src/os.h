@@ -59,17 +59,6 @@ struct os_state
     i32 eventCount;
     os_event events[4096];
 
-    void *(*Reserve)(u64 size);
-    void (*Release)(void *memory, u64 size);
-    void (*Commit)(void *memory, u64 size);
-    void (*Decommit)(void *memory, u64 size);
-    void (*ReadFile)(memory_arena *arena, char * path, void **data, u64 *len);
-    void (*SwapBuffers)(void);
-    void *(*LoadOpenGLProcedure)(char *name);
-
-    void (*DebugPrint)(char *str);
-    void (*DebugDisplayError)(char *str);
-
     memory_arena permanentArena;
     memory_arena frameArena;
 };
@@ -197,3 +186,13 @@ enum os_gamepad_button
     GamepadButton_Y,
     GamepadButton_Max
 };
+
+internal void *OS_Reserve(u64 size);
+internal void OS_Release(void *memory, u64 size);
+internal void OS_Commit(void *memory, u64 size);
+internal void OS_Decommit(void *memory, u64 size);
+internal void OS_ReadFile(memory_arena *arena, char * path, void **data, u64 *len);
+internal void OS_GLSwapBuffers(void);
+internal void *OS_LoadOpenGLProcedure(char *name);
+internal void OS_DebugPrint(char *str);
+internal void OS_DisplayError(char *str);

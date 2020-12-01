@@ -27,7 +27,7 @@ global wgl_choose_pixel_format_arb_fn *wglChoosePixelFormatARB;
 typedef WGL_CREATE_CONTEXT_ATTRIBS_ARB(wgl_create_context_attribs_arb_fn);
 global wgl_create_context_attribs_arb_fn *wglCreateContextAttribsARB;
 
-internal void *W32_LoadOpenGLProcedure(char *name)
+internal void *OS_LoadOpenGLProcedure(char *name)
 {
     void *p = (void *)wglGetProcAddress(name);
     if (!p || p == (void *)0x1 || p == (void *)0x2 || p == (void *)0x3 || p == (void *)-1)
@@ -82,9 +82,9 @@ internal HGLRC W32_InitOpenGL(HDC hdc)
     wglMakeCurrent(hdc, dummyContext);
 
     wglChoosePixelFormatARB =
-        (wgl_choose_pixel_format_arb_fn *)W32_LoadOpenGLProcedure("wglChoosePixelFormatARB");
+        (wgl_choose_pixel_format_arb_fn *)OS_LoadOpenGLProcedure("wglChoosePixelFormatARB");
     wglCreateContextAttribsARB =
-        (wgl_create_context_attribs_arb_fn *)W32_LoadOpenGLProcedure("wglCreateContextAttribsARB");
+        (wgl_create_context_attribs_arb_fn *)OS_LoadOpenGLProcedure("wglCreateContextAttribsARB");
 
     i32 pixelFormatAttribs[] = {WGL_DRAW_TO_WINDOW_ARB,
                                 GL_TRUE,
@@ -144,7 +144,7 @@ internal void W32_CleanUpOpenGL(HDC *hdc, HGLRC glContext)
     wglDeleteContext(glContext);
 }
 
-internal void W32_GLSwapBuffers(void)
+internal void OS_GLSwapBuffers(void)
 {
     wglSwapLayerBuffers(globalHDC, WGL_SWAP_MAIN_PLANE);
 }

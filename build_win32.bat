@@ -1,27 +1,16 @@
 @echo off
 
 set build_options= -DDEBUG=1 -DBUILD_WIN32=1 -DWIN32_LEAN_AND_MEAN=1
-set compile_flags= -nologo -W4 -wd4201 -Z7 /I ../src/
-set common_link_flags= opengl32.lib -opt:ref -incremental:no -Debug:fastlink
-set platform_link_flags= gdi32.lib user32.lib winmm.lib
+set compile_flags= -nologo -W4 -wd4201 -wd4996 -Z7 /I ../src/
+set link_flags= -opt:ref -incremental:no -Debug:fastlink
+set library_link= gdi32.lib user32.lib winmm.lib opengl32.lib
 
 if not exist build mkdir build
 pushd build
 
-del *.pdb > NUL 2> NUL
-echo WAITING FOR PDB > lock.tmp
-
-start /b /wait "" "cl"^
-    %build_options% %compile_flags% -LD ../src/app.c^
-    /link %common_link_flags%^
-    -PDB:app_%random%.pdb^
-    /out:app.dll
-
-del lock.tmp
-
 start /b /wait "" "cl"^
     %build_options% %compile_flags% ../src/win32_main.c^
-    /link %platform_link_flags% %common_link_flags%^
+    /link %library_link% %link_flags%^
     /out:win32_app.exe
 
 popd
