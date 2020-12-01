@@ -40,19 +40,6 @@ internal void AppPermanentLoadStub(os_state *os_)
     (void)os_;
 }
 
-#define APP_HOT_LOAD APP_EXPORT void AppHotLoad(os_state *os_)
-typedef void app_hot_load_fn(os_state *);
-internal void AppHotLoadStub(os_state *os_)
-{
-    (void)os_;
-}
-
-#define APP_HOT_UNLOAD APP_EXPORT void AppHotUnload(void)
-typedef void app_hot_unload_fn(void);
-internal void AppHotUnloadStub(void)
-{
-}
-
 #define APP_UPDATE APP_EXPORT void AppUpdate(void)
 typedef void app_update_fn(void);
 internal void AppUpdateStub(void)

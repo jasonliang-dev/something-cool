@@ -13,17 +13,6 @@ APP_PERMANENT_LOAD
     appState->sprite = R_CreateSprite("res/awesomeface.png");
 }
 
-APP_HOT_LOAD
-{
-    os = os_;
-    OS_DebugPrint("APP_HOT_LOAD\n");
-}
-
-APP_HOT_UNLOAD
-{
-    OS_DebugPrint("APP_HOT_UNLOAD\n");
-}
-
 APP_UPDATE
 {
     local_persist f32 angle = 0;
@@ -37,10 +26,17 @@ APP_UPDATE
             glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
             R_UpdateSpriteProjection(appState->spriteShader);
         }
+        else if (event.type == OS_EventType_KeyPress)
+        {
+            if (event.key == Key_F11)
+            {
+                os->fullscreen = !os->fullscreen;
+            }
+        }
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
-    R_DrawSprite(appState->spriteShader, appState->sprite, v2(10, 0), angle += 0.1f);
+    R_DrawSprite(appState->spriteShader, appState->sprite, v2(0, 0), angle += 0.1f);
     OS_GLSwapBuffers();
 }
 

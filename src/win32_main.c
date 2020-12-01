@@ -53,6 +53,137 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
         OS_PushEvent(event);
         return 0;
     }
+    else if (message == WM_SYSKEYDOWN || message == WM_SYSKEYUP || message == WM_KEYDOWN ||
+             message == WM_KEYUP)
+    {
+        u64 vkeyCode = wParam;
+        u64 keyInput = 0;
+
+        if ((vkeyCode >= 'A' && vkeyCode <= 'Z') || (vkeyCode >= '0' && vkeyCode <= '9'))
+        {
+            keyInput = (vkeyCode >= 'A' && vkeyCode <= 'Z') ? Key_A + (vkeyCode - 'A')
+                                                            : Key_0 + (vkeyCode - '0');
+        }
+        else if (vkeyCode == VK_ESCAPE)
+        {
+            keyInput = Key_Esc;
+        }
+        else if (vkeyCode >= VK_F1 && vkeyCode <= VK_F12)
+        {
+            keyInput = Key_F1 + vkeyCode - VK_F1;
+        }
+        else if (vkeyCode == VK_OEM_3)
+        {
+            keyInput = Key_GraveAccent;
+        }
+        else if (vkeyCode == VK_OEM_MINUS)
+        {
+            keyInput = Key_Minus;
+        }
+        else if (vkeyCode == VK_OEM_PLUS)
+        {
+            keyInput = Key_Equal;
+        }
+        else if (vkeyCode == VK_BACK)
+        {
+            keyInput = Key_Backspace;
+        }
+        else if (vkeyCode == VK_TAB)
+        {
+            keyInput = Key_Tab;
+        }
+        else if (vkeyCode == VK_SPACE)
+        {
+            keyInput = Key_Space;
+        }
+        else if (vkeyCode == VK_RETURN)
+        {
+            keyInput = Key_Enter;
+        }
+        else if (vkeyCode == VK_CONTROL)
+        {
+            keyInput = Key_Ctrl;
+            modifiers &= ~KeyModifier_Ctrl;
+        }
+        else if (vkeyCode == VK_SHIFT)
+        {
+            keyInput = Key_Shift;
+            modifiers &= ~KeyModifier_Shift;
+        }
+        else if (vkeyCode == VK_MENU)
+        {
+            keyInput = Key_Alt;
+            modifiers &= ~KeyModifier_Alt;
+        }
+        else if (vkeyCode == VK_UP)
+        {
+            keyInput = Key_Up;
+        }
+        else if (vkeyCode == VK_LEFT)
+        {
+            keyInput = Key_Left;
+        }
+        else if (vkeyCode == VK_DOWN)
+        {
+            keyInput = Key_Down;
+        }
+        else if (vkeyCode == VK_RIGHT)
+        {
+            keyInput = Key_Right;
+        }
+        else if (vkeyCode == VK_DELETE)
+        {
+            keyInput = Key_Delete;
+        }
+        else if (vkeyCode == VK_PRIOR)
+        {
+            keyInput = Key_PageUp;
+        }
+        else if (vkeyCode == VK_NEXT)
+        {
+            keyInput = Key_PageDown;
+        }
+        else if (vkeyCode == VK_HOME)
+        {
+            keyInput = Key_Home;
+        }
+        else if (vkeyCode == VK_END)
+        {
+            keyInput = Key_End;
+        }
+        else if (vkeyCode == VK_OEM_2)
+        {
+            keyInput = Key_ForwardSlash;
+        }
+        else if (vkeyCode == VK_OEM_PERIOD)
+        {
+            keyInput = Key_Period;
+        }
+        else if (vkeyCode == VK_OEM_COMMA)
+        {
+            keyInput = Key_Comma;
+        }
+        else if (vkeyCode == VK_OEM_7)
+        {
+            keyInput = Key_Quote;
+        }
+        else if (vkeyCode == VK_OEM_4)
+        {
+            keyInput = Key_LeftBracket;
+        }
+        else if (vkeyCode == VK_OEM_6)
+        {
+            keyInput = Key_RightBracket;
+        }
+
+        i8 isDown = !(lParam & (1 << 31));
+        event.type = isDown ? OS_EventType_KeyPress : OS_EventType_KeyRelease;
+        event.key = keyInput;
+        event.modifiers = modifiers;
+        OS_PushEvent(event);
+
+        return DefWindowProc(window, message, wParam, lParam);
+    }
     else if (message == WM_LBUTTONDOWN)
     {
         event.type = OS_EventType_MousePress;
@@ -151,6 +282,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.running = 1;
     globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
     globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
+    globalOS.fullscreen = 0;
 
     globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(f32) * 2,
                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -214,7 +346,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
             }
         }
 
+        b32 last_fullscreen = globalOS.fullscreen;
         AppUpdate();
+
+        if (last_fullscreen != globalOS.fullscreen)
+        {
+            W32_ToggleFullscreen(window);
+        }
 
         if (soundOutput.initialized)
         {
