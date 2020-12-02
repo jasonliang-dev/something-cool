@@ -21,10 +21,12 @@
 typedef struct app_state app_state;
 struct app_state
 {
+    u32 mapShader;
     u32 spriteShader;
     u32 vao;
     texture face;
     texture test;
+    tilemap map;
 
     memory_arena permanentArena;
 };
@@ -42,25 +44,29 @@ void AppLoad(os_state *os_)
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
-    i32 iwidth;
-    i32 iheight;
-    i32 channels;
-    u32 *imageData = (u32 *)stbi_load("res/test.png", &iwidth, &iheight, &channels, 0);
+    state.permanentArena = M_ArenaInitialize(Gigabytes(4));
 
-    char buff[256];
-    for (i32 slow = 0; slow < iheight; slow++)
     {
-        for (i32 fast = 0; fast < iwidth; fast++)
+        i32 iwidth;
+        i32 iheight;
+        i32 channels;
+        u32 *imageData = (u32 *)stbi_load("res/test.png", &iwidth, &iheight, &channels, 0);
+
+        char buff[256];
+        for (i32 slow = 0; slow < iheight; slow++)
         {
-            u8 *pixel = (u8 *)&imageData[slow * iwidth + fast];
-            sprintf(buff, "%d %d %d %d, ", pixel[0], pixel[1], pixel[2], pixel[3]);
-            OS_DebugPrint(buff);
+            for (i32 fast = 0; fast < iwidth; fast++)
+            {
+                u8 *pixel = (u8 *)&imageData[slow * iwidth + fast];
+                sprintf(buff, "%d %d %d %d, ", pixel[0], pixel[1], pixel[2], pixel[3]);
+                OS_DebugPrint(buff);
+            }
+            OS_DebugPrint("\n");
         }
         OS_DebugPrint("\n");
-    }
-    OS_DebugPrint("\n");
 
-    stbi_image_free(imageData);
+        stbi_image_free(imageData);
+    }
 
     GL_LoadProcedures();
     glEnable(GL_BLEND);
@@ -70,8 +76,17 @@ void AppLoad(os_state *os_)
     glUseProgram(state.spriteShader);
     R_UpdateSpriteProjection(state.spriteShader);
     glUniform1i(glGetUniformLocation(state.spriteShader, "image"), 0);
+
     state.vao = R_CreateQuadVAO();
     state.face = R_CreateTexture("res/awesomeface.png");
+
+    state.mapShader = R_InitShader(quadVertexShaderSource, tilemapFragmentShaderSource);
+    glUseProgram(state.mapShader);
+    R_UpdateSpriteProjection(state.mapShader);
+    glUniform1i(glGetUniformLocation(state.spriteShader, "MapTexture"), 1);
+    glUniform1i(glGetUniformLocation(state.spriteShader, "TileAtlasTexture"), 2);
+
+    state.map = R_CreateTilemap("res/small.json", R_CreateTexture("res/atlas.png"));
 }
 
 void AppUpdate(void)
@@ -100,6 +115,7 @@ void AppUpdate(void)
                  v2(os->windowResolution.x / 2.0f - state.face.width / 2.0f,
                     os->windowResolution.y / 2.0f - state.face.height / 2.0f),
                  angle += 0.01f);
+    R_DrawTilemap(state.mapShader, state.vao, state.map);
     OS_GLSwapBuffers();
 }
 

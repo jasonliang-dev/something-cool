@@ -28,7 +28,7 @@ char spriteFragmentShaderSource[] = "      \n\
     }                                      \n\
 ";
 
-char tilemapFragmentShaderSource[]= "                                    \n\
+char tilemapFragmentShaderSource[] = "                                   \n\
     #version 330 core                                                    \n\
                                                                          \n\
     uniform sampler2D MapTexture;                                        \n\
@@ -41,8 +41,8 @@ char tilemapFragmentShaderSource[]= "                                    \n\
     void main()                                                          \n\
     {                                                                    \n\
         // hardcoded here, but could be passed as uniform just as well   \n\
-        float cols = 40.0;                                               \n\
-        float rows = 22.0;                                               \n\
+        float cols = 10.0;                                               \n\
+        float rows = 10.0;                                               \n\
                                                                          \n\
         // texture coordinate is between (0, 1), round it off            \n\
         // to integer column/row                                         \n\
@@ -202,21 +202,55 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 p
     glBindVertexArray(0);
 }
 
-internal tilemap R_LoadTilemap(char *jsonPath, texture atlas)
+internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
+{
+    glUseProgram(mapShader);
+
+    m4 model = M4Identity();
+    // model = M4MultiplyM4(model, M4Translate(v3(0.0f, 0.0f, 0.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3(128.0f, 128.0f, 1.0f)));
+
+    glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.elements[0]);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, map.indexTexture);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+internal tilemap R_CreateTilemap(char *jsonPath, texture atlas)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
     cute_tiled_layer_t *layer = tiledMap->layers;
     Assert(layer->next == NULL);
 
-    tilemap result;
-    u32 *atlasIndex = M_ArenaPush(&state.permanentArena, sizeof(u32) * layer->width * layer->height);
+    u32 mapDataSize = sizeof(u32) * layer->width * layer->height;
+    u32 *atlasIndex = M_ArenaPush(&state.permanentArena, mapDataSize);
 
+    for (i32 i = 0; i < layer->data_count; i++)
+    {
+        u32 tile = layer->data[i];
+        u8 column = (u8)(tile % layer->width);
+        u8 row = (u8)(tile / layer->width);
+
+        u8 *mapByte = (u8 *)&atlasIndex[i];
+        mapByte[0] = column;
+        mapByte[1] = row;
+        mapByte[2] = 0;
+        mapByte[3] = 0;
+    }
+
+    tilemap result;
     result.width = layer->width;
     result.height = layer->height;
     result.atlas = atlas;
     result.tileSize = 16;
-    result.indexTexture = 0; // todo
 
     glGenTextures(1, &result.indexTexture);
 
@@ -230,8 +264,8 @@ internal tilemap R_LoadTilemap(char *jsonPath, texture atlas)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-
     cute_tiled_free_map(tiledMap);
+    M_ArenaPop(&state.permanentArena, mapDataSize);
 
     return result;
 }
