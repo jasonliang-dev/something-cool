@@ -44,6 +44,9 @@ void AppLoad(os_state *os_)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     state.spriteShader = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
+    glUseProgram(state.spriteShader);
+    R_UpdateSpriteProjection(state.spriteShader);
+    glUniform1i(glGetUniformLocation(state.spriteShader, "image"), 0);
     state.vao = R_CreateQuadVAO();
     state.face = R_CreateTexture("res/awesomeface.png");
 }
@@ -58,6 +61,7 @@ void AppUpdate(void)
         if (event.type == OS_EventType_WindowResize)
         {
             glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
+            R_UpdateSpriteProjection(state.spriteShader);
         }
         else if (event.type == OS_EventType_KeyPress)
         {
@@ -69,7 +73,10 @@ void AppUpdate(void)
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
-    R_DrawSprite(state.spriteShader, state.vao, state.face, v2(0.0f, 0.0f), 0.0f);
+    R_DrawSprite(state.spriteShader, state.vao, state.face,
+                 v2(os->windowResolution.x / 2.0f - state.face.width / 2.0f,
+                    os->windowResolution.y / 2.0f - state.face.height / 2.0f),
+                 angle += 0.01f);
     OS_GLSwapBuffers();
 }
 

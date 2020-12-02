@@ -11,7 +11,7 @@ struct tilemap
 {
     u32 width;
     u32 height;
-    u32 atlas;
-    u32 dataLength;
-    u32 data[1];
+    u32 indexTexture;
+    texture atlas;
+    u32 tileSize;
 };

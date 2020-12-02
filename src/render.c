@@ -74,11 +74,6 @@ internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    glUseProgram(spriteShader);
-
-    R_UpdateSpriteProjection(spriteShader);
-    glUniform1i(glGetUniformLocation(spriteShader, "image"), 0);
-
     return spriteShader;
 }
 
@@ -162,21 +157,20 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 p
     glBindVertexArray(0);
 }
 
-internal tilemap *R_LoadTilemap(char *jsonPath, u32 atlas)
+internal tilemap R_LoadTilemap(char *jsonPath, texture atlas)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
     cute_tiled_layer_t *layer = tiledMap->layers;
     Assert(layer->next == NULL);
 
-    tilemap *result =
-        M_ArenaPush(&os->permanentArena, sizeof(tilemap) + (sizeof(u32) * layer->data_count));
+    tilemap result;
 
-    result->width = layer->width;
-    result->height = layer->height;
-    result->atlas = atlas;
-    result->dataLength = layer->data_count;
-    MemoryCopy(result->data, layer->data, sizeof(u32) * layer->data_count);
+    result.width = layer->width;
+    result.height = layer->height;
+    result.atlas = atlas;
+    result.tileSize = 16;
+    result.indexTexture = 0; // todo
 
     cute_tiled_free_map(tiledMap);
 
