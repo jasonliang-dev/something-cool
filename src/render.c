@@ -1,4 +1,4 @@
-char *quadVertexShaderSource = "                                      \n\
+char quadVertexShaderSource[] = "                                     \n\
     #version 330 core                                                 \n\
                                                                       \n\
     layout (location = 0) in vec4 vertex;                             \n\
@@ -14,7 +14,7 @@ char *quadVertexShaderSource = "                                      \n\
     }                                                                 \n\
 ";
 
-char *spriteFragmentShaderSource = "       \n\
+char spriteFragmentShaderSource[] = "      \n\
     #version 330 core                      \n\
                                            \n\
     in vec2 TexCoords;                     \n\
@@ -26,6 +26,51 @@ char *spriteFragmentShaderSource = "       \n\
     {                                      \n\
         color = texture(image, TexCoords); \n\
     }                                      \n\
+";
+
+char tilemapFragmentShaderSource[]= "                                    \n\
+    #version 330 core                                                    \n\
+                                                                         \n\
+    uniform sampler2D MapTexture;                                        \n\
+    uniform sampler2D TileAtlasTexture;                                  \n\
+                                                                         \n\
+    in vec2 TexCoords;                                                   \n\
+    out vec4 color;                                                      \n\
+    uniform vec4 InColor;                                                \n\
+                                                                         \n\
+    void main()                                                          \n\
+    {                                                                    \n\
+        // hardcoded here, but could be passed as uniform just as well   \n\
+        float cols = 40.0;                                               \n\
+        float rows = 22.0;                                               \n\
+                                                                         \n\
+        // texture coordinate is between (0, 1), round it off            \n\
+        // to integer column/row                                         \n\
+        vec2 tilePos = vec2(                                             \n\
+            floor(TexCoords.x * cols),                                   \n\
+            floor(TexCoords.y * rows)                                    \n\
+        );                                                               \n\
+        // retrieve data for our current tile                            \n\
+        vec4 tileSpec = texture(MapTexture, tilePos / vec2(cols, rows)); \n\
+                                                                         \n\
+        // our tile atlas here is 16x16 tiles                            \n\
+        float tilesPerSide = 16.0;                                       \n\
+                                                                         \n\
+        // bottom-left corner of the tile in the atlas                   \n\
+        vec2 texPos = vec2(                                              \n\
+            floor(tileSpec.x * tilesPerSide) / tilesPerSide,             \n\
+            floor(tileSpec.y * tilesPerSide) / tilesPerSide              \n\
+        );                                                               \n\
+        // 'where we are in the tile' - remember, we're doing            \n\
+        // this work for a single pixel.                                 \n\
+        vec2 texOffset = vec2(                                           \n\
+            ((TexCoords.x * cols) - tilePos.x) / tilesPerSide,           \n\
+            ((TexCoords.y * rows) - tilePos.y) / tilesPerSide            \n\
+        );                                                               \n\
+                                                                         \n\
+        // finally, sample the tile atlas                                \n\
+        color = texture(TileAtlasTexture, texPos + texOffset);           \n\
+    }                                                                    \n\
 ";
 
 internal u32 R_CompileShader(u32 type, const char *source)
@@ -165,12 +210,26 @@ internal tilemap R_LoadTilemap(char *jsonPath, texture atlas)
     Assert(layer->next == NULL);
 
     tilemap result;
+    u32 *atlasIndex = M_ArenaPush(&state.permanentArena, sizeof(u32) * layer->width * layer->height);
 
     result.width = layer->width;
     result.height = layer->height;
     result.atlas = atlas;
     result.tileSize = 16;
     result.indexTexture = 0; // todo
+
+    glGenTextures(1, &result.indexTexture);
+
+    glBindTexture(GL_TEXTURE_2D, result.indexTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, atlasIndex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     cute_tiled_free_map(tiledMap);
 

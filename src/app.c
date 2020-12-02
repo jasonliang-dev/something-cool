@@ -24,6 +24,9 @@ struct app_state
     u32 spriteShader;
     u32 vao;
     texture face;
+    texture test;
+
+    memory_arena permanentArena;
 };
 
 global app_state state;
@@ -38,6 +41,26 @@ void AppLoad(os_state *os_)
 {
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
+
+    i32 iwidth;
+    i32 iheight;
+    i32 channels;
+    u32 *imageData = (u32 *)stbi_load("res/test.png", &iwidth, &iheight, &channels, 0);
+
+    char buff[256];
+    for (i32 slow = 0; slow < iheight; slow++)
+    {
+        for (i32 fast = 0; fast < iwidth; fast++)
+        {
+            u8 *pixel = (u8 *)&imageData[slow * iwidth + fast];
+            sprintf(buff, "%d %d %d %d, ", pixel[0], pixel[1], pixel[2], pixel[3]);
+            OS_DebugPrint(buff);
+        }
+        OS_DebugPrint("\n");
+    }
+    OS_DebugPrint("\n");
+
+    stbi_image_free(imageData);
 
     GL_LoadProcedures();
     glEnable(GL_BLEND);
