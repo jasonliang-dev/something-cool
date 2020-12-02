@@ -280,7 +280,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     W32_LoadXInput();
 
-    AppPermanentLoad(&globalOS);
+    AppLoad(&globalOS);
 
     ShowWindow(window, commandShow);
     UpdateWindow(window);

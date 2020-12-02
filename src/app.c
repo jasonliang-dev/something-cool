@@ -1,28 +1,54 @@
-#include "app.h"
+#include <stdio.h>
+#include <math.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
-APP_PERMANENT_LOAD
+#define STB_IMAGE_IMPLEMENTATION
+#include "ext/stb_image.h"
+
+#define CUTE_TILED_IMPLEMENTATION
+#include "ext/cute_tiled.h"
+
+#include "language_layer.h"
+#include "program_options.h"
+#include "maths.h"
+#include "memory.h"
+#include "os.h"
+#include "opengl.h"
+#include "render.h"
+
+typedef struct app_state app_state;
+struct app_state
+{
+    u32 spriteShader;
+    u32 vao;
+    texture face;
+};
+
+global app_state state;
+
+#include "os.c"
+#include "maths.c"
+#include "memory.c"
+#include "opengl.c"
+#include "render.c"
+
+void AppLoad(os_state *os_)
 {
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
     GL_LoadProcedures();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    tilemap *map = R_LoadTilemap("res/small.json", 0);
-
-    char buff[64];
-    for (u32 slow = 0; slow < map->height; slow++)
-    {
-        for (u32 fast = 0; fast < map->width; fast++)
-        {
-            sprintf(buff, "%d ", map->data[slow * map->height + fast]);
-            OS_DebugPrint(buff);
-        }
-        OS_DebugPrint("\n");
-    }
-    OS_DebugPrint("\n");
+    state.spriteShader = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
+    state.vao = R_CreateQuadVAO();
+    state.face = R_CreateTexture("res/awesomeface.png");
 }
 
-APP_UPDATE
+void AppUpdate(void)
 {
     local_persist f32 angle = 0;
 
@@ -43,10 +69,11 @@ APP_UPDATE
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
+    R_DrawSprite(state.spriteShader, state.vao, state.face, v2(0.0f, 0.0f), 0.0f);
     OS_GLSwapBuffers();
 }
 
-APP_CLOSE
+void AppClose(void)
 {
     OS_DebugPrint("APP_CLOSE\n");
 }

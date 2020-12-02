@@ -1,4 +1,4 @@
-char *spriteVertexShaderSource = "                                    \n\
+char *quadVertexShaderSource = "                                      \n\
     #version 330 core                                                 \n\
                                                                       \n\
     layout (location = 0) in vec4 vertex;                             \n\
@@ -60,11 +60,11 @@ internal void R_UpdateSpriteProjection(u32 spriteShader)
                        (f32 *)projection.elements);
 }
 
-internal u32 R_InitSpriteShader()
+internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
 {
     u32 spriteShader = glCreateProgram();
-    u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, spriteVertexShaderSource);
-    u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, spriteFragmentShaderSource);
+    u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, vertexSource);
+    u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
     glAttachShader(spriteShader, vertexShader);
     glAttachShader(spriteShader, fragmentShader);
@@ -79,13 +79,10 @@ internal u32 R_InitSpriteShader()
     R_UpdateSpriteProjection(spriteShader);
     glUniform1i(glGetUniformLocation(spriteShader, "image"), 0);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     return spriteShader;
 }
 
-internal u32 R_CreateSpriteVAO(void)
+internal u32 R_CreateQuadVAO(void)
 {
     v4 vertices[] = {
         // position    texture
