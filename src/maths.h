@@ -132,10 +132,11 @@ union iv4 {
     i32 elements[4];
 };
 
-typedef struct m4 m4;
-struct m4
+typedef union m4 m4;
+union m4
 {
     f32 elements[4][4];
+    f32 flatten[16];
 };
 
 #define v2(...)                                                                                    \
