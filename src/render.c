@@ -222,7 +222,7 @@ internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
     glBindVertexArray(0);
 }
 
-internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 tileSize, u32 quadVAO)
+internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
@@ -233,7 +233,7 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 tileSize, u3
     result.width = layer->width;
     result.height = layer->height;
     result.atlas = atlas;
-    result.tileSize = tileSize;
+    result.tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
     v2 *atlasIndex = M_ArenaPushZero(&state.permanentArena, indexSize);
