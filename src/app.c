@@ -68,7 +68,7 @@ void AppLoad(os_state *os_)
     glUniform1i(glGetUniformLocation(state.mapShader, "atlas"), 1);
 
     state.atlas = R_CreateTexture("res/atlas.png");
-    state.map = R_CreateTilemap("res/small.json", state.atlas, state.vao);
+    state.map = R_CreateTilemap("res/map.json", state.atlas, 16, state.vao);
     GL_CheckForErrors();
 }
 
