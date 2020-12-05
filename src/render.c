@@ -4,6 +4,7 @@ char quadVertexShaderSource[] = "                                     \n\
     layout (location = 0) in vec4 vertex;                             \n\
                                                                       \n\
     out vec2 TexCoords;                                               \n\
+                                                                      \n\
     uniform mat4 model;                                               \n\
     uniform mat4 projection;                                          \n\
                                                                       \n\
@@ -28,81 +29,45 @@ char spriteFragmentShaderSource[] = "      \n\
     }                                      \n\
 ";
 
-/*
-char tilemapFragmentShaderSource[] = "                                                  \n\
-    #version 330 core                                                                   \n\
-                                                                                        \n\
-    in vec2 TexCoords;                                                                  \n\
-    out vec4 color;                                                                     \n\
-                                                                                        \n\
-    uniform sampler2D MapTexture;                                                       \n\
-    uniform sampler2D AtlasTexture;                                                     \n\
-                                                                                        \n\
-    void main()                                                                         \n\
-    {                                                                                   \n\
-        float tileSize = 16.0;                                                          \n\
-        vec2 atlasSize = vec2(256.0, 480.0);                                            \n\
-        \n\
-        vec2 uv = vec2(6.0 * tileSize / atlasSize.x, 0.0 * tileSize / atlasSize.y); \n\
-                                                                                        \n\
-        vec2 realUV = uv + (TexCoords * tileSize / atlasSize);                  \n\
-                                                                                        \n\
-        color = texture(AtlasTexture, realUV);                                      \n\
-    }                                                                                   \n\
+char tilemapVertexShaderSource[] = "                                     \n\
+    #version 330 core                                                 \n\
+                                                                      \n\
+    layout (location = 0) in vec4 vertex;                             \n\
+    layout (location = 1) in vec2 TileIndex;                             \n\
+                                                                      \n\
+    out vec2 TexCoords;                                               \n\
+    out vec2 TileCoords;                                               \n\
+                                                                      \n\
+    uniform mat4 model;                                               \n\
+    uniform mat4 projection;                                          \n\
+                                                                      \n\
+    void main()                                                       \n\
+    {                                                                 \n\
+        ivec2 mapSize = ivec2(10, 10);                                  \n\
+        ivec2 tileOffset = ivec2(gl_InstanceID % mapSize.x, gl_InstanceID / mapSize.x);                                  \n\
+        TexCoords = vertex.zw;                                        \n\
+        TileCoords = TileIndex;                                        \n\
+        gl_Position = projection * model * vec4(vertex.xy + (1.0 * tileOffset), 0.0, 1.0); \n\
+    }                                                                 \n\
 ";
-*/
 
-/*
-char tilemapFragmentShaderSource[] = "                                                  \n\
-    #version 330 core                                                                   \n\
-                                                                                        \n\
-    in vec2 TexCoords;                                                                  \n\
-    out vec4 color;                                                                     \n\
-                                                                                        \n\
-    uniform sampler2D MapTexture;                                                       \n\
-    uniform sampler2D AtlasTexture;                                                     \n\
-                                                                                        \n\
-    void main()                                                                         \n\
-    {                                                                                   \n\
-        float tileSize = 16.0;                                                          \n\
-        vec2 atlasSize = vec2(256.0, 480.0);                                            \n\
-        vec2 mapSize = vec2(10.0, 10.0);                                            \n\
+char tilemapFragmentShaderSource[] = "      \n\
+    #version 330 core                      \n\
+                                           \n\
+    in vec2 TexCoords;                     \n\
+    in vec2 TileCoords;                     \n\
+    out vec4 color;                        \n\
+                                           \n\
+    uniform sampler2D atlas;               \n\
+                                           \n\
+    void main()                            \n\
+    {                                      \n\
+        vec2 atlasSize = vec2(16.0, 30.0);                                  \n\
         \n\
-        vec2 spec = texture(MapTexture, TexCoords).xy;\n\
-        // color = vec4(spec * 64.0, 0.0, 1.0);                                      \n\
-        \n\
-        vec2 uv = vec2(spec.x * tileSize / atlasSize.x, spec.y * tileSize / atlasSize.y); \n\
-                                                                                        \n\
-        vec2 realUV = uv + ((TexCoords / mapSize) * tileSize / atlasSize);                  \n\
-                                                                                        \n\
-        color = texture(AtlasTexture, realUV);                                      \n\
-    }                                                                                   \n\
-";
-*/
-
-char tilemapFragmentShaderSource[] = "                                                  \n\
-    #version 330 core                                                                   \n\
-                                                                                        \n\
-    in vec2 TexCoords;                                                                  \n\
-    out vec4 color;                                                                     \n\
-                                                                                        \n\
-    uniform sampler2D MapTexture;                                                       \n\
-    uniform sampler2D AtlasTexture;                                                     \n\
-                                                                                        \n\
-    void main()                                                                         \n\
-    {                                                                                   \n\
-        float tileSize = 16.0;                                                          \n\
-        vec2 atlasSize = vec2(16.0, 30.0);                                            \n\
-        vec2 mapSize = vec2(10.0, 10.0);                                            \n\
-        \n\
-        vec2 spec = texture(MapTexture, TexCoords).xy;\n\
-        // color = vec4(spec, 0.0, 1.0);                                      \n\
-        \n\
-        vec2 uv = vec2(spec.x / atlasSize.x, spec.y / atlasSize.y); \n\
-        vec2 offset = TexCoords * mapSize / atlasSize;                  \n\
-        \n\
-        color = texture(AtlasTexture, uv + offset);                                      \n\
-    }                                                                                   \n\
+        vec2 uv = (TileCoords * 255.0) / atlasSize; \n\
+        vec2 offset = TexCoords / atlasSize; \n\
+        color = texture(atlas, uv + offset); \n\
+    }                                      \n\
 ";
 
 internal u32 R_CompileShader(u32 type, const char *source)
@@ -240,22 +205,20 @@ internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
     m4 model = M4Identity();
     // model = M4MultiplyM4(model, M4Translate(v3(0.0f, 0.0f, 0.0f)));
     model = M4MultiplyM4(
-        model, M4Scale(v3((f32)map.width * map.tileSize, (f32)map.height * map.tileSize, 1.0f)));
+        model, M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f)));
 
     glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.flatten);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, map.indexTexture);
-
-    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
 
     glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 1);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.width * map.height);
     glBindVertexArray(0);
 }
 
-internal tilemap R_CreateTilemap(char *jsonPath, texture atlas)
+internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
@@ -268,44 +231,39 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas)
     result.atlas = atlas;
     result.tileSize = 16;
 
-    u32 mapDataSize = sizeof(u32) * layer->width * layer->height;
-    u32 *atlasIndex = M_ArenaPushZero(&state.permanentArena, mapDataSize);
-    Assert(layer->width * layer->height == layer->data_count);
-
+    u32 indexSize = sizeof(v2) * layer->data_count;
+    v2 *atlasIndex = M_ArenaPushZero(&state.permanentArena, indexSize);
     u32 atlasColumnCount = atlas.width / result.tileSize;
 
     char buff[256];
     for (i32 i = 0; i < layer->data_count; i++)
     {
-        // -1 because the exported data array increments the tile by 1. why?????
         u32 tile = layer->data[i] - 1;
-        u8 column = (u8)(tile % atlasColumnCount);
-        u8 row = (u8)(tile / atlasColumnCount);
+        u32 column = (tile % atlasColumnCount);
+        u32 row = (tile / atlasColumnCount);
 
-        u8 *mapByte = (u8 *)&atlasIndex[i];
-        mapByte[0] = column;
-        mapByte[1] = row;
-        // mapByte[2] = 0;
-        mapByte[3] = 255;
+        atlasIndex[i] = v2(column / 255.0f, row / 255.0f);
 
         sprintf(buff, "%d (%d %d)\n", tile, column, row);
         OS_DebugPrint(buff);
     }
 
-    glGenTextures(1, &result.indexTexture);
-    glBindTexture(GL_TEXTURE_2D, result.indexTexture);
+    glBindVertexArray(quadVAO);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    u32 vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, indexSize, atlasIndex, GL_STATIC_DRAW);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, atlasIndex);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(v2), 0);
+    glVertexAttribDivisor(1, 1);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
     cute_tiled_free_map(tiledMap);
-    M_ArenaPop(&state.permanentArena, mapDataSize);
+    M_ArenaPop(&state.permanentArena, indexSize);
 
     return result;
 }

@@ -62,14 +62,13 @@ void AppLoad(os_state *os_)
     state.face = R_CreateTexture("res/awesomeface.png");
     */
 
-    state.mapShader = R_InitShader(quadVertexShaderSource, tilemapFragmentShaderSource);
+    state.mapShader = R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
     glUseProgram(state.mapShader);
     R_Update2DProjection(state.mapShader);
-    glUniform1i(glGetUniformLocation(state.mapShader, "MapTexture"), 1);
-    glUniform1i(glGetUniformLocation(state.mapShader, "AtlasTexture"), 2);
+    glUniform1i(glGetUniformLocation(state.mapShader, "atlas"), 1);
 
     state.atlas = R_CreateTexture("res/atlas.png");
-    state.map = R_CreateTilemap("res/small.json", state.atlas);
+    state.map = R_CreateTilemap("res/small.json", state.atlas, state.vao);
     GL_CheckForErrors();
 }
 

@@ -22,6 +22,8 @@ GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER)
 GLProc(glGetUniformLocation, GLGETUNIFORMLOCATION)
 GLProc(glUniform3f, GLUNIFORM3F)
 GLProc(glUniform1i, GLUNIFORM1I)
+GLProc(glVertexAttribDivisor, GLVERTEXATTRIBDIVISOR)
+GLProc(glDrawArraysInstanced, GLDRAWARRAYSINSTANCED)
 
 #if BUILD_WIN32
 GLProc(glActiveTexture, GLACTIVETEXTURE)
