@@ -3,14 +3,14 @@ char quadVertexShaderSource[] = "                                     \n\
                                                                       \n\
     layout (location = 0) in vec4 vertex;                             \n\
                                                                       \n\
-    out vec2 TexCoords;                                               \n\
+    out vec2 texCoords;                                               \n\
                                                                       \n\
     uniform mat4 model;                                               \n\
     uniform mat4 projection;                                          \n\
                                                                       \n\
     void main()                                                       \n\
     {                                                                 \n\
-        TexCoords = vertex.zw;                                        \n\
+        texCoords = vertex.zw;                                        \n\
         gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0); \n\
     }                                                                 \n\
 ";
@@ -18,14 +18,14 @@ char quadVertexShaderSource[] = "                                     \n\
 char spriteFragmentShaderSource[] = "      \n\
     #version 330 core                      \n\
                                            \n\
-    in vec2 TexCoords;                     \n\
+    in vec2 texCoords;                     \n\
     out vec4 color;                        \n\
                                            \n\
     uniform sampler2D image;               \n\
                                            \n\
     void main()                            \n\
     {                                      \n\
-        color = texture(image, TexCoords); \n\
+        color = texture(image, texCoords); \n\
     }                                      \n\
 ";
 
@@ -33,10 +33,10 @@ char tilemapVertexShaderSource[] = "                                            
     #version 330 core                                                                      \n\
                                                                                            \n\
     layout (location = 0) in vec4 vertex;                                                  \n\
-    layout (location = 1) in vec2 TileIndex;                                               \n\
+    layout (location = 1) in vec2 tileIndex;                                               \n\
                                                                                            \n\
-    out vec2 TexCoords;                                                                    \n\
-    out vec2 TileCoords;                                                                   \n\
+    out vec2 texCoords;                                                                    \n\
+    out vec2 tileCoords;                                                                   \n\
                                                                                            \n\
     uniform mat4 model;                                                                    \n\
     uniform mat4 projection;                                                               \n\
@@ -44,9 +44,9 @@ char tilemapVertexShaderSource[] = "                                            
                                                                                            \n\
     void main()                                                                            \n\
     {                                                                                      \n\
+        texCoords = vertex.zw;                                                             \n\
+        tileCoords = tileIndex;                                                            \n\
         ivec2 tileOffset = ivec2(gl_InstanceID % mapSize.x, gl_InstanceID / mapSize.x);    \n\
-        TexCoords = vertex.zw;                                                             \n\
-        TileCoords = TileIndex;                                                            \n\
         gl_Position = projection * model * vec4(vertex.xy + (1.0 * tileOffset), 0.0, 1.0); \n\
     }                                                                                      \n\
 ";
@@ -54,8 +54,8 @@ char tilemapVertexShaderSource[] = "                                            
 char tilemapFragmentShaderSource[] = "       \n\
     #version 330 core                        \n\
                                              \n\
-    in vec2 TexCoords;                       \n\
-    in vec2 TileCoords;                      \n\
+    in vec2 texCoords;                       \n\
+    in vec2 tileCoords;                      \n\
     out vec4 color;                          \n\
                                              \n\
     uniform sampler2D atlas;                 \n\
@@ -63,8 +63,8 @@ char tilemapFragmentShaderSource[] = "       \n\
                                              \n\
     void main()                              \n\
     {                                        \n\
-        vec2 uv = TileCoords / atlasSize;    \n\
-        vec2 offset = TexCoords / atlasSize; \n\
+        vec2 uv = tileCoords / atlasSize;    \n\
+        vec2 offset = texCoords / atlasSize; \n\
         color = texture(atlas, uv + offset); \n\
     }                                        \n\
 ";
@@ -97,6 +97,7 @@ internal void R_Update2DProjection(u32 shader)
 {
     m4 projection =
         M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
+    glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, 0, projection.flatten);
 }
 
@@ -119,15 +120,15 @@ internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
 
 internal u32 R_CreateQuadVAO(void)
 {
-    v4 vertices[] = {
-        // position    texture
-        v4(0.0f, 1.0f, 0.0f, 1.0f), //
-        v4(1.0f, 0.0f, 1.0f, 0.0f), //
-        v4(0.0f, 0.0f, 0.0f, 0.0f), //
+    f32 vertices[] = {
+        // xy       uv
+        0.0f, 1.0f, 0.0f, 1.0f, //
+        1.0f, 0.0f, 1.0f, 0.0f, //
+        0.0f, 0.0f, 0.0f, 0.0f, //
 
-        v4(0.0f, 1.0f, 0.0f, 1.0f), //
-        v4(1.0f, 1.0f, 1.0f, 1.0f), //
-        v4(1.0f, 0.0f, 1.0f, 0.0f)  //
+        0.0f, 1.0f, 0.0f, 1.0f, //
+        1.0f, 1.0f, 1.0f, 1.0f, //
+        1.0f, 0.0f, 1.0f, 0.0f  //
     };
 
     u32 vao;
@@ -197,31 +198,6 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 p
     glBindVertexArray(0);
 }
 
-internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
-{
-    glUseProgram(mapShader);
-
-    m4 model = M4Identity();
-    // model = M4MultiplyM4(model, M4Translate(v3(0.0f, 0.0f, 0.0f)));
-    model = M4MultiplyM4(model, M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f)));
-
-    glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.flatten);
-    GL_CheckForErrors();
-    glUniform2i(glGetUniformLocation(mapShader, "mapSize"), map.width, map.height);
-    GL_CheckForErrors();
-    glUniform2f(glGetUniformLocation(mapShader, "atlasSize"), 1.0f * map.atlas.width / map.tileSize,
-                1.0f * map.atlas.height / map.tileSize);
-    GL_CheckForErrors();
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
-
-    glBindVertexArray(quadVAO);
-    // glDrawArraysInstanced(GL_TRIANGLES, 0, 6, 1);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.width * map.height);
-    glBindVertexArray(0);
-}
-
 internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
@@ -239,17 +215,14 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
     v2 *atlasIndex = M_ArenaPushZero(&state.permanentArena, indexSize);
     u32 atlasColumnCount = atlas.width / result.tileSize;
 
-    char buff[256];
     for (i32 i = 0; i < layer->data_count; i++)
     {
+        // -1 because exported file increments data by 1. bruh why???
         u32 tile = layer->data[i] - 1;
         u32 column = (tile % atlasColumnCount);
         u32 row = (tile / atlasColumnCount);
 
         atlasIndex[i] = v2((f32)column, (f32)row);
-
-        sprintf(buff, "%d (%d %d)\n", tile, column, row);
-        OS_DebugPrint(buff);
     }
 
     glBindVertexArray(quadVAO);
@@ -270,4 +243,23 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
     M_ArenaPop(&state.permanentArena, indexSize);
 
     return result;
+}
+
+internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
+{
+    glUseProgram(mapShader);
+
+    m4 model = M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
+
+    glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.flatten);
+    glUniform2i(glGetUniformLocation(mapShader, "mapSize"), map.width, map.height);
+    glUniform2f(glGetUniformLocation(mapShader, "atlasSize"), 1.0f * map.atlas.width / map.tileSize,
+                1.0f * map.atlas.height / map.tileSize);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
+
+    glBindVertexArray(quadVAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.width * map.height);
+    glBindVertexArray(0);
 }
