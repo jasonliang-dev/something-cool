@@ -30,6 +30,11 @@ internal void OS_DisplayError(char *str)
     MessageBoxA(NULL, str, "Error", MB_OK | MB_ICONEXCLAMATION);
 }
 
+internal void OS_ShowCursor(b32 shown)
+{
+    ShowCursor(shown);
+}
+
 internal v2 W32_GetMousePosition(HWND window)
 {
     POINT mouse;

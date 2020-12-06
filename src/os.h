@@ -193,6 +193,7 @@ internal void OS_Release(void *memory, u64 size);
 internal void OS_Commit(void *memory, u64 size);
 internal void OS_Decommit(void *memory, u64 size);
 internal void OS_ReadFile(memory_arena *arena, char * path, void **data, u64 *len);
+internal void OS_ShowCursor(b32 shown);
 internal void OS_GLSwapBuffers(void);
 internal void *OS_LoadOpenGLProcedure(char *name);
 internal void OS_DebugPrint(char *str);

@@ -93,11 +93,11 @@ internal u32 R_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void R_Update2DProjection(u32 shader)
+internal void R_Update2DProjection(u32 shader, u32 scale)
 {
     m4 projection =
         M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
-    projection = M4MultiplyM4(projection, M4Scale(v3(2.0f, 2.0f, 1.0f)));
+    projection = M4MultiplyM4(projection, M4Scale(v3((f32)scale, (f32)scale, 1.0f)));
 
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, 0, projection.flatten);
@@ -214,7 +214,7 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
     result.tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = M_ArenaPushZero(&state.permanentArena, indexSize);
+    v2 *atlasIndex = M_ArenaPushZero(&os->permanentArena, indexSize);
     u32 atlasColumnCount = atlas.width / result.tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -242,7 +242,7 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
     glBindVertexArray(0);
 
     cute_tiled_free_map(tiledMap);
-    M_ArenaPop(&state.permanentArena, indexSize);
+    M_ArenaPop(&os->permanentArena, indexSize);
 
     return result;
 }

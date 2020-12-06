@@ -23,25 +23,39 @@ struct player
 {
     v2 pos;
     v2 vel;
+    u32 shootCooldown;
     f32 moveSpeed;
     b32 facingRight;
     texture sprite;
+};
+
+typedef struct bone bone;
+struct bone
+{
+    v2 pos;
+    v2 vel;
+    f32 rot;
 };
 
 typedef struct app_state app_state;
 struct app_state
 {
     b8 keysDown[Key_Max];
+    b8 mouseDown[MouseButton_Max];
 
+    u32 scale;
     u32 mapShader;
     u32 spriteShader;
     u32 vao;
     texture face;
+    texture cursor;
+    texture bone;
     tilemap map;
 
     player p;
-
-    memory_arena permanentArena;
+    u32 bulletPoolCount;
+    u32 bulletPoolMax;
+    bone *bulletPool;
 };
 
 global app_state state;
@@ -52,16 +66,26 @@ global app_state state;
 #include "opengl.c"
 #include "render.c"
 
+internal v2 GetWorldCursorPosition(void)
+{
+    return v2(os->mousePosition.x / state.scale, os->mousePosition.y / state.scale);
+}
+
 void AppLoad(os_state *os_)
 {
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
     MemorySet(state.keysDown, 0, Key_Max);
-    state.permanentArena = M_ArenaInitialize(Gigabytes(4));
+    state.scale = 2;
+    state.bulletPoolCount = 0;
+    state.bulletPoolMax = 1000;
+    state.bulletPool = M_ArenaPush(&os->permanentArena, sizeof(bone) * state.bulletPoolMax);
 
     state.p.moveSpeed = 3.0f;
+    state.p.shootCooldown = 0;
 
+    OS_ShowCursor(0);
     GL_LoadProcedures();
 
     glEnable(GL_BLEND);
@@ -78,6 +102,8 @@ void AppLoad(os_state *os_)
     glUniform1i(glGetUniformLocation(state.mapShader, "atlas"), 1);
 
     state.face = R_CreateTexture("res/awesomeface.png");
+    state.cursor = R_CreateTexture("res/cursor.png");
+    state.bone = R_CreateTexture("res/bone.png");
     state.p.sprite = R_CreateTexture("res/dog.png");
     state.map = R_CreateTilemap("res/map.json", R_CreateTexture("res/atlas.png"), state.vao);
 
@@ -86,8 +112,6 @@ void AppLoad(os_state *os_)
 
 void AppUpdate(void)
 {
-    local_persist f32 angle = 0;
-
     player *p = &state.p;
     p->vel = v2(0.0f, 0.0f);
 
@@ -97,8 +121,8 @@ void AppUpdate(void)
         if (event.type == OS_EventType_WindowResize)
         {
             glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
-            R_Update2DProjection(state.spriteShader);
-            R_Update2DProjection(state.mapShader);
+            R_Update2DProjection(state.spriteShader, state.scale);
+            R_Update2DProjection(state.mapShader, state.scale);
         }
         else if (event.type == OS_EventType_KeyPress)
         {
@@ -113,6 +137,37 @@ void AppUpdate(void)
         {
             state.keysDown[event.key] = 0;
         }
+        else if (event.type == OS_EventType_MousePress)
+        {
+            state.mouseDown[event.mouseButton] = 1;
+        }
+        else if (event.type == OS_EventType_MouseRelease)
+        {
+            state.mouseDown[event.mouseButton] = 0;
+        }
+    }
+
+    if (state.mouseDown[MouseButton_Left] && p->shootCooldown == 0)
+    {
+        p->shootCooldown = 10;
+        bone *b = &state.bulletPool[state.bulletPoolCount++];
+        v2 cursor = GetWorldCursorPosition();
+        b->pos = p->pos;
+        b->rot = PointDirection(p->pos, cursor);
+        b->vel.x = 8.0f * Cos(b->rot);
+        b->vel.y = 8.0f * Sin(b->rot);
+    }
+
+    for (u32 i = 0; i < state.bulletPoolCount; i++)
+    {
+        bone *b = &state.bulletPool[i];
+        b->pos.x += b->vel.x;
+        b->pos.y += b->vel.y;
+    }
+
+    if (p->shootCooldown > 0)
+    {
+        p->shootCooldown--;
     }
 
     if (state.keysDown[Key_W])
@@ -143,6 +198,16 @@ void AppUpdate(void)
 
     R_DrawTilemap(state.mapShader, state.vao, state.map);
     R_DrawSprite(state.spriteShader, state.vao, state.p.sprite, state.p.pos, 0);
+    R_DrawSprite(state.spriteShader, state.vao, state.cursor,
+                 v2(os->mousePosition.x / state.scale - (state.cursor.width / 2.0f),
+                    os->mousePosition.y / state.scale - (state.cursor.height / 2.0f)),
+                 0);
+
+    for (u32 i = 0; i < state.bulletPoolCount; i++)
+    {
+        bone *b = &state.bulletPool[i];
+        R_DrawSprite(state.spriteShader, state.vao, state.bone, b->pos, -b->rot);
+    }
 
     OS_GLSwapBuffers();
 

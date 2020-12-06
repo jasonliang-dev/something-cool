@@ -57,6 +57,13 @@ internal v2 V2FromIV2(iv2 a)
     return result;
 }
 
+internal f32 PointDirection(v2 a, v2 b)
+{
+    f32 x = b.x - a.x;
+    f32 y = b.y - a.y;
+    return ATan2(y, x);
+}
+
 internal v3 V3AddV3(v3 a, v3 b)
 {
     v3 c = {a.x + b.x, a.y + b.y, a.z + b.z};
