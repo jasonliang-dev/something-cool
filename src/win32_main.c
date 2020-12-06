@@ -56,6 +56,14 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     else if (message == WM_SYSKEYDOWN || message == WM_SYSKEYUP || message == WM_KEYDOWN ||
              message == WM_KEYUP)
     {
+        b8 isDown = !(lParam & (1 << 31));
+        b8 prevDown = !!(lParam & (1 << 30));
+
+        if (prevDown && isDown)
+        {
+            return DefWindowProc(window, message, wParam, lParam);
+        }
+
         u64 vkeyCode = wParam;
         u64 keyInput = 0;
 
@@ -176,7 +184,6 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
             keyInput = Key_RightBracket;
         }
 
-        i8 isDown = !(lParam & (1 << 31));
         event.type = isDown ? OS_EventType_KeyPress : OS_EventType_KeyRelease;
         event.key = keyInput;
         event.modifiers = modifiers;

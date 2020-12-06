@@ -97,6 +97,8 @@ internal void R_Update2DProjection(u32 shader)
 {
     m4 projection =
         M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
+    projection = M4MultiplyM4(projection, M4Scale(v3(2.0f, 2.0f, 1.0f)));
+
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, 0, projection.flatten);
 }
@@ -162,8 +164,8 @@ internal texture R_CreateTexture(char *imagePath)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, imageData);

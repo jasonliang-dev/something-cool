@@ -19,6 +19,8 @@
 #define Gigabytes(n) (((u64)(n)) << 30)
 #define Terabytes(n) (((u64)(n)) << 40)
 #define PI (3.1415926535897f)
+#define F32_EPSILON (0.0001f)
+#define F64_EPSILON (0.00000001f)
 
 typedef int8_t i8;
 typedef int16_t i16;

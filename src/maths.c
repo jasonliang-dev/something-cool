@@ -29,11 +29,20 @@ internal f32 V2Length(v2 a)
 
 internal v2 V2Normalize(v2 v)
 {
+    v2 result;
     f32 length = V2Length(v);
-    v2 result = {
-        v.x / length,
-        v.y / length,
-    };
+
+    if (length <= F32_EPSILON)
+    {
+        result.x = 0.0f;
+        result.y = 0.0f;
+    }
+    else
+    {
+        result.x = v.x / length;
+        result.y = v.y / length;
+    }
+
     return result;
 }
 
@@ -80,12 +89,22 @@ internal f32 V3Length(v3 a)
 
 internal v3 V3Normalize(v3 v)
 {
+    v3 result;
     f32 length = V3Length(v);
-    v3 result = {
-        v.x / length,
-        v.y / length,
-        v.z / length,
-    };
+
+    if (length <= F32_EPSILON)
+    {
+        result.x = 0.0f;
+        result.y = 0.0f;
+        result.z = 0.0f;
+    }
+    else
+    {
+        result.x = v.x / length;
+        result.y = v.y / length;
+        result.z = v.z / length;
+    }
+
     return result;
 }
 
