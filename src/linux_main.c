@@ -4,7 +4,7 @@
 
 #include "app.c"
 
-global os_state globalOS;
+global os_state_t globalOS;
 global Display *globalDpy;
 global GLXWindow globalGlxWin;
 global void *globalLibGL;
@@ -43,26 +43,13 @@ int main(void)
     globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
 
     globalOS.sampleOut = NULL;
+    globalOS.sampleCount = 0;
     globalOS.samplesPerSecond = 0;
-
-    globalOS.Reserve = Linux_Reserve;
-    globalOS.Release = Linux_Release;
-    globalOS.Commit = Linux_Commit;
-    globalOS.Decommit = Linux_Decommit;
-    globalOS.ReadFile = NULL;
-    globalOS.SwapBuffers = Linux_GLSwapBuffers;
-    globalOS.LoadOpenGLProcedure = Linux_LoadOpenGLProcedure;
-
-    globalOS.DebugPrint = Linux_DebugPrint;
-    globalOS.DebugDisplayError = Linux_DisplayError;
-
-    globalOS.permanentArena = M_ArenaInitialize(Gigabytes(4));
-    globalOS.frameArena = M_ArenaInitialize(Gigabytes(4));
 
     Atom winClosedID = XInternAtom(globalDpy, "WM_DELETE_WINDOW", 0);
     XSetWMProtocols(globalDpy, xWin, &winClosedID, 1);
 
-    AppPermanentLoad(&globalOS);
+    AppLoad(&globalOS);
 
     while (globalOS.running)
     {

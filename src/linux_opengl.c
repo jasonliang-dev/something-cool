@@ -1,4 +1,4 @@
-internal void *Linux_LoadOpenGLProcedure(char *name)
+internal void *OS_LoadOpenGLProcedure(char *name)
 {
     void *p = dlsym(globalLibGL, name);
 
@@ -59,7 +59,7 @@ internal void Linux_CreateWindowWithOpenGL(Window *xWin, GLXWindow *glxWin)
     glXMakeContextCurrent(globalDpy, *glxWin, *glxWin, glxContext);
 }
 
-internal void Linux_GLSwapBuffers(void)
+internal void OS_GLSwapBuffers(void)
 {
     glXSwapBuffers(globalDpy, globalGlxWin);
 }
