@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
 
     AppLoad(&globalOS);
 
-    printf("App running\n");
     while (globalOS.running)
     {
         XEvent event;
