@@ -22,7 +22,6 @@
 
 global app_state_t app;
 global os_state_t *os = NULL;
-global scene_t globalGameScene;
 
 #include "os.c"
 #include "maths.c"
@@ -39,11 +38,12 @@ void AppLoad(os_state_t *os_)
     app.sceneArena = M_ArenaInitialize(Gigabytes(4));
     app.scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    globalGameScene.Init = GameSceneInit;
-    globalGameScene.Destroy = GameSceneDestroy;
-    globalGameScene.Update = GameSceneUpdate;
+    scene_t gameScene;
+    gameScene.Init = GameSceneInit;
+    gameScene.Destroy = GameSceneDestroy;
+    gameScene.Update = GameSceneUpdate;
 
-    app.scene = globalGameScene;
+    app.scene = gameScene;
 
     MemorySet(app.keysDown, 0, Key_Max);
     MemorySet(app.mouseDown, 0, MouseButton_Max);
@@ -72,9 +72,9 @@ void AppLoad(os_state_t *os_)
     app.resources.atlas = R_CreateTexture("res/atlas.png");
     app.resources.map = R_CreateTilemap("res/map.json", app.resources.atlas, app.vao);
 
-    GL_CheckForErrors();
-
     app.scene.Init(&app.sceneArena);
+
+    GL_CheckForErrors();
 }
 
 void AppUpdate(void)
@@ -111,6 +111,8 @@ void AppUpdate(void)
     }
 
     app.scene.Update(&app.sceneArena);
+
+    GL_CheckForErrors();
 }
 
 void AppClose(void)

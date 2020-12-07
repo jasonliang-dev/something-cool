@@ -112,5 +112,4 @@ internal void GameSceneUpdate(memory_arena *arena)
     }
 
     OS_GLSwapBuffers();
-    GL_CheckForErrors();
 }
