@@ -6,6 +6,7 @@
 
 #include "app.c"
 
+global os_state_t globalOS;
 global Display *globalDisplay;
 global Window globalWindow;
 global void *globalLibGL;
@@ -15,7 +16,9 @@ global void *globalLibGL;
 
 int main(int argc, char *argv[])
 {
-    Linux_CreateWindowWithGLContext(&globalDisplay, &globalWindow);
+    GLXContext ctx;
+    Colormap cmap;
+    Linux_CreateWindowWithGLContext(&globalDisplay, &globalWindow, &ctx, &cmap);
 
     globalLibGL = dlopen("libGL.so", RTLD_LAZY);
     if (!globalLibGL)
@@ -24,26 +27,45 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    glClearColor(0, 0.5, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    OS_GLSwapBuffers();
+    os = &globalOS;
+    globalOS.running = 1;
+    globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
+    globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
 
-    sleep(1);
+    globalOS.sampleOut = NULL;
+    globalOS.sampleCount = 0;
+    globalOS.samplesPerSecond = 0;
 
-    glClearColor(1, 0.5, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glXSwapBuffers(globalDisplay, globalWindow);
+    Atom winClosedID = XInternAtom(globalDisplay, "WM_DELETE_WINDOW", 0);
+    XSetWMProtocols(globalDisplay, globalWindow, &winClosedID, 1);
 
-    sleep(1);
+    AppLoad(&globalOS);
 
-    /*
+    printf("App running\n");
+    while (globalOS.running)
+    {
+        XEvent event;
+        while (XPending(globalDisplay))
+        {
+            XNextEvent(globalDisplay, &event);
+
+            if (event.type == ClientMessage && event.xclient.data.l[0] == winClosedID)
+            {
+                globalOS.running = 0;
+            }
+        }
+
+        AppUpdate();
+    }
+
+    AppClose();
+
     glXMakeCurrent(globalDisplay, 0, 0);
     glXDestroyContext(globalDisplay, ctx);
 
     XDestroyWindow(globalDisplay, globalWindow);
     XFreeColormap(globalDisplay, cmap);
     XCloseDisplay(globalDisplay);
-    */
 
     return 0;
 }
