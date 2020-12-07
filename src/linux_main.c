@@ -18,7 +18,12 @@ int main(int argc, char *argv[])
 {
     GLXContext ctx;
     Colormap cmap;
-    Linux_CreateWindowWithGLContext(&globalDisplay, &globalWindow, &ctx, &cmap);
+
+    if (!Linux_CreateWindowWithGLContext(&globalDisplay, &globalWindow, &ctx, &cmap))
+    {
+        printf("Can't create window\n");
+        return 1;
+    }
 
     globalLibGL = dlopen("libGL.so", RTLD_LAZY);
     if (!globalLibGL)

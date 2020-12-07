@@ -4,9 +4,9 @@ typedef GLXContext (*glXCreateContextAttribsARBProc)(Display *, GLXFBConfig, GLX
                                                      const int *);
 global glXCreateContextAttribsARBProc glXCreateContextAttribsARB = 0;
 
-global int globalCtxErrorOccurred = 0;
+global b32 globalCtxErrorOccurred = 0;
 
-internal int Linux_CtxErrorHandler(Display *dpy, XErrorEvent *ev)
+internal i32 Linux_CtxErrorHandler(Display *dpy, XErrorEvent *ev)
 {
     globalCtxErrorOccurred = 1;
     return 0;
@@ -24,17 +24,17 @@ internal void *OS_LoadOpenGLProcedure(char *name)
     return p;
 }
 
-internal void Linux_CreateWindowWithGLContext(Display **display, Window *window, GLXContext *ctx,
-                                              Colormap *cmap)
+internal b32 Linux_CreateWindowWithGLContext(Display **display, Window *window, GLXContext *ctx,
+                                             Colormap *cmap)
 {
     *display = XOpenDisplay(NULL);
 
     if (!*display)
     {
-        exit(1);
+        return 0;
     }
 
-    static int visual_attribs[] = {GLX_X_RENDERABLE,
+    static i32 visual_attribs[] = {GLX_X_RENDERABLE,
                                    1,
                                    GLX_DRAWABLE_TYPE,
                                    GLX_WINDOW_BIT,
@@ -58,26 +58,26 @@ internal void Linux_CreateWindowWithGLContext(Display **display, Window *window,
                                    1,
                                    None};
 
-    int glxMajor, glxMinor;
+    i32 glxMajor, glxMinor;
 
     if (!glXQueryVersion(*display, &glxMajor, &glxMinor) || ((glxMajor == 1) && (glxMinor < 3)) ||
         (glxMajor < 1))
     {
-        exit(1);
+        return 0;
     }
 
-    int fbcount;
+    i32 fbcount;
     GLXFBConfig *fbc =
         glXChooseFBConfig(*display, DefaultScreen(*display), visual_attribs, &fbcount);
 
-    int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+    i32 best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
 
-    for (int i = 0; i < fbcount; i++)
+    for (i32 i = 0; i < fbcount; i++)
     {
         XVisualInfo *vi = glXGetVisualFromFBConfig(*display, fbc[i]);
         if (vi)
         {
-            int samp_buf, samples;
+            i32 samp_buf, samples;
             glXGetFBConfigAttrib(*display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
             glXGetFBConfigAttrib(*display, fbc[i], GLX_SAMPLES, &samples);
 
@@ -111,12 +111,12 @@ internal void Linux_CreateWindowWithGLContext(Display **display, Window *window,
                             CWBorderPixel | CWColormap | CWEventMask, &swa);
     if (!*window)
     {
-        exit(1);
+        return 0;
     }
 
     XFree(vi);
 
-    XStoreName(*display, *window, "GL 3.0 Window");
+    XStoreName(*display, *window, WINDOW_TITLE);
 
     XMapWindow(*display, *window);
 
@@ -128,9 +128,9 @@ internal void Linux_CreateWindowWithGLContext(Display **display, Window *window,
     *ctx = 0;
 
     globalCtxErrorOccurred = 0;
-    int (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(&Linux_CtxErrorHandler);
+    i32 (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(&Linux_CtxErrorHandler);
 
-    int context_attribs[] = {
+    i32 context_attribs[] = {
         GLX_CONTEXT_MAJOR_VERSION_ARB, 3, GLX_CONTEXT_MINOR_VERSION_ARB, 3,
         // GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
         None};
@@ -140,7 +140,7 @@ internal void Linux_CreateWindowWithGLContext(Display **display, Window *window,
     XSync(*display, 0);
     if (globalCtxErrorOccurred || !*ctx)
     {
-        exit(1);
+        return 0;
     }
 
     XSync(*display, 0);
@@ -149,10 +149,12 @@ internal void Linux_CreateWindowWithGLContext(Display **display, Window *window,
 
     if (globalCtxErrorOccurred || !*ctx)
     {
-        exit(1);
+        return 0;
     }
 
     glXMakeCurrent(*display, *window, *ctx);
+
+    return 1;
 }
 
 internal void OS_GLSwapBuffers(void)
