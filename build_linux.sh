@@ -1,6 +1,6 @@
 #/usr/bin/env bash
 
-BUILD_OPTIONS="-DDEBUG=1 -DBUILD_LINUX=1"
+BUILD_OPTIONS="-DDEBUG=1 -DPLATFORM_LINUX=1"
 FLAGS="-std=gnu99"
 LIBRARY_LINK="-lm -ldl -lX11 -lGL"
 

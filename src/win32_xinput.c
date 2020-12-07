@@ -2,8 +2,8 @@
 
 #define W32_MAX_GAMEPADS 4
 
-typedef struct w32_gamepad_input w32_gamepad_input;
-struct w32_gamepad_input
+typedef struct w32_gamepad_input_t w32_gamepad_input_t;
+struct w32_gamepad_input_t
 {
     b32 connected;
     v2 joystick1;
@@ -13,7 +13,7 @@ struct w32_gamepad_input
     i32 buttonStates[GamepadButton_Max];
 };
 
-w32_gamepad_input globalGamepads[W32_MAX_GAMEPADS];
+w32_gamepad_input_t globalGamepads[W32_MAX_GAMEPADS];
 
 #define X_INPUT_GET_STATE(name) DWORD name(DWORD dwUserIndex, XINPUT_STATE *pState)
 typedef X_INPUT_GET_STATE(x_input_get_state_fn);

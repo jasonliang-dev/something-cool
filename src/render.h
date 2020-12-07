@@ -1,16 +1,16 @@
-typedef struct texture texture;
-struct texture
+typedef struct texture_t texture_t;
+struct texture_t
 {
     u32 width;
     u32 height;
     u32 textureID;
 };
 
-typedef struct tilemap tilemap;
-struct tilemap
+typedef struct tilemap_t tilemap_t;
+struct tilemap_t
 {
     u32 width;
     u32 height;
-    texture atlas;
+    texture_t atlas;
     u32 tileSize;
 };

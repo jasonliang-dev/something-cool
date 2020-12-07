@@ -8,7 +8,7 @@
 #define Sin sinf
 #define Cos cosf
 #define Tan tanf
-#define ATan2 atan2f
+#define ArcTan2 atan2f
 
 #define global static
 #define internal static

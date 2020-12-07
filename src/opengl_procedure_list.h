@@ -27,6 +27,6 @@ GLProc(glValidateProgram, GLVALIDATEPROGRAM)
 GLProc(glVertexAttribDivisor, GLVERTEXATTRIBDIVISOR)
 GLProc(glVertexAttribPointer, GLVERTEXATTRIBPOINTER)
 
-#if BUILD_WIN32
+#if PLATFORM_WIN32
 GLProc(glActiveTexture, GLACTIVETEXTURE)
 #endif

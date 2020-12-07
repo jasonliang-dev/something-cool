@@ -3,7 +3,7 @@
 
 #include "app.c"
 
-global os_state globalOS;
+global os_state_t globalOS;
 global HDC globalHDC;
 
 #include "win32_utils.c"
@@ -17,7 +17,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
                                               LPARAM lParam)
 {
     u32 modifiers = 0;
-    os_event event;
+    os_event_t event;
 
     if (GetKeyState(VK_CONTROL) & 0x8000)
     {
@@ -32,17 +32,16 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
         modifiers |= KeyModifier_Alt;
     }
 
-    if (message == WM_CLOSE || message == WM_DESTROY || message == WM_QUIT)
+    switch (message)
     {
+    case WM_CLOSE:
+    case WM_DESTROY:
+    case WM_QUIT:
         globalOS.running = 0;
         return 0;
-    }
-    else if (message == WM_MENUCHAR)
-    {
+    case WM_MENUCHAR:
         return MAKELRESULT(0, MNC_CLOSE);
-    }
-    else if (message == WM_SIZE)
-    {
+    case WM_SIZE:
         i32 width = LOWORD(lParam);
         i32 height = HIWORD(lParam);
         event.type = OS_EventType_WindowResize;
@@ -52,184 +51,70 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
         globalOS.windowResolution.y = height;
         OS_PushEvent(event);
         return 0;
-    }
-    else if (message == WM_SYSKEYDOWN || message == WM_SYSKEYUP || message == WM_KEYDOWN ||
-             message == WM_KEYUP)
-    {
+    case WM_SYSKEYDOWN:
+    case WM_SYSKEYUP:
+    case WM_KEYDOWN:
+    case WM_KEYUP: {
         b8 isDown = !(lParam & (1 << 31));
         b8 prevDown = !!(lParam & (1 << 30));
 
-        if (prevDown && isDown)
-        {
-            return DefWindowProc(window, message, wParam, lParam);
-        }
-
-        u64 vkeyCode = wParam;
         u64 keyInput = 0;
+        W32_KeyCodeToOSKey(wParam, &keyInput, &modifiers);
 
-        if ((vkeyCode >= 'A' && vkeyCode <= 'Z') || (vkeyCode >= '0' && vkeyCode <= '9'))
+        if (!isDown)
         {
-            keyInput = (vkeyCode >= 'A' && vkeyCode <= 'Z') ? Key_A + (vkeyCode - 'A')
-                                                            : Key_0 + (vkeyCode - '0');
+            event.type = OS_EventType_KeyUp;
         }
-        else if (vkeyCode >= VK_F1 && vkeyCode <= VK_F12)
+        else
         {
-            keyInput = Key_F1 + vkeyCode - VK_F1;
-        }
-        else if (vkeyCode == VK_ESCAPE)
-        {
-            keyInput = Key_Esc;
-        }
-        else if (vkeyCode == VK_OEM_3)
-        {
-            keyInput = Key_GraveAccent;
-        }
-        else if (vkeyCode == VK_OEM_MINUS)
-        {
-            keyInput = Key_Minus;
-        }
-        else if (vkeyCode == VK_OEM_PLUS)
-        {
-            keyInput = Key_Equal;
-        }
-        else if (vkeyCode == VK_BACK)
-        {
-            keyInput = Key_Backspace;
-        }
-        else if (vkeyCode == VK_TAB)
-        {
-            keyInput = Key_Tab;
-        }
-        else if (vkeyCode == VK_SPACE)
-        {
-            keyInput = Key_Space;
-        }
-        else if (vkeyCode == VK_RETURN)
-        {
-            keyInput = Key_Enter;
-        }
-        else if (vkeyCode == VK_CONTROL)
-        {
-            keyInput = Key_Ctrl;
-            modifiers &= ~KeyModifier_Ctrl;
-        }
-        else if (vkeyCode == VK_SHIFT)
-        {
-            keyInput = Key_Shift;
-            modifiers &= ~KeyModifier_Shift;
-        }
-        else if (vkeyCode == VK_MENU)
-        {
-            keyInput = Key_Alt;
-            modifiers &= ~KeyModifier_Alt;
-        }
-        else if (vkeyCode == VK_UP)
-        {
-            keyInput = Key_Up;
-        }
-        else if (vkeyCode == VK_LEFT)
-        {
-            keyInput = Key_Left;
-        }
-        else if (vkeyCode == VK_DOWN)
-        {
-            keyInput = Key_Down;
-        }
-        else if (vkeyCode == VK_RIGHT)
-        {
-            keyInput = Key_Right;
-        }
-        else if (vkeyCode == VK_DELETE)
-        {
-            keyInput = Key_Delete;
-        }
-        else if (vkeyCode == VK_PRIOR)
-        {
-            keyInput = Key_PageUp;
-        }
-        else if (vkeyCode == VK_NEXT)
-        {
-            keyInput = Key_PageDown;
-        }
-        else if (vkeyCode == VK_HOME)
-        {
-            keyInput = Key_Home;
-        }
-        else if (vkeyCode == VK_END)
-        {
-            keyInput = Key_End;
-        }
-        else if (vkeyCode == VK_OEM_2)
-        {
-            keyInput = Key_ForwardSlash;
-        }
-        else if (vkeyCode == VK_OEM_PERIOD)
-        {
-            keyInput = Key_Period;
-        }
-        else if (vkeyCode == VK_OEM_COMMA)
-        {
-            keyInput = Key_Comma;
-        }
-        else if (vkeyCode == VK_OEM_7)
-        {
-            keyInput = Key_Quote;
-        }
-        else if (vkeyCode == VK_OEM_4)
-        {
-            keyInput = Key_LeftBracket;
-        }
-        else if (vkeyCode == VK_OEM_6)
-        {
-            keyInput = Key_RightBracket;
+            if (!prevDown)
+            {
+                os_event_t eventOnce;
+                eventOnce.type = OS_EventType_KeyDown;
+                eventOnce.key = keyInput;
+                eventOnce.modifiers = modifiers;
+                OS_PushEvent(eventOnce);
+            }
+
+            event.type = OS_EventType_KeyPress;
         }
 
-        event.type = isDown ? OS_EventType_KeyPress : OS_EventType_KeyRelease;
         event.key = keyInput;
         event.modifiers = modifiers;
         OS_PushEvent(event);
 
         return DefWindowProc(window, message, wParam, lParam);
     }
-    else if (message == WM_LBUTTONDOWN)
-    {
-        event.type = OS_EventType_MousePress;
+    case WM_LBUTTONDOWN:
+        event.type = OS_EventType_MouseDown;
         event.mouseButton = MouseButton_Left;
         OS_PushEvent(event);
         return 0;
-    }
-    else if (message == WM_LBUTTONUP)
-    {
-        event.type = OS_EventType_MouseRelease;
+    case WM_LBUTTONUP:
+        event.type = OS_EventType_MouseUp;
         event.mouseButton = MouseButton_Left;
         OS_PushEvent(event);
         return 0;
-    }
-    else if (message == WM_RBUTTONDOWN)
-    {
-        event.type = OS_EventType_MousePress;
+    case WM_RBUTTONDOWN:
+        event.type = OS_EventType_MouseDown;
         event.mouseButton = MouseButton_Right;
         OS_PushEvent(event);
         return 0;
-    }
-    else if (message == WM_RBUTTONUP)
-    {
-        event.type = OS_EventType_MouseRelease;
+    case WM_RBUTTONUP:
+        event.type = OS_EventType_MouseUp;
         event.mouseButton = MouseButton_Right;
         OS_PushEvent(event);
         return 0;
-    }
-    else if (message == WM_MOUSEMOVE)
-    {
+    case WM_MOUSEMOVE:
         v2 lastMouse = globalOS.mousePosition;
         event.type = OS_EventType_MouseMove;
         event.delta = V2MinusV2(globalOS.mousePosition, lastMouse);
         globalOS.mousePosition = W32_GetMousePosition(window);
         OS_PushEvent(event);
         return 0;
+    default:
+        return DefWindowProc(window, message, wParam, lParam);
     }
-
-    return DefWindowProc(window, message, wParam, lParam);
 }
 
 int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR commandLine,
@@ -262,7 +147,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         return 1;
     }
 
-    w32_sound_output soundOutput = {0};
+    w32_sound_output_t soundOutput = {0};
     soundOutput.channels = 2;
     soundOutput.samplesPerSecond = 48000;
     soundOutput.latencyFrameCount = 48000;
@@ -279,9 +164,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
 
-    globalOS.permanentArena = M_ArenaInitialize(Gigabytes(4));
-    globalOS.frameArena = M_ArenaInitialize(Gigabytes(4));
-
     globalHDC = GetDC(window);
     HGLRC glContext = W32_InitOpenGL(globalHDC);
 
@@ -292,7 +174,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     ShowWindow(window, commandShow);
     UpdateWindow(window);
 
-    w32_timer timer;
+    w32_timer_t timer;
     W32_InitTimer(&timer);
 
     MSG message;

@@ -1,4 +1,4 @@
-internal void OS_PushEvent(os_event event)
+internal void OS_PushEvent(os_event_t event)
 {
     if (os->eventCount < ArrayCount(os->events))
     {
@@ -6,7 +6,7 @@ internal void OS_PushEvent(os_event event)
     }
 }
 
-internal b32 OS_GetNextEvent(os_event *event)
+internal b32 OS_GetNextEvent(os_event_t *event)
 {
     if (os->eventCount == 0)
     {

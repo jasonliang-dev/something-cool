@@ -1,8 +1,8 @@
 #include <audioclient.h>
 #include <mmdeviceapi.h>
 
-typedef struct w32_sound_output w32_sound_output;
-struct w32_sound_output
+typedef struct w32_sound_output_t w32_sound_output_t;
+struct w32_sound_output_t
 {
     b32 initialized;
 
@@ -76,7 +76,7 @@ internal void W32_LoadWASAPI(void)
     }
 }
 
-internal void W32_InitWASAPI(w32_sound_output *output)
+internal void W32_InitWASAPI(w32_sound_output_t *output)
 {
     CoInitializeExProc(0, COINIT_SPEED_OVER_MEMORY);
 
@@ -150,7 +150,7 @@ internal void W32_InitWASAPI(w32_sound_output *output)
     output->initialized = 1;
 }
 
-internal void W32_CleanUpWASAPI(w32_sound_output *output)
+internal void W32_CleanUpWASAPI(w32_sound_output_t *output)
 {
     if (output->initialized)
     {
@@ -163,7 +163,7 @@ internal void W32_CleanUpWASAPI(w32_sound_output *output)
     }
 }
 
-internal void W32_FillSoundBuffer(u32 samples_to_write, f32 *samples, w32_sound_output *output)
+internal void W32_FillSoundBuffer(u32 samples_to_write, f32 *samples, w32_sound_output_t *output)
 {
     if (samples_to_write <= 0)
     {

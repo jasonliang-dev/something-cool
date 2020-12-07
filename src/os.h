@@ -1,5 +1,5 @@
-typedef enum os_key os_key;
-enum os_key
+typedef enum os_key_t os_key_t;
+enum os_key_t
 {
     Key_Null,
     Key_Esc,
@@ -79,8 +79,8 @@ enum os_key
     Key_Max
 };
 
-typedef enum os_gamepad_button os_gamepad_button;
-enum os_gamepad_button
+typedef enum os_gamepad_button_t os_gamepad_button_t;
+enum os_gamepad_button_t
 {
     GamepadButton_Null,
     GamepadButton_DPadUp,
@@ -100,8 +100,8 @@ enum os_gamepad_button
     GamepadButton_Max
 };
 
-typedef enum os_event_type os_event_type;
-enum os_event_type
+typedef enum os_event_type_t os_event_type_t;
+enum os_event_type_t
 {
     OS_EventType_Null,
 
@@ -109,13 +109,14 @@ enum os_event_type
 
     OS_EventType_KeyStart,
     OS_EventType_CharacterInput,
-    OS_EventType_KeyPress,
-    OS_EventType_KeyRelease,
+    OS_EventType_KeyPress, // can fire multiple times while key is held
+    OS_EventType_KeyDown,  // should fires once when key is pressed down
+    OS_EventType_KeyUp,
     OS_EventType_KeyEnd,
 
     OS_EventType_MouseStart,
-    OS_EventType_MousePress,
-    OS_EventType_MouseRelease,
+    OS_EventType_MouseDown,
+    OS_EventType_MouseUp,
     OS_EventType_MouseMove,
     OS_EventType_MouseScroll,
     OS_EventType_MouseEnd,
@@ -132,13 +133,33 @@ enum os_event_type
     OS_EventType_Max
 };
 
-typedef struct os_event os_event;
-struct os_event
+typedef enum os_mouse_button_t os_mouse_button_t;
+enum os_mouse_button_t
 {
-    os_event_type type;
-    u32 mouseButton;
+    MouseButton_Null,
+    MouseButton_Left,
+    MouseButton_Right,
+    MouseButton_Middle,
+    MouseButton_4,
+    MouseButton_5,
+    MouseButton_Max
+};
+
+typedef enum os_key_modifiers_t os_key_modifiers_t;
+enum os_key_modifiers_t
+{
+    KeyModifier_Ctrl = (1 << 0),
+    KeyModifier_Shift = (1 << 1),
+    KeyModifier_Alt = (1 << 2)
+};
+
+typedef struct os_event_t os_event_t;
+struct os_event_t
+{
+    os_event_type_t type;
+    os_mouse_button_t mouseButton;
     v2 delta;
-    os_key key;
+    os_key_t key;
     u32 modifiers;
     // os_gamepad_button gamepadButton;
     // i32 gamepadIndex;
@@ -147,8 +168,8 @@ struct os_event
     // v2 scroll;
 };
 
-typedef struct os_state os_state;
-struct os_state
+typedef struct os_state_t os_state_t;
+struct os_state_t
 {
     volatile b32 running;
     iv2 windowResolution;
@@ -160,39 +181,14 @@ struct os_state
 
     v2 mousePosition;
     i32 eventCount;
-    os_event events[4096];
-
-    memory_arena permanentArena;
-    memory_arena frameArena;
-};
-
-global os_state *os = 0;
-
-typedef enum os_mouse_button os_mouse_button;
-enum os_mouse_button
-{
-    MouseButton_Null,
-    MouseButton_Left,
-    MouseButton_Right,
-    MouseButton_Middle,
-    MouseButton_4,
-    MouseButton_5,
-    MouseButton_Max
-};
-
-typedef enum os_key_modifiers os_key_modifiers;
-enum os_key_modifiers
-{
-    KeyModifier_Ctrl = (1 << 0),
-    KeyModifier_Shift = (1 << 1),
-    KeyModifier_Alt = (1 << 2)
+    os_event_t events[4096];
 };
 
 internal void *OS_Reserve(u64 size);
 internal void OS_Release(void *memory, u64 size);
 internal void OS_Commit(void *memory, u64 size);
 internal void OS_Decommit(void *memory, u64 size);
-internal void OS_ReadFile(memory_arena *arena, char * path, void **data, u64 *len);
+internal void OS_ReadFile(memory_arena *arena, char *path, void **data, u64 *len);
 internal void OS_ShowCursor(b32 shown);
 internal void OS_GLSwapBuffers(void);
 internal void *OS_LoadOpenGLProcedure(char *name);

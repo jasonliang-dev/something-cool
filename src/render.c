@@ -152,9 +152,9 @@ internal u32 R_CreateQuadVAO(void)
     return vao;
 }
 
-internal texture R_CreateTexture(char *imagePath)
+internal texture_t R_CreateTexture(char *imagePath)
 {
-    texture result;
+    texture_t result;
 
     i32 channels;
     u8 *imageData = stbi_load(imagePath, (i32 *)&result.width, (i32 *)&result.height, &channels, 0);
@@ -176,7 +176,7 @@ internal texture R_CreateTexture(char *imagePath)
     return result;
 }
 
-internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 position,
+internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture_t sprite, v2 position,
                            f32 rotation)
 {
     glUseProgram(spriteShader);
@@ -200,21 +200,21 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture sprite, v2 p
     glBindVertexArray(0);
 }
 
-internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
+internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
     cute_tiled_layer_t *layer = tiledMap->layers;
     Assert(layer->next == NULL);
 
-    tilemap result;
+    tilemap_t result;
     result.width = layer->width;
     result.height = layer->height;
     result.atlas = atlas;
     result.tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = M_ArenaPushZero(&os->permanentArena, indexSize);
+    v2 *atlasIndex = M_ArenaPushZero(&app.scratchArena, indexSize);
     u32 atlasColumnCount = atlas.width / result.tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -242,12 +242,12 @@ internal tilemap R_CreateTilemap(char *jsonPath, texture atlas, u32 quadVAO)
     glBindVertexArray(0);
 
     cute_tiled_free_map(tiledMap);
-    M_ArenaPop(&os->permanentArena, indexSize);
+    M_ArenaPop(&app.scratchArena, indexSize);
 
     return result;
 }
 
-internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap map)
+internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap_t map)
 {
     glUseProgram(mapShader);
 

@@ -1,11 +1,10 @@
-#if BUILD_WIN32
-#include <windows.h>
+#if PLATFORM_WIN32
 #include <gl/gl.h>
-#elif BUILD_LINUX
+#elif PLATFORM_LINUX
 #include <GL/gl.h>
 #include <GL/glx.h>
 #else
-#error "OpenGL includes for platform not supported."
+#error "Can't use OpenGL for this platform"
 #endif
 
 #include "ext/glext.h"

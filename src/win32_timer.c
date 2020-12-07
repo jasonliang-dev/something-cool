@@ -1,19 +1,19 @@
-typedef struct w32_timer w32_timer;
-struct w32_timer
+typedef struct w32_timer_t w32_timer_t;
+struct w32_timer_t
 {
     LARGE_INTEGER perfFrequency;
     LARGE_INTEGER lastCounter;
     u64 lastCycle;
 };
 
-internal void W32_InitTimer(w32_timer *timer)
+internal void W32_InitTimer(w32_timer_t *timer)
 {
     QueryPerformanceFrequency(&timer->perfFrequency);
     QueryPerformanceCounter(&timer->lastCounter);
     timer->lastCycle = __rdtsc();
 }
 
-internal void W32_TimerEndFrame(w32_timer *timer)
+internal void W32_TimerEndFrame(w32_timer_t *timer)
 {
     LARGE_INTEGER endCounter;
     u64 endCycle = __rdtsc();
