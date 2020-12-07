@@ -1,34 +1,21 @@
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <dlfcn.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include "app.c"
 
-global os_state_t globalOS;
-global Display *globalDpy;
-global GLXWindow globalGlxWin;
+global Display *globalDisplay;
+global Window globalWindow;
 global void *globalLibGL;
 
-#include "linux_opengl.c"
 #include "linux_utils.c"
+#include "linux_opengl.c"
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    globalDpy = XOpenDisplay(NULL);
-    if (!globalDpy)
-    {
-        printf("Can't open connection to X server\n");
-        return 1;
-    }
-
-    Window xWin;
-    Linux_CreateWindowWithOpenGL(&xWin, &globalGlxWin);
-    if (!xWin || !globalGlxWin)
-    {
-        printf("Can't create window, and/or OpenGL context\n");
-        return 1;
-    }
-    XStoreName(globalDpy, xWin, WINDOW_TITLE);
+    Linux_CreateWindowWithGLContext(&globalDisplay, &globalWindow);
 
     globalLibGL = dlopen("libGL.so", RTLD_LAZY);
     if (!globalLibGL)
@@ -37,37 +24,26 @@ int main(void)
         return 1;
     }
 
-    os = &globalOS;
-    globalOS.running = 1;
-    globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
-    globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
+    glClearColor(0, 0.5, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    OS_GLSwapBuffers();
 
-    globalOS.sampleOut = NULL;
-    globalOS.sampleCount = 0;
-    globalOS.samplesPerSecond = 0;
+    sleep(1);
 
-    Atom winClosedID = XInternAtom(globalDpy, "WM_DELETE_WINDOW", 0);
-    XSetWMProtocols(globalDpy, xWin, &winClosedID, 1);
+    glClearColor(1, 0.5, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glXSwapBuffers(globalDisplay, globalWindow);
 
-    AppLoad(&globalOS);
+    sleep(1);
 
-    while (globalOS.running)
-    {
-        XEvent event;
-        while (XPending(globalDpy))
-        {
-            XNextEvent(globalDpy, &event);
+    /*
+    glXMakeCurrent(globalDisplay, 0, 0);
+    glXDestroyContext(globalDisplay, ctx);
 
-            if (event.type == ClientMessage && event.xclient.data.l[0] == winClosedID)
-            {
-                globalOS.running = 0;
-            }
-        }
-
-        AppUpdate();
-    }
-
-    AppClose();
+    XDestroyWindow(globalDisplay, globalWindow);
+    XFreeColormap(globalDisplay, cmap);
+    XCloseDisplay(globalDisplay);
+    */
 
     return 0;
 }
