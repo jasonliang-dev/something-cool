@@ -159,6 +159,10 @@ internal texture_t R_CreateTexture(char *imagePath)
     i32 channels;
     u8 *imageData = stbi_load(imagePath, (i32 *)&result.width, (i32 *)&result.height, &channels, 0);
 
+    if (!imageData) {
+        OS_DisplayError("Cannot display image: \"%s\"\n", imagePath);
+    }
+
     glGenTextures(1, &result.textureID);
     glBindTexture(GL_TEXTURE_2D, result.textureID);
 
@@ -181,8 +185,10 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture_t sprite, v2
 {
     glUseProgram(spriteShader);
 
+    v2 origin = v2(0.5f, 0.5f);
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(position.x - (origin.x * sprite.width),
+                                               position.y - (origin.y * sprite.height), 0.0f)));
 
     model = M4MultiplyM4(model, M4Translate(v3(0.5f * sprite.width, 0.5f * sprite.height, 0.0f)));
     model = M4MultiplyM4(model, M4RotateZ(rotation));
@@ -208,8 +214,8 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
     Assert(layer->next == NULL);
 
     tilemap_t result;
-    result.width = layer->width;
-    result.height = layer->height;
+    result.cols = layer->width;
+    result.rows = layer->height;
     result.atlas = atlas;
     result.tileSize = tiledMap->tilewidth;
 
@@ -254,7 +260,7 @@ internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap_t map)
     m4 model = M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.flatten);
-    glUniform2i(glGetUniformLocation(mapShader, "mapSize"), map.width, map.height);
+    glUniform2i(glGetUniformLocation(mapShader, "mapSize"), map.cols, map.rows);
     glUniform2f(glGetUniformLocation(mapShader, "atlasSize"), 1.0f * map.atlas.width / map.tileSize,
                 1.0f * map.atlas.height / map.tileSize);
 
@@ -262,6 +268,6 @@ internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap_t map)
     glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
 
     glBindVertexArray(quadVAO);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.width * map.height);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.cols * map.rows);
     glBindVertexArray(0);
 }

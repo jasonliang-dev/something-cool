@@ -1,6 +1,3 @@
-#include <audioclient.h>
-#include <mmdeviceapi.h>
-
 typedef struct w32_sound_output_t w32_sound_output_t;
 struct w32_sound_output_t
 {

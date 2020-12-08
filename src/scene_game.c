@@ -1,33 +1,6 @@
-typedef struct player_t player_t;
-struct player_t
+internal void GameSceneInit(memory_arena_t *arena)
 {
-    v2 pos;
-    v2 vel;
-    u32 shootCooldown;
-    f32 moveSpeed;
-    b32 facingRight;
-};
-
-typedef struct bullet_t bullet_t;
-struct bullet_t
-{
-    v2 pos;
-    v2 vel;
-    f32 rot;
-};
-
-typedef struct game_scene game_scene;
-struct game_scene
-{
-    player_t player;
-    u32 bulletPoolCount;
-    u32 bulletPoolMax;
-    bullet_t *bulletPool;
-};
-
-internal void GameSceneInit(memory_arena *arena)
-{
-    game_scene *scene = M_ArenaPush(arena, sizeof(game_scene));
+    game_scene_t *scene = M_ArenaPushZero(arena, sizeof(game_scene_t));
     scene->bulletPoolCount = 0;
     scene->bulletPoolMax = 1000;
     scene->bulletPool = M_ArenaPush(arena, sizeof(bullet_t) * scene->bulletPoolMax);
@@ -36,14 +9,16 @@ internal void GameSceneInit(memory_arena *arena)
     scene->player.shootCooldown = 0;
 }
 
-internal void GameSceneDestroy(memory_arena *arena)
+internal void GameSceneDestroy(game_scene_t *scene)
 {
-    (void)arena;
+    (void)scene;
 }
 
-internal void GameSceneUpdate(memory_arena *arena)
+internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
 {
-    game_scene *scene = arena->base;
+    (void)nextScene;
+
+    local_persist f32 angle = 0;
 
     player_t *player = &scene->player;
     player->vel = v2(0.0f, 0.0f);
@@ -72,19 +47,19 @@ internal void GameSceneUpdate(memory_arena *arena)
         player->shootCooldown--;
     }
 
-    if (app.keysDown[Key_W])
+    if (app.keyDown[Key_W])
     {
         player->vel.y -= 1.0f;
     }
-    if (app.keysDown[Key_S])
+    if (app.keyDown[Key_S])
     {
         player->vel.y += 1.0f;
     }
-    if (app.keysDown[Key_A])
+    if (app.keyDown[Key_A])
     {
         player->vel.x -= 1.0f;
     }
-    if (app.keysDown[Key_D])
+    if (app.keyDown[Key_D])
     {
         player->vel.x += 1.0f;
     }
@@ -95,15 +70,10 @@ internal void GameSceneUpdate(memory_arena *arena)
     player->pos.x += player->vel.x;
     player->pos.y += player->vel.y;
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     R_DrawTilemap(app.mapShader, app.vao, app.resources.map);
     R_DrawSprite(app.spriteShader, app.vao, app.resources.dog, player->pos, 0);
     R_DrawSprite(app.spriteShader, app.vao, app.resources.cursor,
-                 v2(os->mousePosition.x / app.scale - (app.resources.cursor.width / 2.0f),
-                    os->mousePosition.y / app.scale - (app.resources.cursor.height / 2.0f)),
-                 0);
+                 v2(os->mousePosition.x / app.scale, os->mousePosition.y / app.scale), 0);
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
     {
@@ -111,5 +81,11 @@ internal void GameSceneUpdate(memory_arena *arena)
         R_DrawSprite(app.spriteShader, app.vao, app.resources.bone, b->pos, -b->rot);
     }
 
-    OS_GLSwapBuffers();
+    if (app.keyPress[Key_Esc])
+    {
+        *nextScene = Scene_CreateFrom(Menu);
+        return 1;
+    }
+
+    return 0;
 }

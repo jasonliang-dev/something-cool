@@ -1,15 +1,19 @@
 #include <windows.h>
 #include <strsafe.h>
+#include <audioclient.h>
+#include <mmdeviceapi.h>
+#include <xinput.h>
 
 #include "app.c"
 
 global os_state_t globalOS;
 global HDC globalHDC;
 
-#include "win32_utils.c"
 #include "win32_file_io.c"
 #include "win32_opengl.c"
+#include "win32_os.c"
 #include "win32_timer.c"
+#include "win32_utils.c"
 #include "win32_wasapi.c"
 #include "win32_xinput.c"
 

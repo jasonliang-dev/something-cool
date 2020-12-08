@@ -1,5 +1,5 @@
-typedef struct memory_arena memory_arena;
-struct memory_arena
+typedef struct memory_arena_t memory_arena_t;
+struct memory_arena_t
 {
     void *base;
     u64 max;

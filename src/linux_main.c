@@ -11,7 +11,7 @@ global Display *globalDisplay;
 global Window globalWindow;
 global void *globalLibGL;
 
-#include "linux_utils.c"
+#include "linux_os.c"
 #include "linux_opengl.c"
 
 int main(int argc, char *argv[])

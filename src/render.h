@@ -9,8 +9,8 @@ struct texture_t
 typedef struct tilemap_t tilemap_t;
 struct tilemap_t
 {
-    u32 width;
-    u32 height;
+    u32 cols;
+    u32 rows;
     texture_t atlas;
     u32 tileSize;
 };

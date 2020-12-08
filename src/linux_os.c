@@ -23,14 +23,20 @@ internal void OS_Decommit(void *memory, u64 size)
     msync(memory, size, MS_SYNC | MS_INVALIDATE);
 }
 
-internal void OS_DebugPrint(char *str)
+internal void OS_DebugPrint(char *format, ...)
 {
-    fputs(str, stdout);
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
 }
 
-internal void OS_DisplayError(char *str)
+internal void OS_DisplayError(char *format, ...)
 {
-    fputs(str, stderr);
+    va_list args;
+    va_start(args, format);
+    vfprintf(stderr, format, args);
+    va_end(args);
 }
 
 internal void OS_ShowCursor(b32 shown)

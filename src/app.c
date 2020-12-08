@@ -1,13 +1,16 @@
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define CUTE_TILED_IMPLEMENTATION
+#define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
+
 #include <stdio.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define STB_IMAGE_IMPLEMENTATION
+#include "ext/stb_truetype.h"
 #include "ext/stb_image.h"
-
-#define CUTE_TILED_IMPLEMENTATION
 #include "ext/cute_tiled.h"
 
 #include "language_layer.h"
@@ -18,6 +21,8 @@
 #include "opengl.h"
 #include "render.h"
 #include "scene.h"
+#include "scene_game.h"
+#include "scene_menu.h"
 #include "app.h"
 
 global app_state_t app;
@@ -29,27 +34,24 @@ global os_state_t *os = NULL;
 #include "opengl.c"
 #include "render.c"
 #include "scene_game.c"
+#include "scene_menu.c"
 
 void AppLoad(os_state_t *os_)
 {
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
+    ShowCursor(0);
+
     app.sceneArena = M_ArenaInitialize(Gigabytes(4));
     app.scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    scene_t gameScene;
-    gameScene.Init = GameSceneInit;
-    gameScene.Destroy = GameSceneDestroy;
-    gameScene.Update = GameSceneUpdate;
+    app.scene = Scene_CreateFrom(Game);
 
-    app.scene = gameScene;
-
-    MemorySet(app.keysDown, 0, Key_Max);
+    MemorySet(app.keyDown, 0, Key_Max);
     MemorySet(app.mouseDown, 0, MouseButton_Max);
     app.scale = 4;
 
-    OS_ShowCursor(0);
     GL_LoadProcedures();
 
     glEnable(GL_BLEND);
@@ -65,7 +67,6 @@ void AppLoad(os_state_t *os_)
     glUseProgram(app.mapShader);
     glUniform1i(glGetUniformLocation(app.mapShader, "atlas"), 1);
 
-    app.resources.face = R_CreateTexture("res/awesomeface.png");
     app.resources.cursor = R_CreateTexture("res/cursor.png");
     app.resources.bone = R_CreateTexture("res/bone.png");
     app.resources.dog = R_CreateTexture("res/dog.png");
@@ -79,6 +80,8 @@ void AppLoad(os_state_t *os_)
 
 void AppUpdate(void)
 {
+    MemorySet(app.keyPress, 0, Key_Max);
+
     os_event_t event;
     while (OS_GetNextEvent(&event))
     {
@@ -90,16 +93,13 @@ void AppUpdate(void)
             R_Update2DProjection(app.mapShader, app.scale);
             break;
         case OS_EventType_KeyPress:
-            if (event.key == Key_F11)
-            {
-                os->fullscreen = !os->fullscreen;
-            }
+            app.keyPress[event.key] = 1;
             break;
         case OS_EventType_KeyDown:
-            app.keysDown[event.key] = 1;
+            app.keyDown[event.key] = 1;
             break;
         case OS_EventType_KeyUp:
-            app.keysDown[event.key] = 0;
+            app.keyDown[event.key] = 0;
             break;
         case OS_EventType_MouseDown:
             app.mouseDown[event.mouseButton] = 1;
@@ -110,9 +110,24 @@ void AppUpdate(void)
         }
     }
 
-    app.scene.Update(&app.sceneArena);
+    scene_t nextScene;
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    if (app.scene.Update(app.sceneArena.base, &nextScene))
+    {
+        app.scene.Destroy(app.sceneArena.base);
+        M_ArenaClear(&app.sceneArena);
+        app.scene = nextScene;
+        app.scene.Init(&app.sceneArena);
+    }
+    OS_GLSwapBuffers();
 
     GL_CheckForErrors();
+
+    if (app.keyPress[Key_F11])
+    {
+        os->fullscreen = !os->fullscreen;
+    }
 }
 
 void AppClose(void)

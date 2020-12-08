@@ -1,5 +1,3 @@
-#include <xinput.h>
-
 #define W32_MAX_GAMEPADS 4
 
 typedef struct w32_gamepad_input_t w32_gamepad_input_t;

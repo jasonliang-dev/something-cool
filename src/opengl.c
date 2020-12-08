@@ -39,9 +39,7 @@ internal void GL_CheckForErrorsReal(char *file, u32 line)
 
         if (error)
         {
-            char buff[256];
-            sprintf(buff, "%s: %s line %d\n", error, file, line);
-            OS_DebugPrint(buff);
+            OS_DisplayError("%s: %s line %d\n", error, file, line);
         }
     }
 }

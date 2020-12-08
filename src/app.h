@@ -1,7 +1,6 @@
 typedef struct app_resources_t app_resources_t;
 struct app_resources_t
 {
-    texture_t face;
     texture_t cursor;
     texture_t bone;
     texture_t dog;
@@ -12,7 +11,8 @@ struct app_resources_t
 typedef struct app_state_t app_state_t;
 struct app_state_t
 {
-    b8 keysDown[Key_Max];
+    b8 keyDown[Key_Max];
+    b8 keyPress[Key_Max];
     b8 mouseDown[MouseButton_Max];
 
     u32 scale;
@@ -22,6 +22,6 @@ struct app_state_t
     app_resources_t resources;
 
     scene_t scene;
-    memory_arena sceneArena;
-    memory_arena scratchArena;
+    memory_arena_t sceneArena;
+    memory_arena_t scratchArena;
 };
