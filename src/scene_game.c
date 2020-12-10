@@ -9,14 +9,14 @@ internal void GameSceneBegin(memory_arena_t *arena)
     scene->player.shootCooldown = 0;
 }
 
-internal void GameSceneEnd(game_scene_t *scene)
+internal void GameSceneEnd(void *memory)
 {
-    (void)scene;
+    (void)memory;
 }
 
-internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
+internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
 {
-    (void)nextScene;
+    game_scene_t *scene = memory;
 
     local_persist f32 angle = 0;
 

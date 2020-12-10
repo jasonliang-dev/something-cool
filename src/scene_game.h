@@ -26,5 +26,5 @@ struct game_scene_t
 };
 
 internal void GameSceneBegin(memory_arena_t *arena);
-internal void GameSceneEnd(game_scene_t *scene);
-internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene);
+internal void GameSceneEnd(void *memory);
+internal b32 GameSceneUpdate(void *memory, scene_t *nextScene);

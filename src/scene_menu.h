@@ -5,5 +5,5 @@ struct menu_scene_t
 };
 
 internal void MenuSceneBegin(memory_arena_t *arena);
-internal void MenuSceneEnd(menu_scene_t *scene);
-internal b32 MenuSceneUpdate(menu_scene_t *scene, scene_t *nextScene);
+internal void MenuSceneEnd(void *memory);
+internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene);

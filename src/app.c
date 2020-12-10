@@ -58,6 +58,15 @@ void AppLoad(os_state_t *os_)
 
     R_SetupRendering();
 
+    i32 params;
+    glBindFramebuffer(GL_FRAMEBUFFER, app->screenFBO);
+    glGetIntegerv(GL_SAMPLE_BUFFERS, &params);
+    OS_DebugPrint("GL_SAMPLE_BUFFERS: %d\n", params);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glGetIntegerv(GL_SAMPLE_BUFFERS, &params);
+    OS_DebugPrint("GL_SAMPLE_BUFFERS: %d\n", params);
+
     app->resources.play = R_CreateTexture("res/play.png");
     app->resources.quit = R_CreateTexture("res/quit.png");
     app->resources.cursor = R_CreateTexture("res/cursor.png");
