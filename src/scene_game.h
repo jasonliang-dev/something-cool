@@ -5,7 +5,7 @@ struct player_t
     v2 vel;
     u32 shootCooldown;
     f32 moveSpeed;
-    b32 facingRight;
+    b32 facingLeft;
 };
 
 typedef struct bullet_t bullet_t;

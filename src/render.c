@@ -135,20 +135,21 @@ internal texture_t R_CreateTexture(char *imagePath)
     return result;
 }
 
-internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
+internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale)
 {
     glUseProgram(app->shaders.sprite);
 
     v2 origin = v2(0.5f, 0.5f);
+    v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x - (origin.x * sprite.width),
-                                               position.y - (origin.y * sprite.height), 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(position.x - (origin.x * area.x),
+                                               position.y - (origin.y * area.y), 0.0f)));
 
-    model = M4MultiplyM4(model, M4Translate(v3(0.5f * sprite.width, 0.5f * sprite.height, 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f)));
     model = M4MultiplyM4(model, M4RotateZ(rotation));
-    model = M4MultiplyM4(model, M4Translate(v3(-0.5f * sprite.width, -0.5f * sprite.height, 0.0f)));
+    model = M4MultiplyM4(model, M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f)));
 
-    model = M4MultiplyM4(model, M4Scale(v3((f32)sprite.width, (f32)sprite.height, 1.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3(area.x, area.y, 1.0f)));
 
     glUniformMatrix4fv(glGetUniformLocation(app->shaders.sprite, "model"), 1, 0, model.flatten);
 
@@ -158,6 +159,11 @@ internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
     glBindVertexArray(app->quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+}
+
+internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
+{
+    R_DrawSpriteExt(sprite, position, rotation, v2(1, 1));
 }
 
 internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)

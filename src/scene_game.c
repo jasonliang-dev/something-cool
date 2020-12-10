@@ -28,7 +28,7 @@ internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
 
     if (app->mouseDown[MouseButton_Left] && player->shootCooldown == 0)
     {
-        f32 bulletSpeed = 6.0f;
+        f32 bulletSpeed = 2.0f;
         player->shootCooldown = 10;
         bullet_t *b = &scene->bulletPool[scene->bulletPoolCount++];
         b->pos = player->pos;
@@ -69,11 +69,21 @@ internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
     player->vel = V2Normalize(player->vel);
     player->vel = V2MultiplyF32(player->vel, player->moveSpeed);
 
+    if (player->vel.x > 0)
+    {
+        player->facingLeft = 0;
+    }
+    else if (player->vel.x < 0)
+    {
+        player->facingLeft = 1;
+    }
+
     player->pos.x += player->vel.x;
     player->pos.y += player->vel.y;
 
     R_DrawTilemap(app->resources.map);
-    R_DrawSprite(app->resources.dog, player->pos, 0);
+    R_DrawSpriteExt(app->resources.dog, player->pos, 0,
+                    v2(player->facingLeft ? -1.0f : 1.0f, 1.0f));
     R_DrawSprite(app->resources.cursor, cursorPos, 0);
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
