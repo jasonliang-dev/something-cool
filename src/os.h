@@ -182,6 +182,8 @@ struct os_state_t
     v2 mousePosition;
     i32 eventCount;
     os_event_t events[4096];
+
+    memory_arena_t permanentArena;
 };
 
 internal void *OS_Reserve(u64 size);

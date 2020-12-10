@@ -1,74 +1,3 @@
-char quadVertexShaderSource[] = "                                     \n\
-    #version 330 core                                                 \n\
-                                                                      \n\
-    layout (location = 0) in vec4 vertex;                             \n\
-                                                                      \n\
-    out vec2 texCoords;                                               \n\
-                                                                      \n\
-    uniform mat4 model;                                               \n\
-    uniform mat4 projection;                                          \n\
-                                                                      \n\
-    void main()                                                       \n\
-    {                                                                 \n\
-        texCoords = vertex.zw;                                        \n\
-        gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0); \n\
-    }                                                                 \n\
-";
-
-char spriteFragmentShaderSource[] = "      \n\
-    #version 330 core                      \n\
-                                           \n\
-    in vec2 texCoords;                     \n\
-    out vec4 color;                        \n\
-                                           \n\
-    uniform sampler2D image;               \n\
-                                           \n\
-    void main()                            \n\
-    {                                      \n\
-        color = texture(image, texCoords); \n\
-    }                                      \n\
-";
-
-char tilemapVertexShaderSource[] = "                                                       \n\
-    #version 330 core                                                                      \n\
-                                                                                           \n\
-    layout (location = 0) in vec4 vertex;                                                  \n\
-    layout (location = 1) in vec2 tileIndex;                                               \n\
-                                                                                           \n\
-    out vec2 texCoords;                                                                    \n\
-    out vec2 tileCoords;                                                                   \n\
-                                                                                           \n\
-    uniform mat4 model;                                                                    \n\
-    uniform mat4 projection;                                                               \n\
-    uniform ivec2 mapSize;                                                                 \n\
-                                                                                           \n\
-    void main()                                                                            \n\
-    {                                                                                      \n\
-        texCoords = vertex.zw;                                                             \n\
-        tileCoords = tileIndex;                                                            \n\
-        ivec2 tileOffset = ivec2(gl_InstanceID % mapSize.x, gl_InstanceID / mapSize.x);    \n\
-        gl_Position = projection * model * vec4(vertex.xy + (1.0 * tileOffset), 0.0, 1.0); \n\
-    }                                                                                      \n\
-";
-
-char tilemapFragmentShaderSource[] = "       \n\
-    #version 330 core                        \n\
-                                             \n\
-    in vec2 texCoords;                       \n\
-    in vec2 tileCoords;                      \n\
-    out vec4 color;                          \n\
-                                             \n\
-    uniform sampler2D atlas;                 \n\
-    uniform vec2 atlasSize;                  \n\
-                                             \n\
-    void main()                              \n\
-    {                                        \n\
-        vec2 uv = tileCoords / atlasSize;    \n\
-        vec2 offset = texCoords / atlasSize; \n\
-        color = texture(atlas, uv + offset); \n\
-    }                                        \n\
-";
-
 internal u32 R_CompileShader(u32 type, const char *source)
 {
     u32 shader = glCreateShader(type);
@@ -93,14 +22,11 @@ internal u32 R_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void R_Update2DProjection(u32 shader, u32 scale)
+internal void R_Pixel2DProjection(u32 shader)
 {
-    m4 projection =
-        M4Ortho(0.0f, (f32)os->windowResolution.x, (f32)os->windowResolution.y, 0.0f, -1.0f, 1.0f);
-    projection = M4MultiplyM4(projection, M4Scale(v3((f32)scale, (f32)scale, 1.0f)));
-
-    glUseProgram(shader);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, 0, projection.flatten);
+    glUniformMatrix4fv(
+        glGetUniformLocation(shader, "projection"), 1, 0,
+        M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f).flatten);
 }
 
 internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
@@ -120,36 +46,64 @@ internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
     return spriteShader;
 }
 
-internal u32 R_CreateQuadVAO(void)
+internal void R_SetupRendering()
 {
-    f32 vertices[] = {
-        // xy       uv
-        0.0f, 1.0f, 0.0f, 1.0f, //
-        1.0f, 0.0f, 1.0f, 0.0f, //
-        0.0f, 0.0f, 0.0f, 0.0f, //
+    GL_LoadProcedures();
 
-        0.0f, 1.0f, 0.0f, 1.0f, //
-        1.0f, 1.0f, 1.0f, 1.0f, //
-        1.0f, 0.0f, 1.0f, 0.0f  //
-    };
+    {
+        f32 vertices[] = {
+            // xy       tex
+            0.0f, 1.0f, 0.0f, 1.0f, //
+            1.0f, 0.0f, 1.0f, 0.0f, //
+            0.0f, 0.0f, 0.0f, 0.0f, //
 
-    u32 vao;
-    u32 vbo;
+            0.0f, 1.0f, 0.0f, 1.0f, //
+            1.0f, 1.0f, 1.0f, 1.0f, //
+            1.0f, 0.0f, 1.0f, 0.0f  //
+        };
 
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+        u32 vbo;
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        glGenVertexArrays(1, &app->quadVAO);
+        glBindVertexArray(app->quadVAO);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(v4), 0);
 
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(v4), 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    {
+        unsigned int rbo;
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, LOW_RES_SCREEN_WIDTH,
+                              LOW_RES_SCREEN_HEIGHT);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    return vao;
+        glGenFramebuffers(1, &app->screenFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, app->screenFBO);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+        Assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    app->shaders.sprite = R_InitShader(spriteVertexShaderSource, spriteFragmentShaderSource);
+    glUseProgram(app->shaders.sprite);
+    glUniform1i(glGetUniformLocation(app->shaders.sprite, "image"), 1);
+    R_Pixel2DProjection(app->shaders.sprite);
+
+    app->shaders.map = R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
+    glUseProgram(app->shaders.map);
+    glUniform1i(glGetUniformLocation(app->shaders.map, "atlas"), 2);
+    R_Pixel2DProjection(app->shaders.map);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glViewport(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT);
 }
 
 internal texture_t R_CreateTexture(char *imagePath)
@@ -159,7 +113,8 @@ internal texture_t R_CreateTexture(char *imagePath)
     i32 channels;
     u8 *imageData = stbi_load(imagePath, (i32 *)&result.width, (i32 *)&result.height, &channels, 0);
 
-    if (!imageData) {
+    if (!imageData)
+    {
         OS_DisplayError("Cannot display image: \"%s\"\n", imagePath);
     }
 
@@ -180,10 +135,9 @@ internal texture_t R_CreateTexture(char *imagePath)
     return result;
 }
 
-internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture_t sprite, v2 position,
-                           f32 rotation)
+internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
 {
-    glUseProgram(spriteShader);
+    glUseProgram(app->shaders.sprite);
 
     v2 origin = v2(0.5f, 0.5f);
     m4 model = M4Identity();
@@ -196,17 +150,17 @@ internal void R_DrawSprite(u32 spriteShader, u32 spriteVAO, texture_t sprite, v2
 
     model = M4MultiplyM4(model, M4Scale(v3((f32)sprite.width, (f32)sprite.height, 1.0f)));
 
-    glUniformMatrix4fv(glGetUniformLocation(spriteShader, "model"), 1, 0, model.flatten);
+    glUniformMatrix4fv(glGetUniformLocation(app->shaders.sprite, "model"), 1, 0, model.flatten);
 
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, sprite.textureID);
 
-    glBindVertexArray(spriteVAO);
+    glBindVertexArray(app->quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
 
-internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
+internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
@@ -220,7 +174,7 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
     result.tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = M_ArenaPushZero(&app.scratchArena, indexSize);
+    v2 *atlasIndex = M_ArenaPushZero(&app->scratchArena, indexSize);
     u32 atlasColumnCount = atlas.width / result.tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -233,7 +187,7 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
         atlasIndex[i] = v2((f32)column, (f32)row);
     }
 
-    glBindVertexArray(quadVAO);
+    glBindVertexArray(app->quadVAO);
 
     u32 vbo;
     glGenBuffers(1, &vbo);
@@ -248,26 +202,26 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas, u32 quadVAO)
     glBindVertexArray(0);
 
     cute_tiled_free_map(tiledMap);
-    M_ArenaPop(&app.scratchArena, indexSize);
+    M_ArenaPop(&app->scratchArena, indexSize);
 
     return result;
 }
 
-internal void R_DrawTilemap(u32 mapShader, u32 quadVAO, tilemap_t map)
+internal void R_DrawTilemap(tilemap_t map)
 {
-    glUseProgram(mapShader);
+    glUseProgram(app->shaders.map);
 
     m4 model = M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(mapShader, "model"), 1, 0, model.flatten);
-    glUniform2i(glGetUniformLocation(mapShader, "mapSize"), map.cols, map.rows);
-    glUniform2f(glGetUniformLocation(mapShader, "atlasSize"), 1.0f * map.atlas.width / map.tileSize,
-                1.0f * map.atlas.height / map.tileSize);
+    glUniformMatrix4fv(glGetUniformLocation(app->shaders.map, "model"), 1, 0, model.flatten);
+    glUniform2i(glGetUniformLocation(app->shaders.map, "mapSize"), map.cols, map.rows);
+    glUniform2f(glGetUniformLocation(app->shaders.map, "atlasSize"),
+                1.0f * map.atlas.width / map.tileSize, 1.0f * map.atlas.height / map.tileSize);
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
 
-    glBindVertexArray(quadVAO);
+    glBindVertexArray(app->quadVAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.cols * map.rows);
     glBindVertexArray(0);
 }

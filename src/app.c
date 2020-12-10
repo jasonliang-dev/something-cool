@@ -23,9 +23,10 @@
 #include "scene.h"
 #include "scene_game.h"
 #include "scene_menu.h"
+#include "shaders.h"
 #include "app.h"
 
-global app_state_t app;
+global app_state_t *app;
 global os_state_t *os = NULL;
 
 #include "os.c"
@@ -41,46 +42,38 @@ void AppLoad(os_state_t *os_)
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
-    ShowCursor(0);
+    // ShowCursor(0);
 
-    app.sceneArena = M_ArenaInitialize(Gigabytes(4));
-    app.scratchArena = M_ArenaInitialize(Gigabytes(4));
+    os->permanentArena = M_ArenaInitialize(Gigabytes(1));
+    app = M_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
+    app->sceneArena = M_ArenaInitialize(Gigabytes(4));
+    app->scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    app.scene = Scene_CreateFrom(Game);
+    app->scene = SceneCreate(Game);
 
-    MemorySet(app.keyDown, 0, Key_Max);
-    MemorySet(app.mouseDown, 0, MouseButton_Max);
-    app.scale = 4;
+    MemorySet(app->keyDown, 0, Key_Max);
+    MemorySet(app->mouseDown, 0, MouseButton_Max);
+    app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
+                          LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
 
-    GL_LoadProcedures();
+    R_SetupRendering();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    app->resources.play = R_CreateTexture("res/play.png");
+    app->resources.quit = R_CreateTexture("res/quit.png");
+    app->resources.cursor = R_CreateTexture("res/cursor.png");
+    app->resources.bone = R_CreateTexture("res/bone.png");
+    app->resources.dog = R_CreateTexture("res/dog.png");
+    app->resources.atlas = R_CreateTexture("res/atlas.png");
+    app->resources.map = R_CreateTilemap("res/map.json", app->resources.atlas);
 
-    app.vao = R_CreateQuadVAO();
-
-    app.spriteShader = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
-    glUseProgram(app.spriteShader);
-    glUniform1i(glGetUniformLocation(app.spriteShader, "image"), 0);
-
-    app.mapShader = R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
-    glUseProgram(app.mapShader);
-    glUniform1i(glGetUniformLocation(app.mapShader, "atlas"), 1);
-
-    app.resources.cursor = R_CreateTexture("res/cursor.png");
-    app.resources.bone = R_CreateTexture("res/bone.png");
-    app.resources.dog = R_CreateTexture("res/dog.png");
-    app.resources.atlas = R_CreateTexture("res/atlas.png");
-    app.resources.map = R_CreateTilemap("res/map.json", app.resources.atlas, app.vao);
-
-    app.scene.Init(&app.sceneArena);
+    app->scene.Begin(&app->sceneArena);
 
     GL_CheckForErrors();
 }
 
 void AppUpdate(void)
 {
-    MemorySet(app.keyPress, 0, Key_Max);
+    MemorySet(app->keyPress, 0, Key_Max);
 
     os_event_t event;
     while (OS_GetNextEvent(&event))
@@ -88,43 +81,50 @@ void AppUpdate(void)
         switch (event.type)
         {
         case OS_EventType_WindowResize:
-            glViewport(0, 0, os->windowResolution.x, os->windowResolution.y);
-            R_Update2DProjection(app.spriteShader, app.scale);
-            R_Update2DProjection(app.mapShader, app.scale);
+            app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
+                                  LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
             break;
         case OS_EventType_KeyPress:
-            app.keyPress[event.key] = 1;
+            app->keyPress[event.key] = 1;
             break;
         case OS_EventType_KeyDown:
-            app.keyDown[event.key] = 1;
+            app->keyDown[event.key] = 1;
             break;
         case OS_EventType_KeyUp:
-            app.keyDown[event.key] = 0;
+            app->keyDown[event.key] = 0;
             break;
         case OS_EventType_MouseDown:
-            app.mouseDown[event.mouseButton] = 1;
+            app->mouseDown[event.mouseButton] = 1;
             break;
         case OS_EventType_MouseUp:
-            app.mouseDown[event.mouseButton] = 0;
+            app->mouseDown[event.mouseButton] = 0;
             break;
         }
     }
 
-    scene_t nextScene;
+    glBindFramebuffer(GL_FRAMEBUFFER, app->screenFBO);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    if (app.scene.Update(app.sceneArena.base, &nextScene))
+
+    scene_t nextScene;
+    if (app->scene.Update(app->sceneArena.base, &nextScene))
     {
-        app.scene.Destroy(app.sceneArena.base);
-        M_ArenaClear(&app.sceneArena);
-        app.scene = nextScene;
-        app.scene.Init(&app.sceneArena);
+        app->scene.End(app->sceneArena.base);
+        M_ArenaClear(&app->sceneArena);
+        app->scene = nextScene;
+        app->scene.Begin(&app->sceneArena);
     }
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0, 0,
+                      os->windowResolution.x, os->windowResolution.y, GL_COLOR_BUFFER_BIT,
+                      GL_NEAREST);
+
     OS_GLSwapBuffers();
 
     GL_CheckForErrors();
 
-    if (app.keyPress[Key_F11])
+    if (app->keyPress[Key_F11])
     {
         os->fullscreen = !os->fullscreen;
     }

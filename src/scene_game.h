@@ -25,6 +25,6 @@ struct game_scene_t
     bullet_t *bulletPool;
 };
 
-internal void GameSceneInit(memory_arena_t *arena);
-internal void GameSceneDestroy(game_scene_t *scene);
+internal void GameSceneBegin(memory_arena_t *arena);
+internal void GameSceneEnd(game_scene_t *scene);
 internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene);

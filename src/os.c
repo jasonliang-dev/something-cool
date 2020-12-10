@@ -10,10 +10,15 @@ internal b32 OS_GetNextEvent(os_event_t *event)
 {
     if (os->eventCount == 0)
     {
-        event = NULL;
         return 0;
     }
 
     *event = os->events[--os->eventCount];
     return 1;
+}
+
+internal void OS_AssertionFailure(char *expresssion, char *file, u32 line)
+{
+    OS_DisplayError("ASSERT FAILED: (%s) %s:%d", expresssion, file, line);
+    *(int *)0 = 0;
 }

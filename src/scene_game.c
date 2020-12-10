@@ -1,4 +1,4 @@
-internal void GameSceneInit(memory_arena_t *arena)
+internal void GameSceneBegin(memory_arena_t *arena)
 {
     game_scene_t *scene = M_ArenaPushZero(arena, sizeof(game_scene_t));
     scene->bulletPoolCount = 0;
@@ -9,7 +9,7 @@ internal void GameSceneInit(memory_arena_t *arena)
     scene->player.shootCooldown = 0;
 }
 
-internal void GameSceneDestroy(game_scene_t *scene)
+internal void GameSceneEnd(game_scene_t *scene)
 {
     (void)scene;
 }
@@ -20,17 +20,19 @@ internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
 
     local_persist f32 angle = 0;
 
+    v2 cursorPos =
+        v2(os->mousePosition.x * app->screenScale.x, os->mousePosition.y * app->screenScale.y);
+
     player_t *player = &scene->player;
     player->vel = v2(0.0f, 0.0f);
 
-    if (app.mouseDown[MouseButton_Left] && player->shootCooldown == 0)
+    if (app->mouseDown[MouseButton_Left] && player->shootCooldown == 0)
     {
         f32 bulletSpeed = 6.0f;
         player->shootCooldown = 10;
         bullet_t *b = &scene->bulletPool[scene->bulletPoolCount++];
-        v2 cursor = v2(os->mousePosition.x / app.scale, os->mousePosition.y / app.scale);
         b->pos = player->pos;
-        b->rot = PointDirection(player->pos, cursor);
+        b->rot = PointDirection(player->pos, cursorPos);
         b->vel.x = bulletSpeed * Cos(b->rot);
         b->vel.y = bulletSpeed * Sin(b->rot);
     }
@@ -47,19 +49,19 @@ internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
         player->shootCooldown--;
     }
 
-    if (app.keyDown[Key_W])
+    if (app->keyDown[Key_W])
     {
         player->vel.y -= 1.0f;
     }
-    if (app.keyDown[Key_S])
+    if (app->keyDown[Key_S])
     {
         player->vel.y += 1.0f;
     }
-    if (app.keyDown[Key_A])
+    if (app->keyDown[Key_A])
     {
         player->vel.x -= 1.0f;
     }
-    if (app.keyDown[Key_D])
+    if (app->keyDown[Key_D])
     {
         player->vel.x += 1.0f;
     }
@@ -70,20 +72,19 @@ internal b32 GameSceneUpdate(game_scene_t *scene, scene_t *nextScene)
     player->pos.x += player->vel.x;
     player->pos.y += player->vel.y;
 
-    R_DrawTilemap(app.mapShader, app.vao, app.resources.map);
-    R_DrawSprite(app.spriteShader, app.vao, app.resources.dog, player->pos, 0);
-    R_DrawSprite(app.spriteShader, app.vao, app.resources.cursor,
-                 v2(os->mousePosition.x / app.scale, os->mousePosition.y / app.scale), 0);
+    R_DrawTilemap(app->resources.map);
+    R_DrawSprite(app->resources.dog, player->pos, 0);
+    R_DrawSprite(app->resources.cursor, cursorPos, 0);
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
     {
         bullet_t *b = &scene->bulletPool[i];
-        R_DrawSprite(app.spriteShader, app.vao, app.resources.bone, b->pos, -b->rot);
+        R_DrawSprite(app->resources.bone, b->pos, -b->rot);
     }
 
-    if (app.keyPress[Key_Esc])
+    if (app->keyPress[Key_Esc])
     {
-        *nextScene = Scene_CreateFrom(Menu);
+        *nextScene = SceneCreate(Menu);
         return 1;
     }
 

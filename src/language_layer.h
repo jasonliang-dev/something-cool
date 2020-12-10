@@ -45,7 +45,7 @@ typedef double f64;
 #define Assert(b)                                                                                  \
     if (!(b))                                                                                      \
     {                                                                                              \
-        *(int *)0 = 0;                                                                             \
+        OS_AssertionFailure(#b, __FILE__, __LINE__);                                               \
     }
 #else
 #define Assert(b)
