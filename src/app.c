@@ -24,16 +24,19 @@
 #include "scene_game.h"
 #include "scene_menu.h"
 #include "shaders.h"
+#include "ui.h"
 #include "app.h"
 
 global app_state_t *app;
 global os_state_t *os = NULL;
 
+#include "app_utils.c"
 #include "os.c"
 #include "maths.c"
 #include "memory.c"
 #include "opengl.c"
 #include "render.c"
+#include "ui.c"
 #include "scene_game.c"
 #include "scene_menu.c"
 
@@ -49,7 +52,7 @@ void AppLoad(os_state_t *os_)
     app->sceneArena = M_ArenaInitialize(Gigabytes(4));
     app->scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    app->scene = SceneCreate(Game);
+    app->scene = SceneCreate(Menu);
 
     MemorySet(app->keyDown, 0, Key_Max);
     MemorySet(app->mouseDown, 0, MouseButton_Max);
@@ -83,6 +86,7 @@ void AppLoad(os_state_t *os_)
 void AppUpdate(void)
 {
     MemorySet(app->keyPress, 0, Key_Max);
+    MemorySet(app->mousePress, 0, MouseButton_Max);
 
     os_event_t event;
     while (OS_GetNextEvent(&event))
@@ -103,6 +107,7 @@ void AppUpdate(void)
             app->keyDown[event.key] = 0;
             break;
         case OS_EventType_MouseDown:
+            app->mousePress[event.mouseButton] = 1;
             app->mouseDown[event.mouseButton] = 1;
             break;
         case OS_EventType_MouseUp:

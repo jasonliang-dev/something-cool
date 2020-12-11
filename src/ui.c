@@ -1,12 +1,12 @@
-internal ui_id_t UI_CreateUIID()
+internal b32 UI_SpriteButton(texture_t sprite, v2 position)
 {
-    local_persist ui_id_t nextID = 0;
-    return ++nextID;
-}
+    R_DrawSpriteExt(sprite, position, 0, v2(1, 1), v2(0, 0));
 
-/*
-internal void UI_DrawSpriteButton(ui_t ui, texture_t texture, v2 position)
-{
+    v4 bounds = v4(position.x, position.y, (f32)sprite.width, (f32)sprite.height);
+    if (V4HasPoint(bounds, GetCursorPosition()) && app->mousePress[MouseButton_Left])
+    {
+        return 1;
+    }
 
+    return 0;
 }
-*/

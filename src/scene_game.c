@@ -20,8 +20,7 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
 
     local_persist f32 angle = 0;
 
-    v2 cursorPos =
-        v2(os->mousePosition.x * app->screenScale.x, os->mousePosition.y * app->screenScale.y);
+    v2 cursorPos = GetCursorPosition();
 
     player_t *player = &scene->player;
     player->vel = v2(0.0f, 0.0f);
@@ -82,8 +81,8 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
     player->pos.y += player->vel.y;
 
     R_DrawTilemap(app->resources.map);
-    R_DrawSpriteExt(app->resources.dog, player->pos, 0,
-                    v2(player->facingLeft ? -1.0f : 1.0f, 1.0f));
+    R_DrawSpriteExt(app->resources.dog, player->pos, 0, v2(player->facingLeft ? -1.0f : 1.0f, 1.0f),
+                    v2(0.5f, 0.5f));
     R_DrawSprite(app->resources.cursor, cursorPos, 0);
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)

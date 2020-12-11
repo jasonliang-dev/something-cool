@@ -22,6 +22,7 @@ struct app_state_t
     b8 keyDown[Key_Max];
     b8 keyPress[Key_Max];
     b8 mouseDown[MouseButton_Max];
+    b8 mousePress[MouseButton_Max];
 
     v2 screenScale;
     u32 quadVAO;

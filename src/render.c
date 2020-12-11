@@ -135,11 +135,10 @@ internal texture_t R_CreateTexture(char *imagePath)
     return result;
 }
 
-internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale)
+internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
     glUseProgram(app->shaders.sprite);
 
-    v2 origin = v2(0.5f, 0.5f);
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     m4 model = M4Identity();
     model = M4MultiplyM4(model, M4Translate(v3(position.x - (origin.x * area.x),
@@ -163,7 +162,7 @@ internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 sc
 
 internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
 {
-    R_DrawSpriteExt(sprite, position, rotation, v2(1, 1));
+    R_DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0.5f, 0.5f));
 }
 
 internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)
