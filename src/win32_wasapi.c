@@ -77,8 +77,6 @@ internal void W32_InitWASAPI(w32_sound_output_t *output)
 {
     CoInitializeExProc(0, COINIT_SPEED_OVER_MEMORY);
 
-    REFERENCE_TIME requested_sound_duration = REFTIMES_PER_SEC * 2;
-
     if (FAILED(CoCreateInstanceProc(&CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL,
                                     &IID_IMMDeviceEnumerator, (void **)(&output->device_enum))))
     {
@@ -100,15 +98,15 @@ internal void W32_InitWASAPI(w32_sound_output_t *output)
         return;
     }
 
-    WAVEFORMATEX *wave_format = 0;
+    WAVEFORMATEX *waveFormat = 0;
 
-    output->audioClient->lpVtbl->GetMixFormat(output->audioClient, &wave_format);
+    output->audioClient->lpVtbl->GetMixFormat(output->audioClient, &waveFormat);
 
     output->samplesPerSecond = 44100;
     WORD bitsPerSample = sizeof(i16) * 8;
     WORD blockAlign = (output->channels * bitsPerSample) / 8;
 
-    WAVEFORMATEX new_wave_format = {
+    WAVEFORMATEX newWaveFormat = {
         WAVE_FORMAT_PCM,
         (WORD)output->channels,
         output->samplesPerSecond,
@@ -120,11 +118,12 @@ internal void W32_InitWASAPI(w32_sound_output_t *output)
 
     output->latencyFrameCount = output->samplesPerSecond / SOUND_LATENCY_FPS;
 
+    REFERENCE_TIME requestedSoundDuration = REFTIMES_PER_SEC * 2;
     if (FAILED(output->audioClient->lpVtbl->Initialize(
             output->audioClient, AUDCLNT_SHAREMODE_SHARED,
             AUDCLNT_STREAMFLAGS_RATEADJUST | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
                 AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
-            requested_sound_duration, 0, &new_wave_format, 0)))
+            requestedSoundDuration, 0, &newWaveFormat, 0)))
     {
         OS_DisplayError("WASAPI Error: Audio client initialization failed.");
         return;
@@ -160,9 +159,9 @@ internal void W32_CleanUpWASAPI(w32_sound_output_t *output)
     }
 }
 
-internal void W32_FillSoundBuffer(u32 samples_to_write, f32 *samples, w32_sound_output_t *output)
+internal void W32_FillSoundBuffer(u32 samplesToWrite, i16 *samples, w32_sound_output_t *output)
 {
-    if (samples_to_write <= 0)
+    if (samplesToWrite <= 0)
     {
         return;
     }
@@ -170,21 +169,18 @@ internal void W32_FillSoundBuffer(u32 samples_to_write, f32 *samples, w32_sound_
     BYTE *data = 0;
     DWORD flags = 0;
 
-    output->audioRenderClient->lpVtbl->GetBuffer(output->audioRenderClient, samples_to_write,
-                                                 &data);
+    output->audioRenderClient->lpVtbl->GetBuffer(output->audioRenderClient, samplesToWrite, &data);
     if (data)
     {
         i16 *destination = (i16 *)data;
-        f32 *source = samples;
-        for (UINT32 i = 0; i < samples_to_write; ++i)
+        i16 *source = samples;
+        for (UINT32 i = 0; i < samplesToWrite; ++i)
         {
-            i16 left = (i16)(*source++ * 3000);
-            i16 right = (i16)(*source++ * 3000);
-            *destination++ = left;
-            *destination++ = right;
+            *destination++ = *source++;
+            *destination++ = *source++;
         }
     }
 
-    output->audioRenderClient->lpVtbl->ReleaseBuffer(output->audioRenderClient, samples_to_write,
+    output->audioRenderClient->lpVtbl->ReleaseBuffer(output->audioRenderClient, samplesToWrite,
                                                      flags);
 }

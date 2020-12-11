@@ -131,6 +131,21 @@ void AppUpdate(void)
     {
         os->fullscreen = !os->fullscreen;
     }
+
+    local_persist f32 tSine = 0;
+    i32 toneHz = 256;
+
+    i32 toneVolume = 3000;
+    i32 wavePeriod = os->samplesPerSecond / toneHz;
+
+    i16 *output = os->sampleOut;
+    for (u32 i = 0; i < os->sampleCount; i++)
+    {
+        i16 value = (i16)(sinf(tSine) * toneVolume);
+        *output++ = value;
+        *output++ = value;
+        tSine += 2.0f * PI * (1.0f / (f32)wavePeriod);
+    }
 }
 
 void AppClose(void)

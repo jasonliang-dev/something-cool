@@ -217,10 +217,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
                 }
             }
 
-            for (u32 i = 0; i < soundOutput.bufferFrameCount; i++)
-            {
-                globalOS.sampleOut[i] = 0;
-            }
+            MemorySet(globalOS.sampleOut, 0, soundOutput.bufferFrameCount);
         }
 
         b32 last_fullscreen = globalOS.fullscreen;

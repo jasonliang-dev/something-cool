@@ -175,7 +175,7 @@ struct os_state_t
     iv2 windowResolution;
     b32 fullscreen;
 
-    f32 *sampleOut;
+    i16 *sampleOut;
     u32 sampleCount;
     u32 samplesPerSecond;
 

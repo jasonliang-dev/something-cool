@@ -7,6 +7,8 @@ internal void GameSceneBegin(memory_arena_t *arena)
 
     scene->player.moveSpeed = 2.0f;
     scene->player.shootCooldown = 0;
+    scene->player.pos.x = 120.0f;
+    scene->player.pos.y = 240.0f;
 
     OS_ShowCursor(0);
 }
