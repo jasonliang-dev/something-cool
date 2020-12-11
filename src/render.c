@@ -212,11 +212,13 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)
     return result;
 }
 
-internal void R_DrawTilemap(tilemap_t map)
+internal void R_DrawTilemap(tilemap_t map, v2 position)
 {
     glUseProgram(app->shaders.map);
 
-    m4 model = M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
+    m4 model = M4Identity();
+    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f)));
 
     glUniformMatrix4fv(glGetUniformLocation(app->shaders.map, "model"), 1, 0, model.flatten);
     glUniform2i(glGetUniformLocation(app->shaders.map, "mapSize"), map.cols, map.rows);

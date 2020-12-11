@@ -19,6 +19,7 @@ struct bullet_t
 typedef struct game_scene_t game_scene_t;
 struct game_scene_t
 {
+    v2 camera;
     player_t player;
     u32 bulletPoolCount;
     u32 bulletPoolMax;

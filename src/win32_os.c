@@ -47,5 +47,14 @@ internal void OS_DisplayError(char *format, ...)
 
 internal void OS_ShowCursor(b32 shown)
 {
-    ShowCursor(shown);
+    if (shown)
+    {
+        while (ShowCursor(1) < 0)
+            ;
+    }
+    else
+    {
+        while (ShowCursor(0) >= 0)
+            ;
+    }
 }

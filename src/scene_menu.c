@@ -2,6 +2,8 @@ internal void MenuSceneBegin(memory_arena_t *arena)
 {
     menu_scene_t *scene = M_ArenaPushZero(arena, sizeof(menu_scene_t));
     (void)scene;
+
+    OS_ShowCursor(1);
 }
 
 internal void MenuSceneEnd(void *memory)

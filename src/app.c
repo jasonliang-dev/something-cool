@@ -1,16 +1,17 @@
-#define STB_TRUETYPE_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define CUTE_TILED_IMPLEMENTATION
-#define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
-
 #include <stdio.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define STB_TRUETYPE_IMPLEMENTATION
 #include "ext/stb_truetype.h"
+
+#define STB_IMAGE_IMPLEMENTATION
 #include "ext/stb_image.h"
+
+#define CUTE_TILED_IMPLEMENTATION
+#define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
 #include "ext/cute_tiled.h"
 
 #include "language_layer.h"
@@ -45,14 +46,10 @@ void AppLoad(os_state_t *os_)
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
-    // ShowCursor(0);
-
     os->permanentArena = M_ArenaInitialize(Gigabytes(1));
     app = M_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
     app->sceneArena = M_ArenaInitialize(Gigabytes(4));
     app->scratchArena = M_ArenaInitialize(Gigabytes(4));
-
-    app->scene = SceneCreate(Menu);
 
     MemorySet(app->keyDown, 0, Key_Max);
     MemorySet(app->mouseDown, 0, MouseButton_Max);
@@ -60,15 +57,6 @@ void AppLoad(os_state_t *os_)
                           LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
 
     R_SetupRendering();
-
-    i32 params;
-    glBindFramebuffer(GL_FRAMEBUFFER, app->screenFBO);
-    glGetIntegerv(GL_SAMPLE_BUFFERS, &params);
-    OS_DebugPrint("GL_SAMPLE_BUFFERS: %d\n", params);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glGetIntegerv(GL_SAMPLE_BUFFERS, &params);
-    OS_DebugPrint("GL_SAMPLE_BUFFERS: %d\n", params);
 
     app->resources.play = R_CreateTexture("res/play.png");
     app->resources.quit = R_CreateTexture("res/quit.png");
@@ -78,6 +66,7 @@ void AppLoad(os_state_t *os_)
     app->resources.atlas = R_CreateTexture("res/atlas.png");
     app->resources.map = R_CreateTilemap("res/map.json", app->resources.atlas);
 
+    app->scene = SceneCreate(Menu);
     app->scene.Begin(&app->sceneArena);
 
     GL_CheckForErrors();

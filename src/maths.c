@@ -17,6 +17,13 @@ internal v2 V2MultiplyF32(v2 v, f32 f)
     return v;
 }
 
+internal v2 V2DivideF32(v2 v, f32 f)
+{
+    v.x /= f;
+    v.y /= f;
+    return v;
+}
+
 internal f32 V2LengthSquared(v2 a)
 {
     return a.x * a.x + a.y * a.y;
@@ -49,6 +56,14 @@ internal v2 V2Normalize(v2 v)
 internal f32 V2Dot(v2 a, v2 b)
 {
     return a.x * b.x + a.y * b.y;
+}
+
+internal v2 V2Inverse(v2 v)
+{
+    v2 result;
+    result.x = -v.x;
+    result.y = -v.y;
+    return result;
 }
 
 internal v2 V2FromIV2(iv2 a)
