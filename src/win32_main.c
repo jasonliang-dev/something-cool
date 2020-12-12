@@ -164,7 +164,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
     globalOS.fullscreen = 0;
 
-    globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(f32) * 2,
+    globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(i16) * 2,
                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
 

@@ -3,6 +3,7 @@
 #include <dlfcn.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <alsa/asoundlib.h>
 
 #include "app.c"
 
@@ -13,6 +14,8 @@ global void *globalLibGL;
 
 #include "linux_os.c"
 #include "linux_opengl.c"
+#include "linux_alsa.c"
+#include "linux_file_io.c"
 
 int main(int argc, char *argv[])
 {
@@ -32,14 +35,20 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    linux_sound_output_t soundOutput = {0};
+    soundOutput.channels = 2;
+    soundOutput.samplesPerSecond = 48000;
+    Linux_InitAlsa(&soundOutput);
+
     os = &globalOS;
     globalOS.running = 1;
     globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
     globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
 
-    globalOS.sampleOut = NULL;
-    globalOS.sampleCount = 0;
-    globalOS.samplesPerSecond = 0;
+    globalOS.sampleCount = 1000;
+    globalOS.sampleOut = malloc(globalOS.sampleCount * sizeof(i16) * 2);
+
+    globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
 
     Atom winClosedID = XInternAtom(globalDisplay, "WM_DELETE_WINDOW", 0);
     XSetWMProtocols(globalDisplay, globalWindow, &winClosedID, 1);
@@ -60,6 +69,7 @@ int main(int argc, char *argv[])
         }
 
         AppUpdate();
+        Linux_FillSoundBuffer(globalOS.sampleCount, globalOS.sampleOut, &soundOutput);
     }
 
     AppClose();

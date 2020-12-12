@@ -70,34 +70,53 @@ internal b32 Linux_CreateWindowWithGLContext(Display **display, Window *window, 
     GLXFBConfig *fbc =
         glXChooseFBConfig(*display, DefaultScreen(*display), visual_attribs, &fbcount);
 
-    i32 best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+    // from http://docs.gl/gl3/glBlitFramebuffer:
+
+    // GL_INVALID_OPERATION is generated if GL_SAMPLE_BUFFERS for both read and
+    // draw buffers greater than zero and the dimensions of the source and
+    // destination rectangles is not identical.
+
+    // app->screenFBO has 0 sample buffers, while on linux, the default
+    // framebuffer could have 0 or 1 sample buffers.
+
+    // so I could find the best fbc by finding the fbc with the highest samples
+    // and sample buffers, but what I really need is a fbc with a sample buffer
+    // count of 0.
+
+    i32 bestFbc = -1;
+    i32 worstFbc = -1;
+    i32 bestNumSamp = -1;
+    i32 worstNumSamp = 999;
 
     for (i32 i = 0; i < fbcount; i++)
     {
         XVisualInfo *vi = glXGetVisualFromFBConfig(*display, fbc[i]);
         if (vi)
         {
-            i32 samp_buf, samples;
-            glXGetFBConfigAttrib(*display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+            i32 sampBuff, samples;
+            glXGetFBConfigAttrib(*display, fbc[i], GLX_SAMPLE_BUFFERS, &sampBuff);
             glXGetFBConfigAttrib(*display, fbc[i], GLX_SAMPLES, &samples);
 
-            if (best_fbc < 0 || samp_buf && samples > best_num_samp)
+            if (bestFbc < 0 || (!sampBuff && samples > bestNumSamp))
             {
-                best_fbc = i, best_num_samp = samples;
+                bestFbc = i;
+                bestNumSamp = samples;
             }
-            if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
+
+            if (worstFbc < 0 || sampBuff || samples < worstNumSamp)
             {
-                worst_fbc = i, worst_num_samp = samples;
+                worstFbc = i;
+                worstNumSamp = samples;
             }
         }
         XFree(vi);
     }
 
-    GLXFBConfig bestFbc = fbc[best_fbc];
+    GLXFBConfig useFbc = fbc[bestFbc];
 
     XFree(fbc);
 
-    XVisualInfo *vi = glXGetVisualFromFBConfig(*display, bestFbc);
+    XVisualInfo *vi = glXGetVisualFromFBConfig(*display, useFbc);
 
     XSetWindowAttributes swa;
     swa.colormap = *cmap =
@@ -135,7 +154,7 @@ internal b32 Linux_CreateWindowWithGLContext(Display **display, Window *window, 
         // GLX_CONTEXT_FLAGS_ARB        , GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
         None};
 
-    *ctx = glXCreateContextAttribsARB(*display, bestFbc, 0, 1, context_attribs);
+    *ctx = glXCreateContextAttribsARB(*display, useFbc, 0, 1, context_attribs);
 
     XSync(*display, 0);
     if (globalCtxErrorOccurred || !*ctx)
