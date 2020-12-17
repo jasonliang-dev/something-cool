@@ -1,12 +1,14 @@
 typedef struct app_resources_t app_resources_t;
 struct app_resources_t
 {
-    texture_t play;
-    texture_t quit;
-    texture_t cursor;
-    texture_t bone;
-    texture_t dog;
-    texture_t atlas;
+    sound_t sndJingle;
+    sound_t sndImpact;
+    texture_t texPlay;
+    texture_t texQuit;
+    texture_t texCursor;
+    texture_t texBone;
+    texture_t texDog;
+    texture_t texAtlas;
     tilemap_t map;
 };
 
@@ -23,6 +25,8 @@ struct app_state_t
     b8 keyPress[Key_Max];
     b8 mouseDown[MouseButton_Max];
     b8 mousePress[MouseButton_Max];
+
+    audio_t audio;
 
     v2 screenScale;
     u32 quadVAO;

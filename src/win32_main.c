@@ -154,7 +154,6 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     w32_sound_output_t soundOutput = {0};
     soundOutput.channels = 2;
     soundOutput.samplesPerSecond = 48000;
-    soundOutput.latencyFrameCount = 48000;
     W32_LoadWASAPI();
     W32_InitWASAPI(&soundOutput);
 

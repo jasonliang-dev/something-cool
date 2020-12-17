@@ -4,28 +4,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define STB_TRUETYPE_IMPLEMENTATION
-#include "ext/stb_truetype.h"
+#define CUTE_TILED_IMPLEMENTATION
+#define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
+#include "ext/cute_tiled.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "ext/stb_image.h"
 
-#define CUTE_TILED_IMPLEMENTATION
-#define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
-#include "ext/cute_tiled.h"
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "ext/stb_truetype.h"
+
+#pragma warning(push, 0)
+#pragma warning(disable: 4701)
+#include "ext/stb_vorbis.c"
+#pragma warning(pop)
 
 #include "language_layer.h"
 #include "program_options.h"
 #include "maths.h"
 #include "memory.h"
 #include "os.h"
+#include "audio.h"
 #include "opengl.h"
 #include "render.h"
 #include "scene.h"
 #include "scene_game.h"
 #include "scene_menu.h"
 #include "shaders.h"
-#include "ui.h"
 #include "app.h"
 
 global app_state_t *app;
@@ -33,6 +38,7 @@ global os_state_t *os = NULL;
 
 #include "app_utils.c"
 #include "os.c"
+#include "audio.c"
 #include "maths.c"
 #include "memory.c"
 #include "opengl.c"
@@ -58,18 +64,24 @@ void AppLoad(os_state_t *os_)
 
     R_SetupRendering();
 
-    app->resources.play = R_CreateTexture("res/play.png");
-    app->resources.quit = R_CreateTexture("res/quit.png");
-    app->resources.cursor = R_CreateTexture("res/cursor.png");
-    app->resources.bone = R_CreateTexture("res/bone.png");
-    app->resources.dog = R_CreateTexture("res/dog.png");
-    app->resources.atlas = R_CreateTexture("res/atlas.png");
-    app->resources.map = R_CreateTilemap("res/map.json", app->resources.atlas);
+    app->resources.sndJingle = Sound_LoadFromFile("res/jingle44k.ogg");
+    app->resources.sndImpact = Sound_LoadFromFile("res/impact.ogg");
+    app->resources.texPlay = R_CreateTexture("res/play.png");
+    app->resources.texQuit = R_CreateTexture("res/quit.png");
+    app->resources.texCursor = R_CreateTexture("res/cursor.png");
+    app->resources.texBone = R_CreateTexture("res/bone.png");
+    app->resources.texDog = R_CreateTexture("res/dog.png");
+    app->resources.texAtlas = R_CreateTexture("res/atlas.png");
+    app->resources.map = R_CreateTilemap("res/map.json", app->resources.texAtlas);
 
     app->scene = SceneCreate(Menu);
     app->scene.Begin(&app->sceneArena);
 
     GL_CheckForErrors();
+
+    MemorySet(app->audio.sources, 0, AUDIO_SOURCE_MAX);
+    MemorySet(app->audio.reserved, 0, AUDIO_SOURCE_MAX);
+    app->audio.audioSourceCount = 0;
 }
 
 void AppUpdate(void)
@@ -132,20 +144,7 @@ void AppUpdate(void)
         os->fullscreen = !os->fullscreen;
     }
 
-    local_persist f32 tSine = 0;
-    i32 toneHz = 256;
-
-    i32 toneVolume = 3000;
-    i32 wavePeriod = os->samplesPerSecond / toneHz;
-
-    i16 *output = os->sampleOut;
-    for (u32 i = 0; i < os->sampleCount; i++)
-    {
-        i16 value = (i16)(sinf(tSine) * toneVolume);
-        *output++ = value;
-        *output++ = value;
-        tSine += 2.0f * PI * (1.0f / (f32)wavePeriod);
-    }
+    Audio_Update(&app->audio);
 }
 
 void AppClose(void)

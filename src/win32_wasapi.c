@@ -31,7 +31,7 @@ const GUID IID_IMMDeviceEnumerator = {0xA95664D2, 0x9614, 0x4F35, 0xA7, 0x46, 0x
 #define AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY 0x08000000
 #endif
 
-#define SOUND_LATENCY_FPS 10
+#define SOUND_LATENCY_FPS 15
 #define REFTIMES_PER_SEC 10000000
 
 #define CO_CREATE_INSTANCE(name)                                                                   \
@@ -102,8 +102,7 @@ internal void W32_InitWASAPI(w32_sound_output_t *output)
 
     output->audioClient->lpVtbl->GetMixFormat(output->audioClient, &waveFormat);
 
-    output->samplesPerSecond = 44100;
-    WORD bitsPerSample = sizeof(i16) * 8;
+    WORD bitsPerSample = 16;
     WORD blockAlign = (output->channels * bitsPerSample) / 8;
 
     WAVEFORMATEX newWaveFormat = {
@@ -174,7 +173,7 @@ internal void W32_FillSoundBuffer(u32 samplesToWrite, i16 *samples, w32_sound_ou
     {
         i16 *destination = (i16 *)data;
         i16 *source = samples;
-        for (UINT32 i = 0; i < samplesToWrite; ++i)
+        for (u32 i = 0; i < samplesToWrite; ++i)
         {
             *destination++ = *source++;
             *destination++ = *source++;

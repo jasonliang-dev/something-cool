@@ -40,6 +40,8 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
         b->rot = PointDirection(b->pos, worldCursor);
         b->vel.x = bulletSpeed * Cos(b->rot);
         b->vel.y = bulletSpeed * Sin(b->rot);
+
+        Audio_PlaySound(&app->audio, &app->resources.sndImpact);
     }
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
@@ -86,7 +88,7 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
     player->pos.x += player->vel.x;
     player->pos.y += player->vel.y;
 
-    v2 target = v2(0,0);
+    v2 target = v2(0, 0);
     target = V2AddV2(target, V2MultiplyF32(player->pos, 8.0f));
     target = V2AddV2(target, V2MultiplyF32(worldCursor, 1.0f));
     target = V2DivideF32(target, 9.0f);
@@ -98,16 +100,16 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
                  -scene->camera.y + (LOW_RES_SCREEN_HEIGHT / 2));
 
     R_DrawTilemap(app->resources.map, view);
-    R_DrawSpriteExt(app->resources.dog, V2AddV2(player->pos, view), 0,
+    R_DrawSpriteExt(app->resources.texDog, V2AddV2(player->pos, view), 0,
                     v2(player->facingLeft ? -1.0f : 1.0f, 1.0f), v2(0.5f, 0.5f));
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
     {
         bullet_t *b = &scene->bulletPool[i];
-        R_DrawSprite(app->resources.bone, V2AddV2(b->pos, view), -b->rot);
+        R_DrawSprite(app->resources.texBone, V2AddV2(b->pos, view), -b->rot);
     }
 
-    R_DrawSprite(app->resources.cursor, cursorPos, 0);
+    R_DrawSprite(app->resources.texCursor, cursorPos, 0);
 
     if (app->keyPress[Key_Esc])
     {
