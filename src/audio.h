@@ -22,5 +22,4 @@ struct audio_t
 {
     audio_source_t sources[AUDIO_SOURCE_MAX];
     b8 reserved[AUDIO_SOURCE_MAX];
-    u32 audioSourceCount;
 };

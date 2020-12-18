@@ -23,14 +23,13 @@
 #elif PLATFORM_LINUX
 
 #include "ext/cute_tiled.h"
+#include "ext/stb_truetype.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 #include "ext/stb_image.h"
 #pragma GCC diagnostic pop
-
-#include "ext/stb_truetype.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -81,14 +80,14 @@ void AppLoad(os_state_t *os_)
     app->sceneArena = M_ArenaInitialize(Gigabytes(4));
     app->scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    MemorySet(app->keyDown, 0, sizeof(app->keyDown) * Key_Max);
-    MemorySet(app->mouseDown, 0, sizeof(app->mouseDown) * MouseButton_Max);
+    MemorySet(app->keyDown, 0, sizeof(app->keyDown));
+    MemorySet(app->mouseDown, 0, sizeof(app->mouseDown));
     app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
                           LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
 
     R_SetupRendering();
 
-    app->resources.sndJingle = Sound_LoadFromFile("res/jingle44k.ogg");
+    app->resources.sndJingle = Sound_LoadFromFile("res/jingle.ogg");
     app->resources.sndImpact = Sound_LoadFromFile("res/impact.ogg");
     app->resources.texPlay = R_CreateTexture("res/play.png");
     app->resources.texQuit = R_CreateTexture("res/quit.png");
@@ -108,8 +107,8 @@ void AppLoad(os_state_t *os_)
 
 void AppUpdate(void)
 {
-    MemorySet(app->keyPress, 0, sizeof(app->keyPress) * Key_Max);
-    MemorySet(app->mousePress, 0, sizeof(app->mousePress) * MouseButton_Max);
+    MemorySet(app->keyPress, 0, sizeof(app->keyPress));
+    MemorySet(app->mousePress, 0, sizeof(app->mousePress));
 
     os_event_t event;
     while (OS_GetNextEvent(&event))

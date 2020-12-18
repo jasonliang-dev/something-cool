@@ -153,9 +153,13 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     w32_sound_output_t soundOutput = {0};
     soundOutput.channels = 2;
-    soundOutput.samplesPerSecond = 48000;
+    soundOutput.samplesPerSecond = 44100;
     W32_LoadWASAPI();
-    W32_InitWASAPI(&soundOutput);
+
+    if (!W32_InitWASAPI(&soundOutput))
+    {
+        return 1;
+    }
 
     os = &globalOS;
     globalOS.running = 1;
@@ -201,23 +205,20 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
         W32_UpdateXInput();
 
-        if (soundOutput.initialized)
+        globalOS.sampleCount = 0;
+        UINT32 soundPaddingSize;
+        if (SUCCEEDED(soundOutput.audioClient->lpVtbl->GetCurrentPadding(soundOutput.audioClient,
+                                                                         &soundPaddingSize)))
         {
-            globalOS.sampleCount = 0;
-            UINT32 soundPaddingSize;
-            if (SUCCEEDED(soundOutput.audioClient->lpVtbl->GetCurrentPadding(
-                    soundOutput.audioClient, &soundPaddingSize)))
+            globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
+            globalOS.sampleCount = (u32)(soundOutput.latencyFrameCount - soundPaddingSize);
+            if (globalOS.sampleCount > soundOutput.latencyFrameCount)
             {
-                globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
-                globalOS.sampleCount = (u32)(soundOutput.latencyFrameCount - soundPaddingSize);
-                if (globalOS.sampleCount > soundOutput.latencyFrameCount)
-                {
-                    globalOS.sampleCount = soundOutput.latencyFrameCount;
-                }
+                globalOS.sampleCount = soundOutput.latencyFrameCount;
             }
-
-            MemorySet(globalOS.sampleOut, 0, soundOutput.bufferFrameCount);
         }
+
+        MemorySet(globalOS.sampleOut, 0, soundOutput.bufferFrameCount);
 
         b32 last_fullscreen = globalOS.fullscreen;
         AppUpdate();
@@ -227,10 +228,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
             W32_ToggleFullscreen(window);
         }
 
-        if (soundOutput.initialized)
-        {
-            W32_FillSoundBuffer(globalOS.sampleCount, globalOS.sampleOut, &soundOutput);
-        }
+        W32_FillSoundBuffer(globalOS.sampleCount, globalOS.sampleOut, &soundOutput);
 
         W32_TimerEndFrame(&timer);
     }

@@ -18,7 +18,6 @@ internal void Audio_Init(audio_t *audio)
 {
     MemorySet(audio->sources, 0, sizeof(audio->sources));
     MemorySet(audio->reserved, 0, sizeof(audio->reserved));
-    audio->audioSourceCount = 0;
 }
 
 internal void Audio_PlaySound(audio_t *audio, sound_t *sound)
@@ -49,19 +48,15 @@ internal void Audio_Update(audio_t *audio)
         }
 
         i16 *sampleOut = os->sampleOut;
-        i16 *sampleLeft = source->sound->samples + source->playPosition;
-        i16 *sampleRight = sampleLeft + (source->sound->channels == 2);
+        i16 *sampleIn = source->sound->samples + (source->playPosition * source->sound->channels);
 
-        u32 delta = source->sound->sampleCount - source->playPosition;
-        u32 targetSampleCount = Min(os->sampleCount, delta);
-
-        for (u32 write = 0; write < targetSampleCount; write++)
+        for (u32 write = 0; write < os->sampleCount; write++)
         {
-            *sampleOut++ += *sampleLeft++;
-            *sampleOut++ += *sampleRight++;
-            source->playPosition++;
+            *sampleOut++ += *sampleIn++;
+            *sampleOut++ += *sampleIn++;
 
-            if (source->playPosition == source->sound->sampleCount)
+            source->playPosition++;
+            if (source->playPosition >= source->sound->sampleCount)
             {
                 source->playing = 0;
                 audio->reserved[i] = 0;
