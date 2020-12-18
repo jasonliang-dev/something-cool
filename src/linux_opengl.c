@@ -8,6 +8,8 @@ global b32 globalCtxErrorOccurred = 0;
 
 internal i32 Linux_CtxErrorHandler(Display *dpy, XErrorEvent *ev)
 {
+    (void)dpy;
+    (void)ev;
     globalCtxErrorOccurred = 1;
     return 0;
 }
@@ -136,10 +138,7 @@ internal b32 Linux_CreateWindowWithGLContext(Display **display, Window *window, 
     XFree(vi);
 
     XStoreName(*display, *window, WINDOW_TITLE);
-
     XMapWindow(*display, *window);
-
-    const char *glxExts = glXQueryExtensionsString(*display, DefaultScreen(*display));
 
     glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)glXGetProcAddressARB(
         (const GLubyte *)"glXCreateContextAttribsARB");

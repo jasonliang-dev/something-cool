@@ -3,8 +3,6 @@
 #elif PLATFORM_LINUX
 #include <GL/gl.h>
 #include <GL/glx.h>
-#else
-#error "Can't use OpenGL for this platform"
 #endif
 
 #include "ext/glext.h"

@@ -12,7 +12,7 @@ internal u32 R_CompileShader(u32 type, const char *source)
         i32 length;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
         char message[512] = {0};
-        length = Max(length, sizeof(message));
+        length = Max((u32)length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
         OS_DisplayError(message);
 

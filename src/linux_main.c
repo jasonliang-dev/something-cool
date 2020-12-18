@@ -19,6 +19,9 @@ global void *globalLibGL;
 
 int main(int argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
+
     GLXContext ctx;
     Colormap cmap;
 
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
         {
             XNextEvent(globalDisplay, &event);
 
-            if (event.type == ClientMessage && event.xclient.data.l[0] == winClosedID)
+            if (event.type == ClientMessage && (u64)event.xclient.data.l[0] == winClosedID)
             {
                 globalOS.running = 0;
             }

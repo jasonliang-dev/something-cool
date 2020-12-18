@@ -22,8 +22,6 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
 {
     game_scene_t *scene = memory;
 
-    local_persist f32 angle = 0;
-
     v2 cursorPos = GetCursorPosition();
     v2 worldCursor = v2(cursorPos.x + scene->camera.x - (LOW_RES_SCREEN_WIDTH / 2),
                         cursorPos.y + scene->camera.y - (LOW_RES_SCREEN_HEIGHT / 2));

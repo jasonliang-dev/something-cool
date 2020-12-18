@@ -14,6 +14,13 @@ internal void Sound_FreeSamples(sound_t *sound)
     sound->sampleCount = 0;
 }
 
+internal void Audio_Init(audio_t *audio)
+{
+    MemorySet(audio->sources, 0, sizeof(audio->sources));
+    MemorySet(audio->reserved, 0, sizeof(audio->reserved));
+    audio->audioSourceCount = 0;
+}
+
 internal void Audio_PlaySound(audio_t *audio, sound_t *sound)
 {
     for (u32 i = 0; i < AUDIO_SOURCE_MAX; i++)

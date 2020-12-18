@@ -180,7 +180,7 @@ struct os_state_t
     u32 samplesPerSecond;
 
     v2 mousePosition;
-    i32 eventCount;
+    u32 eventCount;
     os_event_t events[4096];
 
     memory_arena_t permanentArena;

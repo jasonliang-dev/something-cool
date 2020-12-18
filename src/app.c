@@ -6,18 +6,42 @@
 
 #define CUTE_TILED_IMPLEMENTATION
 #define CUTE_TILED_NO_EXTERNAL_TILESET_WARNING
-#include "ext/cute_tiled.h"
-
 #define STB_IMAGE_IMPLEMENTATION
-#include "ext/stb_image.h"
-
 #define STB_TRUETYPE_IMPLEMENTATION
+
+#if PLATFORM_WIN32
+
+#include "ext/cute_tiled.h"
+#include "ext/stb_image.h"
 #include "ext/stb_truetype.h"
 
 #pragma warning(push, 0)
-#pragma warning(disable: 4701)
+#pragma warning(disable : 4701)
 #include "ext/stb_vorbis.c"
 #pragma warning(pop)
+
+#elif PLATFORM_LINUX
+
+#include "ext/cute_tiled.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#include "ext/stb_image.h"
+#pragma GCC diagnostic pop
+
+#include "ext/stb_truetype.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "ext/stb_vorbis.c"
+#pragma GCC diagnostic pop
+
+#else
+
+#error "Platform not supported."
+
+#endif
 
 #include "language_layer.h"
 #include "program_options.h"
@@ -57,8 +81,8 @@ void AppLoad(os_state_t *os_)
     app->sceneArena = M_ArenaInitialize(Gigabytes(4));
     app->scratchArena = M_ArenaInitialize(Gigabytes(4));
 
-    MemorySet(app->keyDown, 0, Key_Max);
-    MemorySet(app->mouseDown, 0, MouseButton_Max);
+    MemorySet(app->keyDown, 0, sizeof(app->keyDown) * Key_Max);
+    MemorySet(app->mouseDown, 0, sizeof(app->mouseDown) * MouseButton_Max);
     app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
                           LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
 
@@ -79,15 +103,13 @@ void AppLoad(os_state_t *os_)
 
     GL_CheckForErrors();
 
-    MemorySet(app->audio.sources, 0, AUDIO_SOURCE_MAX);
-    MemorySet(app->audio.reserved, 0, AUDIO_SOURCE_MAX);
-    app->audio.audioSourceCount = 0;
+    Audio_Init(&app->audio);
 }
 
 void AppUpdate(void)
 {
-    MemorySet(app->keyPress, 0, Key_Max);
-    MemorySet(app->mousePress, 0, MouseButton_Max);
+    MemorySet(app->keyPress, 0, sizeof(app->keyPress) * Key_Max);
+    MemorySet(app->mousePress, 0, sizeof(app->mousePress) * MouseButton_Max);
 
     os_event_t event;
     while (OS_GetNextEvent(&event))
@@ -113,6 +135,8 @@ void AppUpdate(void)
             break;
         case OS_EventType_MouseUp:
             app->mouseDown[event.mouseButton] = 0;
+            break;
+        default:
             break;
         }
     }
