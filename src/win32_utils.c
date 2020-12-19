@@ -8,7 +8,7 @@ internal v2 W32_GetMousePosition(HWND window)
 
 internal void W32_ToggleFullscreen(HWND window)
 {
-    local_persist WINDOWPLACEMENT lastWindowPlacement = {sizeof(lastWindowPlacement)};
+    persistent WINDOWPLACEMENT lastWindowPlacement = {sizeof(lastWindowPlacement)};
 
     DWORD windowStyle = GetWindowLong(window, GWL_STYLE);
     if (windowStyle & WS_OVERLAPPEDWINDOW)

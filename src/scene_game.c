@@ -10,7 +10,7 @@ internal void GameSceneBegin(memory_arena_t *arena)
     scene->player.pos.x = 120.0f;
     scene->player.pos.y = 240.0f;
 
-    OS_ShowCursor(0);
+    OS_ShowCursor(false);
 }
 
 internal void GameSceneEnd(void *memory)
@@ -112,8 +112,8 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
     if (app->keyPress[Key_Esc])
     {
         *nextScene = SceneCreate(Menu);
-        return 1;
+        return true;
     }
 
-    return 0;
+    return false;
 }

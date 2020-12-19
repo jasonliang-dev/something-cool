@@ -63,7 +63,7 @@ internal void W32_UpdateXInput(void)
         XINPUT_STATE controller_state = {0};
         if (XInputGetStateProc(0, &controller_state) == ERROR_SUCCESS)
         {
-            globalGamepads[i].connected = 1;
+            globalGamepads[i].connected = true;
             XINPUT_GAMEPAD *pad = &controller_state.Gamepad;
 
             for (u32 j = 0; j < GamepadButton_Max; ++j)
@@ -103,7 +103,7 @@ internal void W32_UpdateXInput(void)
         }
         else
         {
-            globalGamepads[i].connected = 0;
+            globalGamepads[i].connected = false;
         }
     }
 }

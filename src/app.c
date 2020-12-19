@@ -120,20 +120,20 @@ void AppUpdate(void)
                                   LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
             break;
         case OS_EventType_KeyPress:
-            app->keyPress[event.key] = 1;
+            app->keyPress[event.key] = true;
             break;
         case OS_EventType_KeyDown:
-            app->keyDown[event.key] = 1;
+            app->keyDown[event.key] = true;
             break;
         case OS_EventType_KeyUp:
-            app->keyDown[event.key] = 0;
+            app->keyDown[event.key] = false;
             break;
         case OS_EventType_MouseDown:
-            app->mousePress[event.mouseButton] = 1;
-            app->mouseDown[event.mouseButton] = 1;
+            app->mousePress[event.mouseButton] = true;
+            app->mouseDown[event.mouseButton] = true;
             break;
         case OS_EventType_MouseUp:
-            app->mouseDown[event.mouseButton] = 0;
+            app->mouseDown[event.mouseButton] = false;
             break;
         default:
             break;

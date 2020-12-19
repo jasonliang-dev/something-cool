@@ -41,7 +41,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     case WM_CLOSE:
     case WM_DESTROY:
     case WM_QUIT:
-        globalOS.running = 0;
+        globalOS.running = false;
         return 0;
     case WM_MENUCHAR:
         return MAKELRESULT(0, MNC_CLOSE);
@@ -153,7 +153,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     w32_sound_output_t soundOutput = {0};
     soundOutput.channels = 2;
-    soundOutput.samplesPerSecond = 44100;
+    soundOutput.samplesPerSecond = AUDIO_SAMPLE_RATE;
     W32_LoadWASAPI();
 
     if (!W32_InitWASAPI(&soundOutput))
@@ -162,10 +162,10 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     }
 
     os = &globalOS;
-    globalOS.running = 1;
+    globalOS.running = true;
     globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
     globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
-    globalOS.fullscreen = 0;
+    globalOS.fullscreen = false;
 
     globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(i16) * 2,
                                       MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -191,7 +191,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         {
             if (message.message == WM_QUIT)
             {
-                globalOS.running = 0;
+                globalOS.running = false;
             }
 
             TranslateMessage(&message);
@@ -206,7 +206,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         W32_UpdateXInput();
 
         globalOS.sampleCount = 0;
-        UINT32 soundPaddingSize;
+        u32 soundPaddingSize;
         if (SUCCEEDED(soundOutput.audioClient->lpVtbl->GetCurrentPadding(soundOutput.audioClient,
                                                                          &soundPaddingSize)))
         {

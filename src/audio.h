@@ -13,7 +13,6 @@ typedef struct audio_source_t audio_source_t;
 struct audio_source_t
 {
     sound_t *sound;
-    b32 playing;
     u32 playPosition;
 };
 
@@ -21,5 +20,5 @@ typedef struct audio_t audio_t;
 struct audio_t
 {
     audio_source_t sources[AUDIO_SOURCE_MAX];
-    b8 reserved[AUDIO_SOURCE_MAX];
+    b8 playing[AUDIO_SOURCE_MAX];
 };

@@ -10,11 +10,11 @@ internal b32 OS_GetNextEvent(os_event_t *event)
 {
     if (os->eventCount == 0)
     {
-        return 0;
+        return false;
     }
 
     *event = os->events[--os->eventCount];
-    return 1;
+    return true;
 }
 
 internal void OS_AssertionFailure(char *expresssion, char *file, u32 line)

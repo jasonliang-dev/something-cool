@@ -17,7 +17,7 @@ internal void Sound_FreeSamples(sound_t *sound)
 internal void Audio_Init(audio_t *audio)
 {
     MemorySet(audio->sources, 0, sizeof(audio->sources));
-    MemorySet(audio->reserved, 0, sizeof(audio->reserved));
+    MemorySet(audio->playing, 0, sizeof(audio->playing));
 }
 
 internal void Audio_PlaySound(audio_t *audio, sound_t *sound)
@@ -26,10 +26,10 @@ internal void Audio_PlaySound(audio_t *audio, sound_t *sound)
     {
         audio_source_t *source = &audio->sources[i];
 
-        if (!source->playing && !audio->reserved[i])
+        if (!audio->playing[i])
         {
+            audio->playing[i] = true;
             source->sound = sound;
-            source->playing = 1;
             source->playPosition = 0;
             return;
         }
@@ -40,12 +40,12 @@ internal void Audio_Update(audio_t *audio)
 {
     for (u32 i = 0; i < AUDIO_SOURCE_MAX; i++)
     {
-        audio_source_t *source = &audio->sources[i];
-
-        if (!source->playing)
+        if (!audio->playing[i])
         {
             continue;
         }
+
+        audio_source_t *source = &audio->sources[i];
 
         i16 *sampleOut = os->sampleOut;
         i16 *sampleIn = source->sound->samples + (source->playPosition * source->sound->channels);
@@ -58,8 +58,7 @@ internal void Audio_Update(audio_t *audio)
             source->playPosition++;
             if (source->playPosition >= source->sound->sampleCount)
             {
-                source->playing = 0;
-                audio->reserved[i] = 0;
+                audio->playing[i] = false;
                 goto out;
             }
         }

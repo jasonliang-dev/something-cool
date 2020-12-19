@@ -12,7 +12,7 @@
 
 #define global static
 #define internal static
-#define local_persist static
+#define persistent static
 #define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
 #define Bytes(n) (n)
 #define Kilobytes(n) ((n) << 10)
@@ -22,6 +22,9 @@
 #define PI (3.1415926535897f)
 #define F32_EPSILON (0.00001f)
 #define F64_EPSILON (0.000000001f)
+
+#define true 1
+#define false 0
 
 typedef int8_t i8;
 typedef int16_t i16;

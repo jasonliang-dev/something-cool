@@ -79,21 +79,21 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
                                     &IID_IMMDeviceEnumerator, (void **)(&output->device_enum))))
     {
         OS_DisplayError("WASAPI Error: Device enumerator retrieval failed.");
-        return 0;
+        return false;
     }
 
     if (FAILED(output->device_enum->lpVtbl->GetDefaultAudioEndpoint(output->device_enum, eRender,
                                                                     eConsole, &output->device)))
     {
         OS_DisplayError("WASAPI Error: Default audio endpoint was not found.");
-        return 0;
+        return false;
     }
 
     if (FAILED(output->device->lpVtbl->Activate(output->device, &IID_IAudioClient, CLSCTX_ALL, 0,
                                                 (void **)&output->audioClient)))
     {
         OS_DisplayError("WASAPI Error: Could not activate audio device.");
-        return 0;
+        return false;
     }
 
     WAVEFORMATEX *waveFormat = 0;
@@ -123,14 +123,14 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
             requestedSoundDuration, 0, &newWaveFormat, 0)))
     {
         OS_DisplayError("WASAPI Error: Audio client initialization failed.");
-        return 0;
+        return false;
     }
 
     if (FAILED(output->audioClient->lpVtbl->GetService(output->audioClient, &IID_IAudioRenderClient,
                                                        (void **)&output->audioRenderClient)))
     {
         OS_DisplayError("WASAPI Error: Request for audio render service failed.");
-        return 0;
+        return false;
     }
 
     output->audioClient->lpVtbl->GetBufferSize(output->audioClient, &output->bufferFrameCount);
@@ -140,7 +140,7 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
 
     output->audioClient->lpVtbl->Start(output->audioClient);
 
-    return 1;
+    return true;
 }
 
 internal void W32_CleanUpWASAPI(w32_sound_output_t *output)
