@@ -444,3 +444,8 @@ internal v3 HSVToRGB(v3 hsv)
 
     return rgb;
 }
+
+internal f32 Clampf(f32 v, f32 lo, f32 hi)
+{
+    return (lo > v) ? lo : ((v > hi) ? hi : v);
+}

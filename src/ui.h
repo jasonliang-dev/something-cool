@@ -3,7 +3,8 @@
 typedef enum ui_widget_type_t ui_widget_type_t;
 enum ui_widget_type_t
 {
-    UI_WIDGET_BUTTON
+    UI_WIDGET_BUTTON,
+    UI_WIDGET_SLIDER
 };
 
 typedef struct ui_id_t ui_id_t;
@@ -27,7 +28,7 @@ struct ui_widget_t
         {
             f32 value;
         } slider;
-    }
+    };
 };
 
 typedef struct ui_input_t ui_input_t;

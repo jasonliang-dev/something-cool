@@ -30,7 +30,11 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
         OS_DebugPrint("Clicked\n");
     }
 
-    UI_EndFrame(&app->ui, &uiInput);
+    persistent f32 slider = 0.5f;
+
+    slider = UI_SliderExt(&app->ui, UI_MakeID(2, 1), slider, v4(32, 128, 120, 16));
+
+    UI_EndFrame(&app->ui);
 
     if (UI_SpriteButton(app->resources.texPlay,
                         v2((LOW_RES_SCREEN_WIDTH - app->resources.texPlay.width) / 2.0f, 32.0f)))
