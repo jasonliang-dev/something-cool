@@ -1,3 +1,4 @@
 build/*
 !build/res/
 !build/res/*
+.vs
