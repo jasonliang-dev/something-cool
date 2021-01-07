@@ -21,6 +21,13 @@ struct ui_widget_t
     v4 box;
     f32 tHot;
     f32 tActive;
+
+    union {
+        struct ui_slider_t
+        {
+            f32 value;
+        } slider;
+    }
 };
 
 typedef struct ui_input_t ui_input_t;

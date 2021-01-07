@@ -103,6 +103,7 @@ void AppLoad(os_state_t *os_)
 
     GL_CheckForErrors();
 
+    UI_Init(&app->ui);
     Audio_Init(&app->audio);
 }
 

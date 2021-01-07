@@ -34,6 +34,54 @@ internal v4 UI_GetNextAutoLayoutRect(ui_t *ui)
     return v4(0, 0, 0, 0);
 }
 
+internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
+{
+    (void)text;
+
+    b32 isMouseOver = V4HasPoint(rect, ui->cursor);
+    b32 isHot = UI_IDEqual(ui->hot, id);
+
+    if (!isHot && isMouseOver)
+    {
+        ui->hot = id;
+    }
+    else if (isHot && !isMouseOver)
+    {
+        ui->hot = UI_IDNull();
+    }
+
+    b32 triggered = false;
+
+    if (UI_IDEqual(ui->active, id) && !ui->leftDown)
+    {
+        triggered = UI_IDEqual(ui->hot, id);
+        ui->active = UI_IDNull();
+    }
+    else if (isHot && ui->leftDown)
+    {
+        ui->active = id;
+    }
+
+    ui_widget_t *widget = ui->widgets + ui->widgetCount++;
+    widget->type = UI_WIDGET_BUTTON;
+    widget->id = id;
+    widget->box = rect;
+
+    return triggered;
+}
+
+internal b32 UI_Button(ui_t *ui, ui_id_t id, char *text)
+{
+    v4 rect = UI_GetNextAutoLayoutRect(ui);
+    return UI_ButtonExt(ui, id, text, rect);
+}
+
+internal void UI_Init(ui_t *ui)
+{
+    ui->hot = UI_IDNull();
+    ui->active = UI_IDNull();
+}
+
 internal void UI_BeginFrame(ui_t *ui, ui_input_t *input)
 {
     ui->cursor = input->cursor;
@@ -47,44 +95,25 @@ internal void UI_EndFrame(ui_t *ui, ui_input_t *input)
 {
     (void)input;
 
-    for (u32 i = 0; i < ui->widgetCount; i++) {
+    for (u32 i = 0; i < ui->widgetCount; i++)
+    {
         ui_widget_t *widget = ui->widgets + i;
 
-        switch(widget->type) {
-        case UI_WIDGET_BUTTON:
-            break;
+        f32 deltaTime = 0.016f;
+        widget->tHot += ((f32)UI_IDEqual(ui->hot, widget->id) - widget->tHot) * deltaTime * 4.0f;
+        widget->tActive += ((f32)UI_IDEqual(ui->active, widget->id) - widget->tActive) * deltaTime * 4.0f;
+
+        switch (widget->type)
+        {
+        case UI_WIDGET_BUTTON: {
+            f32 col = 0.6f + widget->tHot * 0.4f - widget->tActive * 0.5f;
+            R_DrawRect(v4(col, col, col, col), v2(widget->box.x, widget->box.y),
+                       v2(widget->box.width, widget->box.height));
+        }
+        break;
         default:
             Assert(false);
             break;
         }
     }
-}
-
-internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
-{
-    (void)id;
-    (void)ui;
-    (void)text;
-
-    b32 isMouseOver = V4HasPoint(rect, ui->cursor);
-    b32 isHot = UI_IDEqual(ui->hot, id);
-
-    if (!isHot && isMouseOver) {
-        ui->hot = id;
-    }
-    else if (isHot && !isMouseOver) {
-        ui->hot = UI_IDNull();
-    }
-
-    ui_widget_t *widget = ui->widgets + ui->widgetCount++;
-    widget->type = UI_WIDGET_BUTTON;
-    widget->box = rect;
-
-    return false;
-}
-
-internal b32 UI_Button(ui_t *ui, ui_id_t id, char *text)
-{
-    v4 rect = UI_GetNextAutoLayoutRect(ui);
-    return UI_ButtonExt(ui, id, text, rect);
 }

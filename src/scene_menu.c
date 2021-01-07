@@ -18,17 +18,16 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
     menu_scene_t *scene = memory;
     (void)scene;
 
-    R_DrawRect(v4(1, 1, 1, 1), v2(32, 32), v2(100, 32));
-
     ui_input_t uiInput;
     uiInput.cursor = GetCursorPosition();
-    uiInput.leftDown = app->mousePress[MouseButton_Left];
-    uiInput.rightDown = app->mousePress[MouseButton_Right];
+    uiInput.leftDown = app->mouseDown[MouseButton_Left];
+    uiInput.rightDown = app->mouseDown[MouseButton_Right];
 
     UI_BeginFrame(&app->ui, &uiInput);
 
-    if (UI_ButtonExt(&app->ui, UI_MakeID(1, 1), "Sample Text", v4(32, 32, 100, 32)))
+    if (UI_ButtonExt(&app->ui, UI_MakeID(1, 1), "Sample Text", v4(32, 32, 120, 32)))
     {
+        OS_DebugPrint("Clicked\n");
     }
 
     UI_EndFrame(&app->ui, &uiInput);
