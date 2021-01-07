@@ -24,9 +24,9 @@ internal u32 R_CompileShader(u32 type, const char *source)
 
 internal void R_Pixel2DProjection(u32 shader)
 {
-    glUniformMatrix4fv(
-        glGetUniformLocation(shader, "projection"), 1, 0,
-        M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f).flatten);
+    i32 loc = glGetUniformLocation(shader, "projection");
+    m4 camera = M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(loc, 1, 0, camera.flatten);
 }
 
 internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
@@ -91,7 +91,11 @@ internal void R_SetupRendering()
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    app->shaders.sprite = R_InitShader(spriteVertexShaderSource, spriteFragmentShaderSource);
+    app->shaders.quad = R_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
+    glUseProgram(app->shaders.quad);
+    R_Pixel2DProjection(app->shaders.quad);
+
+    app->shaders.sprite = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
     glUseProgram(app->shaders.sprite);
     glUniform1i(glGetUniformLocation(app->shaders.sprite, "image"), 1);
     R_Pixel2DProjection(app->shaders.sprite);
@@ -133,6 +137,21 @@ internal texture_t R_CreateTexture(char *imagePath)
     stbi_image_free(imageData);
 
     return result;
+}
+
+internal void R_DrawRect(v4 color, v2 position, v2 size) {
+    glUseProgram(app->shaders.quad);
+
+    m4 model = M4Identity();
+    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
+
+    glUniformMatrix4fv(glGetUniformLocation(app->shaders.quad, "model"), 1, 0, model.flatten);
+    glUniform4fv(glGetUniformLocation(app->shaders.quad, "drawColor"), 1, color.elements);
+
+    glBindVertexArray(app->quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }
 
 internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)

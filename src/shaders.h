@@ -1,4 +1,4 @@
-char spriteVertexShaderSource[] = "                                                        \n\
+char quadVertexShaderSource[] = "                                                          \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     layout (location = 0) in vec4 vertex;                                                  \n\
@@ -12,6 +12,20 @@ char spriteVertexShaderSource[] = "                                             
     {                                                                                      \n\
         texCoords = vertex.zw;                                                             \n\
         gl_Position = projection * model * vec4(vertex.xy, 0.0, 1.0);                      \n\
+    }                                                                                      \n\
+";
+
+char quadFragmentShaderSource[] = "                                                        \n\
+    #version 330 core                                                                      \n\
+                                                                                           \n\
+    in vec2 texCoords;                                                                     \n\
+    out vec4 color;                                                                        \n\
+                                                                                           \n\
+    uniform vec4 drawColor;                                                                \n\
+                                                                                           \n\
+    void main()                                                                            \n\
+    {                                                                                      \n\
+        color = drawColor;                                                                 \n\
     }                                                                                      \n\
 ";
 

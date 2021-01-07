@@ -14,6 +14,7 @@ struct app_resources_t
 
 typedef struct app_shaders_t app_shaders_t;
 struct app_shaders_t {
+    u32 quad;
     u32 sprite;
     u32 map;
 };
@@ -26,6 +27,7 @@ struct app_state_t
     b8 mouseDown[MouseButton_Max];
     b8 mousePress[MouseButton_Max];
 
+    ui_t ui;
     audio_t audio;
 
     v2 screenScale;

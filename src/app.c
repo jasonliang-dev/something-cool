@@ -50,6 +50,7 @@
 #include "audio.h"
 #include "opengl.h"
 #include "render.h"
+#include "ui.h"
 #include "scene.h"
 #include "scene_game.h"
 #include "scene_menu.h"
