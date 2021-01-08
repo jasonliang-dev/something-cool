@@ -25,8 +25,8 @@ internal u32 R_CompileShader(u32 type, const char *source)
 internal void R_Pixel2DProjection(u32 shader)
 {
     i32 loc = glGetUniformLocation(shader, "projection");
-    m4 camera = M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(loc, 1, 0, camera.flatten);
+    m4 projection = M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(loc, 1, 0, projection.flatten);
 }
 
 internal u32 R_InitShader(char *vertexSource, char *fragmentSource)

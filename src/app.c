@@ -104,7 +104,9 @@ void AppLoad(os_state_t *os_)
     GL_CheckForErrors();
 
     UI_Init(&app->ui);
+
     Audio_Init(&app->audio);
+    app->audio.volume = 0.2f;
 }
 
 void AppUpdate(void)
@@ -161,7 +163,6 @@ void AppUpdate(void)
                       GL_NEAREST);
 
     OS_GLSwapBuffers();
-
     GL_CheckForErrors();
 
     if (app->keyPress[Key_F11])

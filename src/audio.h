@@ -19,6 +19,7 @@ struct audio_source_t
 typedef struct audio_t audio_t;
 struct audio_t
 {
+    f32 volume;
     audio_source_t sources[AUDIO_SOURCE_MAX];
     b8 playing[AUDIO_SOURCE_MAX];
 };
