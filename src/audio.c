@@ -1,13 +1,12 @@
-internal sound_t Sound_LoadFromFile(char *file)
+internal void Audio_LoadSoundFromFile(char *file, sound_t *sound)
 {
-    sound_t sound;
-    i32 len = stb_vorbis_decode_filename(file, &sound.channels, &sound.sampleRate, &sound.samples);
+    i32 len =
+        stb_vorbis_decode_filename(file, &sound->channels, &sound->sampleRate, &sound->samples);
     Assert(len >= 0);
-    sound.sampleCount = (u32)len;
-    return sound;
+    sound->sampleCount = (u32)len;
 }
 
-internal void Sound_FreeSamples(sound_t *sound)
+internal void Audio_FreeSoundSamples(sound_t *sound)
 {
     free(sound->samples);
     sound->samples = NULL;

@@ -182,7 +182,7 @@ internal void R_DrawSpriteExt(r_texture_t sprite, v2 position, f32 rotation, v2 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.sprite, "model"), 1, 0,
                        model.flatten);
 
-    glActiveTexture(GL_TEXTURE1);
+    glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_SPRITE);
     glBindTexture(GL_TEXTURE_2D, sprite.textureID);
 
     glBindVertexArray(renderer->quadVAO);
@@ -255,7 +255,7 @@ internal void R_DrawTilemap(r_tilemap_t map, v2 position)
     glUniform2f(glGetUniformLocation(renderer->shaders.tilemap, "atlasSize"),
                 1.0f * map.atlas.width / map.tileSize, 1.0f * map.atlas.height / map.tileSize);
 
-    glActiveTexture(GL_TEXTURE2);
+    glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_TILEMAP);
     glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
 
     glBindVertexArray(renderer->quadVAO);
@@ -265,20 +265,26 @@ internal void R_DrawTilemap(r_tilemap_t map, v2 position)
 
 internal void R_CreateFont(char *filePath, r_font_t *font)
 {
-    u8 *memoryPool = M_ArenaPush(&app->scratchArena, Megabytes(2));
-    u8 *ttfBuffer = memoryPool;
-    u8 *bitmap = memoryPool + Megabytes(1);
+    u32 bitmapWidth = 512;
+    u32 bitmapHeight = 512;
+    f32 fontSize = 32.0f;
 
-    fread(ttfBuffer, 1, Megabytes(1), fopen(filePath, "rb"));
-    stbtt_BakeFontBitmap(ttfBuffer, 0, 32.0, bitmap, 512, 512, 32, 96, font->bakedCharData);
+    u8 *bitmap = M_ArenaPush(&app->scratchArena, Megabytes(1));
+    u8 *ttfBuffer = NULL;
+    u32 ttfBufferLen = 0;
+    OS_ReadFile(&app->scratchArena, filePath, &ttfBuffer, &ttfBufferLen);
+
+    stbtt_BakeFontBitmap(ttfBuffer, 0, fontSize, bitmap, bitmapWidth, bitmapHeight, ' ',
+                         ArrayCount(font->bakedCharData), font->bakedCharData);
 
     glGenTextures(1, &font->textureID);
     glBindTexture(GL_TEXTURE_2D, font->textureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, bitmapWidth, bitmapHeight, 0, GL_RED, GL_UNSIGNED_BYTE,
+                 bitmap);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     M_ArenaPop(&app->scratchArena, Megabytes(2));
@@ -297,7 +303,7 @@ internal void R_DrawText(r_font_t *font, v2 position, char *text)
 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.font, "model"), 1, 0, model.flatten);
 
-    glActiveTexture(GL_TEXTURE3);
+    glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_FONT);
     glBindTexture(GL_TEXTURE_2D, font->textureID);
 
     glBindVertexArray(renderer->quadVAO);

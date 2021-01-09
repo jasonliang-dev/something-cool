@@ -1,44 +1,44 @@
-internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u64 *len)
+internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *len)
 {
     *data = 0;
     *len = 0;
 
     HANDLE file = {0};
 
-    DWORD desired_access = GENERIC_READ | GENERIC_WRITE;
-    DWORD share_mode = 0;
-    SECURITY_ATTRIBUTES security_attributes = {
+    DWORD desiredAccess = GENERIC_READ | GENERIC_WRITE;
+    DWORD shareMode = 0;
+    SECURITY_ATTRIBUTES securityAttributes = {
         (DWORD)sizeof(SECURITY_ATTRIBUTES),
         0,
         0,
     };
-    DWORD creation_disposition = OPEN_EXISTING;
-    DWORD flags_and_attributes = 0;
-    HANDLE template_file = 0;
+    DWORD creationDisposition = OPEN_EXISTING;
+    DWORD flagsAndAttributes = 0;
+    HANDLE templateFile = 0;
 
-    file = CreateFile(path, desired_access, share_mode, &security_attributes, creation_disposition,
-                      flags_and_attributes, template_file);
+    file = CreateFile(path, desiredAccess, shareMode, &securityAttributes, creationDisposition,
+                      flagsAndAttributes, templateFile);
     if (file == INVALID_HANDLE_VALUE)
     {
         return;
     }
 
-    DWORD read_bytes = GetFileSize(file, 0);
-    if (!read_bytes)
+    DWORD readBytes = GetFileSize(file, 0);
+    if (!readBytes)
     {
         goto cleanup;
     }
 
-    void *read_data = M_ArenaPush(arena, read_bytes + 1);
-    DWORD bytes_read = 0;
+    u8 *readData = M_ArenaPush(arena, readBytes + 1);
+    DWORD bytesRead = 0;
     OVERLAPPED overlapped = {0};
 
-    ReadFile(file, read_data, read_bytes, &bytes_read, &overlapped);
+    ReadFile(file, readData, readBytes, &bytesRead, &overlapped);
 
-    ((u8 *)read_data)[read_bytes] = 0;
+    readData[readBytes] = 0;
 
-    *data = read_data;
-    *len = (u64)bytes_read;
+    *data = readData;
+    *len = bytesRead;
 
 cleanup:
     CloseHandle(file);

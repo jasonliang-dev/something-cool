@@ -26,7 +26,7 @@ struct r_tilemap_t
 typedef struct r_font_t r_font_t;
 struct r_font_t
 {
-    stbtt_bakedchar bakedCharData[95]; // ASCII [126 '~'] - [32 ' '] = 95
+    stbtt_bakedchar bakedCharData[95]; // ASCII (126 '~') - (32 ' ') = 94
     u32 textureID;
 };
 
