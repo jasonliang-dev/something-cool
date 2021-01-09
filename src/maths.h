@@ -1,5 +1,6 @@
 typedef union v2 v2;
-union v2 {
+union v2
+{
     struct
     {
         f32 x;
@@ -16,7 +17,8 @@ union v2 {
 };
 
 typedef union v3 v3;
-union v3 {
+union v3
+{
     struct
     {
         f32 x;
@@ -47,10 +49,12 @@ union v3 {
 };
 
 typedef union v4 v4;
-union v4 {
+union v4
+{
     struct
     {
-        union {
+        union
+        {
             v3 xyz;
             struct
             {
@@ -65,7 +69,8 @@ union v4 {
 
     struct
     {
-        union {
+        union
+        {
             v3 rgb;
             struct
             {
@@ -96,7 +101,8 @@ union v4 {
     {
         f32 ignore4;
         f32 ignore5;
-        union {
+        union
+        {
             v2 zw;
             v2 wh;
             struct
@@ -111,7 +117,8 @@ union v4 {
 };
 
 typedef union m4 m4;
-union m4 {
+union m4
+{
     f32 elements[4][4];
     f32 flatten[16];
 };

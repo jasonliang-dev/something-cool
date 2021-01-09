@@ -33,7 +33,8 @@ struct ui_widget_t
     f32 tHot;
     f32 tActive;
 
-    union {
+    union
+    {
         struct ui_slider_t
         {
             f32 value;
