@@ -85,22 +85,14 @@ union v4
 
     struct
     {
-        v2 xy;
         f32 ignore0;
+        v2 yz;
         f32 ignore1;
     };
 
     struct
     {
-        f32 ignore2;
-        v2 yz;
-        f32 ignore3;
-    };
-
-    struct
-    {
-        f32 ignore4;
-        f32 ignore5;
+        v2 xy;
         union
         {
             v2 zw;

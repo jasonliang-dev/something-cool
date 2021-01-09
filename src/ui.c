@@ -1,4 +1,4 @@
-internal b32 UI_SpriteButton(texture_t sprite, v2 position)
+internal b32 UI_SpriteButton(r_texture_t sprite, v2 position)
 {
     R_DrawSpriteExt(sprite, position, 0, v2(1, 1), v2(0, 0));
 
@@ -35,10 +35,8 @@ internal v4 UI_GetNextFlexRect(ui_t *ui)
     ui_flex_stack_t *node = ui->flexStack + ui->flexStackCount - 1;
 
     v4 rect;
-    rect.x = node->position.x;
-    rect.y = node->position.y;
-    rect.width = node->size.x;
-    rect.height = node->size.y;
+    rect.xy = node->position;
+    rect.wh = node->size;
 
     if (node->direction == UI_FLEX_ROW)
     {
@@ -196,14 +194,12 @@ internal void UI_EndFrame(ui_t *ui)
         {
         case UI_WIDGET_BUTTON: {
             f32 col = 0.6f + widget->tHot * 0.4f - widget->tActive * 0.5f;
-            R_DrawRect(v4(col, col, col, 1), v2(widget->box.x, widget->box.y),
-                       v2(widget->box.width, widget->box.height));
+            R_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.wh);
+            break;
         }
-        break;
         case UI_WIDGET_SLIDER:
-            R_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), v2(widget->box.x, widget->box.y),
-                       v2(widget->box.width, widget->box.height));
-            R_DrawRect(v4(1, 1, 1, 1), v2(widget->box.x, widget->box.y),
+            R_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), widget->box.xy, widget->box.wh);
+            R_DrawRect(v4(1, 1, 1, 1), widget->box.xy,
                        v2(widget->box.width * widget->slider.value, widget->box.height));
             break;
         default:

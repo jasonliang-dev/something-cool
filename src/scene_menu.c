@@ -40,6 +40,9 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
     }
     UI_EndFrame(&app->ui);
 
+    R_DrawText(&app->resources.fntFont, v2(10, 10),
+               "The quick brown fox jumped over the lazy dog");
+
     if (UI_SpriteButton(app->resources.texPlay,
                         v2((LOW_RES_SCREEN_WIDTH - app->resources.texPlay.width) / 2.0f, 32.0f)))
     {

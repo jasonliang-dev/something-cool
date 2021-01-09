@@ -22,31 +22,31 @@ internal u32 R_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void R_Pixel2DProjection(u32 shader)
+internal void R_OrthoProjection(u32 shader, v2 resolution)
 {
     i32 loc = glGetUniformLocation(shader, "projection");
-    m4 projection = M4Ortho(0.0f, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
+    m4 projection = M4Ortho(0.0f, resolution.width, resolution.height, 0.0f, -1.0f, 1.0f);
     glUniformMatrix4fv(loc, 1, 0, projection.flatten);
 }
 
 internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
 {
-    u32 spriteShader = glCreateProgram();
+    u32 shader = glCreateProgram();
     u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, vertexSource);
     u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
-    glAttachShader(spriteShader, vertexShader);
-    glAttachShader(spriteShader, fragmentShader);
-    glLinkProgram(spriteShader);
-    glValidateProgram(spriteShader);
+    glAttachShader(shader, vertexShader);
+    glAttachShader(shader, fragmentShader);
+    glLinkProgram(shader);
+    glValidateProgram(shader);
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    return spriteShader;
+    return shader;
 }
 
-internal void R_SetupRendering(r_renderer_t *renderer)
+internal void R_SetupRendering(renderer_t *renderer)
 {
     GL_LoadProcedures();
 
@@ -91,58 +91,62 @@ internal void R_SetupRendering(r_renderer_t *renderer)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    renderer->shaders.quad = R_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
-    glUseProgram(renderer->shaders.quad);
-    R_Pixel2DProjection(renderer->shaders.quad);
+    r_shaders_t *shaders = &renderer->shaders;
+    shaders->quad = R_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
+    glUseProgram(shaders->quad);
+    R_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    renderer->shaders.sprite = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
-    glUseProgram(renderer->shaders.sprite);
-    glUniform1i(glGetUniformLocation(renderer->shaders.sprite, "image"), 1);
-    R_Pixel2DProjection(renderer->shaders.sprite);
+    shaders->sprite = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
+    glUseProgram(shaders->sprite);
+    glUniform1i(glGetUniformLocation(shaders->sprite, "image"), TEXTURE_UNIT_SPRITE);
+    R_OrthoProjection(shaders->sprite, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    renderer->shaders.tilemap =
-        R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
-    glUseProgram(renderer->shaders.tilemap);
-    glUniform1i(glGetUniformLocation(renderer->shaders.tilemap, "atlas"), 2);
-    R_Pixel2DProjection(renderer->shaders.tilemap);
+    shaders->tilemap = R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
+    glUseProgram(shaders->tilemap);
+    glUniform1i(glGetUniformLocation(shaders->tilemap, "atlas"), TEXTURE_UNIT_TILEMAP);
+    R_OrthoProjection(shaders->tilemap, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+
+    shaders->font = R_InitShader(quadVertexShaderSource, fontFragmentShaderSource);
+    glUseProgram(shaders->font);
+    glUniform1i(glGetUniformLocation(shaders->font, "bitmap"), TEXTURE_UNIT_FONT);
+    R_OrthoProjection(shaders->font, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT);
+
+    glUseProgram(0);
 }
 
-internal texture_t R_CreateTexture(char *imagePath)
+internal void R_CreateTexture(char *imagePath, r_texture_t *result)
 {
-    texture_t result;
-
     i32 channels;
-    u8 *imageData = stbi_load(imagePath, (i32 *)&result.width, (i32 *)&result.height, &channels, 0);
+    u8 *imageData =
+        stbi_load(imagePath, (i32 *)&result->width, (i32 *)&result->height, &channels, 0);
 
     if (!imageData)
     {
         OS_DisplayError("Cannot display image: \"%s\"\n", imagePath);
     }
 
-    glGenTextures(1, &result.textureID);
-    glBindTexture(GL_TEXTURE_2D, result.textureID);
+    glGenTextures(1, &result->textureID);
+    glBindTexture(GL_TEXTURE_2D, result->textureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, result.width, result.height, 0, GL_RGBA,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, result->width, result->height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, imageData);
 
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(imageData);
-
-    return result;
 }
 
 internal void R_DrawRect(v4 color, v2 position, v2 size)
 {
-    r_renderer_t *renderer = &app->renderer;
+    renderer_t *renderer = &app->renderer;
 
     glUseProgram(renderer->shaders.quad);
 
@@ -150,8 +154,7 @@ internal void R_DrawRect(v4 color, v2 position, v2 size)
     model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
     model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.quad, "model"), 1, 0,
-                       model.flatten);
+    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.quad, "model"), 1, 0, model.flatten);
     glUniform4fv(glGetUniformLocation(renderer->shaders.quad, "drawColor"), 1, color.elements);
 
     glBindVertexArray(renderer->quadVAO);
@@ -159,9 +162,9 @@ internal void R_DrawRect(v4 color, v2 position, v2 size)
     glBindVertexArray(0);
 }
 
-internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+internal void R_DrawSpriteExt(r_texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
-    r_renderer_t *renderer = &app->renderer;
+    renderer_t *renderer = &app->renderer;
 
     glUseProgram(renderer->shaders.sprite);
 
@@ -187,27 +190,26 @@ internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 sc
     glBindVertexArray(0);
 }
 
-internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
+internal void R_DrawSprite(r_texture_t sprite, v2 position, f32 rotation)
 {
     R_DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0.5f, 0.5f));
 }
 
-internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)
+internal void R_CreateTilemap(char *jsonPath, r_texture_t atlas, r_tilemap_t *result)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
     cute_tiled_layer_t *layer = tiledMap->layers;
     Assert(layer->next == NULL);
 
-    tilemap_t result;
-    result.cols = layer->width;
-    result.rows = layer->height;
-    result.atlas = atlas;
-    result.tileSize = tiledMap->tilewidth;
+    result->cols = layer->width;
+    result->rows = layer->height;
+    result->atlas = atlas;
+    result->tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
     v2 *atlasIndex = M_ArenaPushZero(&app->scratchArena, indexSize);
-    u32 atlasColumnCount = atlas.width / result.tileSize;
+    u32 atlasColumnCount = atlas.width / result->tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
     {
@@ -235,13 +237,11 @@ internal tilemap_t R_CreateTilemap(char *jsonPath, texture_t atlas)
 
     cute_tiled_free_map(tiledMap);
     M_ArenaPop(&app->scratchArena, indexSize);
-
-    return result;
 }
 
-internal void R_DrawTilemap(tilemap_t map, v2 position)
+internal void R_DrawTilemap(r_tilemap_t map, v2 position)
 {
-    r_renderer_t *renderer = &app->renderer;
+    renderer_t *renderer = &app->renderer;
 
     glUseProgram(renderer->shaders.tilemap);
 
@@ -249,7 +249,8 @@ internal void R_DrawTilemap(tilemap_t map, v2 position)
     model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
     model = M4MultiplyM4(model, M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f)));
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.tilemap, "model"), 1, 0, model.flatten);
+    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.tilemap, "model"), 1, 0,
+                       model.flatten);
     glUniform2i(glGetUniformLocation(renderer->shaders.tilemap, "mapSize"), map.cols, map.rows);
     glUniform2f(glGetUniformLocation(renderer->shaders.tilemap, "atlasSize"),
                 1.0f * map.atlas.width / map.tileSize, 1.0f * map.atlas.height / map.tileSize);
@@ -259,5 +260,47 @@ internal void R_DrawTilemap(tilemap_t map, v2 position)
 
     glBindVertexArray(renderer->quadVAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.cols * map.rows);
+    glBindVertexArray(0);
+}
+
+internal void R_CreateFont(char *filePath, r_font_t *font)
+{
+    u8 *memoryPool = M_ArenaPush(&app->scratchArena, Megabytes(2));
+    u8 *ttfBuffer = memoryPool;
+    u8 *bitmap = memoryPool + Megabytes(1);
+
+    fread(ttfBuffer, 1, Megabytes(1), fopen(filePath, "rb"));
+    stbtt_BakeFontBitmap(ttfBuffer, 0, 32.0, bitmap, 512, 512, 32, 96, font->bakedCharData);
+
+    glGenTextures(1, &font->textureID);
+    glBindTexture(GL_TEXTURE_2D, font->textureID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 512, 512, 0, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    M_ArenaPop(&app->scratchArena, Megabytes(2));
+}
+
+internal void R_DrawText(r_font_t *font, v2 position, char *text)
+{
+    (void)text;
+    renderer_t *renderer = &app->renderer;
+
+    glUseProgram(renderer->shaders.font);
+
+    m4 model = M4Identity();
+    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
+    model = M4MultiplyM4(model, M4Scale(v3(512.0f, 512.0f, 1.0f)));
+
+    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.font, "model"), 1, 0, model.flatten);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, font->textureID);
+
+    glBindVertexArray(renderer->quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }

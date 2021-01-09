@@ -43,6 +43,20 @@ global char *spriteFragmentShaderSource = "                                     
     }                                                                                      \n\
 ";
 
+global char *fontFragmentShaderSource = "                                                  \n\
+    #version 330 core                                                                      \n\
+                                                                                           \n\
+    in vec2 texCoords;                                                                     \n\
+    out vec4 color;                                                                        \n\
+                                                                                           \n\
+    uniform sampler2D bitmap;                                                              \n\
+                                                                                           \n\
+    void main()                                                                            \n\
+    {                                                                                      \n\
+        color = vec4(1, 1, 1, texture(bitmap, texCoords).r);                               \n\
+    }                                                                                      \n\
+";
+
 global char *tilemapVertexShaderSource = "                                                 \n\
     #version 330 core                                                                      \n\
                                                                                            \n\

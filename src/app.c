@@ -92,19 +92,20 @@ void AppLoad(os_state_t *os_)
         app_resources_t *resources = &app->resources;
         resources->sndJingle = Sound_LoadFromFile("res/jingle.ogg");
         resources->sndImpact = Sound_LoadFromFile("res/impact.ogg");
-        resources->texPlay = R_CreateTexture("res/play.png");
-        resources->texQuit = R_CreateTexture("res/quit.png");
-        resources->texCursor = R_CreateTexture("res/cursor.png");
-        resources->texBone = R_CreateTexture("res/bone.png");
-        resources->texDog = R_CreateTexture("res/dog.png");
-        resources->texAtlas = R_CreateTexture("res/atlas.png");
-        resources->map = R_CreateTilemap("res/map.json", resources->texAtlas);
-
-        app->scene = SceneCreate(Menu);
-        app->scene.Begin(&app->sceneArena);
+        R_CreateFont("c:/windows/fonts/times.ttf", &resources->fntFont);
+        R_CreateTexture("res/play.png", &resources->texPlay);
+        R_CreateTexture("res/quit.png", &resources->texQuit);
+        R_CreateTexture("res/cursor.png", &resources->texCursor);
+        R_CreateTexture("res/bone.png", &resources->texBone);
+        R_CreateTexture("res/dog.png", &resources->texDog);
+        R_CreateTexture("res/atlas.png", &resources->texAtlas);
+        R_CreateTilemap("res/map.json", resources->texAtlas, &resources->map);
 
         GL_CheckForErrors();
     }
+
+    app->scene = SceneCreate(Menu);
+    app->scene.Begin(&app->sceneArena);
 
     UI_Init(&app->ui);
 
