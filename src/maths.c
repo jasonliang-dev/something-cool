@@ -66,12 +66,6 @@ internal v2 V2Inverse(v2 v)
     return result;
 }
 
-internal v2 V2FromIV2(iv2 a)
-{
-    v2 result = {(f32)a.x, (f32)a.y};
-    return result;
-}
-
 internal f32 PointDirection(v2 a, v2 b)
 {
     f32 x = b.x - a.x;

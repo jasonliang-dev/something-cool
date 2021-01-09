@@ -83,25 +83,28 @@ void AppLoad(os_state_t *os_)
 
     MemorySet(app->keyDown, 0, sizeof(app->keyDown));
     MemorySet(app->mouseDown, 0, sizeof(app->mouseDown));
-    app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
-                          LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
+    app->renderer.screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowWidth,
+                                   LOW_RES_SCREEN_HEIGHT / (f32)os->windowHeight);
 
-    R_SetupRendering();
+    {
+        R_SetupRendering(&app->renderer);
 
-    app->resources.sndJingle = Sound_LoadFromFile("res/jingle.ogg");
-    app->resources.sndImpact = Sound_LoadFromFile("res/impact.ogg");
-    app->resources.texPlay = R_CreateTexture("res/play.png");
-    app->resources.texQuit = R_CreateTexture("res/quit.png");
-    app->resources.texCursor = R_CreateTexture("res/cursor.png");
-    app->resources.texBone = R_CreateTexture("res/bone.png");
-    app->resources.texDog = R_CreateTexture("res/dog.png");
-    app->resources.texAtlas = R_CreateTexture("res/atlas.png");
-    app->resources.map = R_CreateTilemap("res/map.json", app->resources.texAtlas);
+        app_resources_t *resources = &app->resources;
+        resources->sndJingle = Sound_LoadFromFile("res/jingle.ogg");
+        resources->sndImpact = Sound_LoadFromFile("res/impact.ogg");
+        resources->texPlay = R_CreateTexture("res/play.png");
+        resources->texQuit = R_CreateTexture("res/quit.png");
+        resources->texCursor = R_CreateTexture("res/cursor.png");
+        resources->texBone = R_CreateTexture("res/bone.png");
+        resources->texDog = R_CreateTexture("res/dog.png");
+        resources->texAtlas = R_CreateTexture("res/atlas.png");
+        resources->map = R_CreateTilemap("res/map.json", resources->texAtlas);
 
-    app->scene = SceneCreate(Menu);
-    app->scene.Begin(&app->sceneArena);
+        app->scene = SceneCreate(Menu);
+        app->scene.Begin(&app->sceneArena);
 
-    GL_CheckForErrors();
+        GL_CheckForErrors();
+    }
 
     UI_Init(&app->ui);
 
@@ -120,8 +123,8 @@ void AppUpdate(void)
         switch (event.type)
         {
         case OS_EventType_WindowResize:
-            app->screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowResolution.x,
-                                  LOW_RES_SCREEN_HEIGHT / (f32)os->windowResolution.y);
+            app->renderer.screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowWidth,
+                                           LOW_RES_SCREEN_HEIGHT / (f32)os->windowHeight);
             break;
         case OS_EventType_KeyPress:
             app->keyPress[event.key] = true;
@@ -144,7 +147,7 @@ void AppUpdate(void)
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, app->screenFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->renderer.screenFBO);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -158,9 +161,8 @@ void AppUpdate(void)
     }
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-    glBlitFramebuffer(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0, 0,
-                      os->windowResolution.x, os->windowResolution.y, GL_COLOR_BUFFER_BIT,
-                      GL_NEAREST);
+    glBlitFramebuffer(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0, 0, os->windowWidth,
+                      os->windowHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     OS_GLSwapBuffers();
     GL_CheckForErrors();

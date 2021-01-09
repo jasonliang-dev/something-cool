@@ -109,8 +109,8 @@ enum os_event_type_t
 
     OS_EventType_KeyStart,
     OS_EventType_CharacterInput,
-    OS_EventType_KeyPress, // can fire multiple times while key is held
-    OS_EventType_KeyDown,  // should fires once when key is pressed down
+    OS_EventType_KeyPress, // event fires once when key is down
+    OS_EventType_KeyDown,  // event fires multiple times while key is held
     OS_EventType_KeyUp,
     OS_EventType_KeyEnd,
 
@@ -172,7 +172,8 @@ typedef struct os_state_t os_state_t;
 struct os_state_t
 {
     volatile b32 running;
-    iv2 windowResolution;
+    u32 windowWidth;
+    u32 windowHeight;
     b32 fullscreen;
 
     i16 *sampleOut;
@@ -186,6 +187,7 @@ struct os_state_t
     memory_arena_t permanentArena;
 };
 
+// forward declare platform specific functions
 internal void *OS_Reserve(u64 size);
 internal void OS_Release(void *memory, u64 size);
 internal void OS_Commit(void *memory, u64 size);

@@ -1,4 +1,4 @@
-char quadVertexShaderSource[] = "                                                          \n\
+global char *quadVertexShaderSource = "                                                    \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     layout (location = 0) in vec4 vertex;                                                  \n\
@@ -15,7 +15,7 @@ char quadVertexShaderSource[] = "                                               
     }                                                                                      \n\
 ";
 
-char quadFragmentShaderSource[] = "                                                        \n\
+global char *quadFragmentShaderSource = "                                                  \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     in vec2 texCoords;                                                                     \n\
@@ -29,7 +29,7 @@ char quadFragmentShaderSource[] = "                                             
     }                                                                                      \n\
 ";
 
-char spriteFragmentShaderSource[] = "                                                      \n\
+global char *spriteFragmentShaderSource = "                                                \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     in vec2 texCoords;                                                                     \n\
@@ -43,7 +43,7 @@ char spriteFragmentShaderSource[] = "                                           
     }                                                                                      \n\
 ";
 
-char tilemapVertexShaderSource[] = "                                                       \n\
+global char *tilemapVertexShaderSource = "                                                 \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     layout (location = 0) in vec4 vertex;                                                  \n\
@@ -65,7 +65,7 @@ char tilemapVertexShaderSource[] = "                                            
     }                                                                                      \n\
 ";
 
-char tilemapFragmentShaderSource[] = "                                                     \n\
+global char *tilemapFragmentShaderSource = "                                               \n\
     #version 330 core                                                                      \n\
                                                                                            \n\
     in vec2 texCoords;                                                                     \n\

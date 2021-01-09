@@ -26,6 +26,18 @@ union v3 {
 
     struct
     {
+        v2 xy;
+        f32 ignore0;
+    };
+
+    struct
+    {
+        f32 ignore1;
+        v2 yz;
+    };
+
+    struct
+    {
         f32 r;
         f32 g;
         f32 b;
@@ -38,14 +50,55 @@ typedef union v4 v4;
 union v4 {
     struct
     {
-        f32 x;
-        f32 y;
         union {
+            v3 xyz;
             struct
             {
+                f32 x;
+                f32 y;
                 f32 z;
-                f32 w;
             };
+        };
+
+        f32 w;
+    };
+
+    struct
+    {
+        union {
+            v3 rgb;
+            struct
+            {
+                f32 r;
+                f32 g;
+                f32 b;
+            };
+        };
+
+        f32 a;
+    };
+
+    struct
+    {
+        v2 xy;
+        f32 ignore0;
+        f32 ignore1;
+    };
+
+    struct
+    {
+        f32 ignore2;
+        v2 yz;
+        f32 ignore3;
+    };
+
+    struct
+    {
+        f32 ignore4;
+        f32 ignore5;
+        union {
+            v2 zw;
+            v2 wh;
             struct
             {
                 f32 width;
@@ -54,87 +107,11 @@ union v4 {
         };
     };
 
-    struct
-    {
-        f32 r;
-        f32 g;
-        f32 b;
-        f32 a;
-    };
-
     f32 elements[4];
 };
 
-typedef union iv2 iv2;
-union iv2 {
-    struct
-    {
-        i32 x;
-        i32 y;
-    };
-
-    struct
-    {
-        i32 width;
-        i32 height;
-    };
-
-    i32 elements[2];
-};
-
-typedef union iv3 iv3;
-union iv3 {
-    struct
-    {
-        i32 x;
-        i32 y;
-        i32 z;
-    };
-
-    struct
-    {
-        i32 r;
-        i32 g;
-        i32 b;
-    };
-
-    i32 elements[3];
-};
-
-typedef union iv4 iv4;
-union iv4 {
-    struct
-    {
-        i32 x;
-        i32 y;
-        union {
-            struct
-            {
-                i32 z;
-                i32 w;
-            };
-            struct
-            {
-                i32 width;
-                i32 height;
-            };
-        };
-    };
-
-    struct
-    {
-        i32 r;
-        i32 g;
-        i32 b;
-        i32 a;
-    };
-
-    i32 elements[4];
-};
-
 typedef union m4 m4;
-union m4
-{
+union m4 {
     f32 elements[4][4];
     f32 flatten[16];
 };
@@ -151,21 +128,6 @@ union m4
     }
 #define v4(...)                                                                                    \
     (v4)                                                                                           \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
-#define iv2(...)                                                                                   \
-    (iv2)                                                                                          \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
-#define iv3(...)                                                                                   \
-    (iv3)                                                                                          \
-    {                                                                                              \
-        __VA_ARGS__                                                                                \
-    }
-#define iv4(...)                                                                                   \
-    (iv4)                                                                                          \
     {                                                                                              \
         __VA_ARGS__                                                                                \
     }

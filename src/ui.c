@@ -30,7 +30,7 @@ internal ui_id_t UI_MakeID(u32 primary, u32 secondary)
 
 internal v4 UI_GetNextFlexRect(ui_t *ui)
 {
-    Assert(ui->flexStackCount != 0);
+    Assert(ui->flexStackCount > 0);
 
     ui_flex_stack_t *node = ui->flexStack + ui->flexStackCount - 1;
 

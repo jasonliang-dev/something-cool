@@ -49,10 +49,10 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
         i32 width = LOWORD(lParam);
         i32 height = HIWORD(lParam);
         event.type = OS_EventType_WindowResize;
-        event.delta = v2((f32)(width - globalOS.windowResolution.x),
-                         (f32)(height - globalOS.windowResolution.y));
-        globalOS.windowResolution.x = width;
-        globalOS.windowResolution.y = height;
+        event.delta = v2((f32)(width - globalOS.windowWidth),
+                         (f32)(height - globalOS.windowHeight));
+        globalOS.windowWidth = width;
+        globalOS.windowHeight = height;
         OS_PushEvent(event);
         return 0;
     case WM_SYSKEYDOWN:
@@ -163,8 +163,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
     os = &globalOS;
     globalOS.running = true;
-    globalOS.windowResolution.x = DEFAULT_WINDOW_WIDTH;
-    globalOS.windowResolution.y = DEFAULT_WINDOW_HEIGHT;
+    globalOS.windowWidth = DEFAULT_WINDOW_WIDTH;
+    globalOS.windowHeight = DEFAULT_WINDOW_HEIGHT;
     globalOS.fullscreen = false;
 
     globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(i16) * 2,
@@ -200,8 +200,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
         RECT clientRect;
         GetClientRect(window, &clientRect);
-        globalOS.windowResolution.x = clientRect.right - clientRect.left;
-        globalOS.windowResolution.y = clientRect.bottom - clientRect.top;
+        globalOS.windowWidth = clientRect.right - clientRect.left;
+        globalOS.windowHeight = clientRect.bottom - clientRect.top;
 
         W32_UpdateXInput();
 

@@ -12,13 +12,6 @@ struct app_resources_t
     tilemap_t map;
 };
 
-typedef struct app_shaders_t app_shaders_t;
-struct app_shaders_t {
-    u32 quad;
-    u32 sprite;
-    u32 map;
-};
-
 typedef struct app_state_t app_state_t;
 struct app_state_t
 {
@@ -30,11 +23,8 @@ struct app_state_t
     ui_t ui;
     audio_t audio;
 
-    v2 screenScale;
-    u32 quadVAO;
-    u32 screenFBO;
     app_resources_t resources;
-    app_shaders_t shaders;
+    r_renderer_t renderer;
 
     scene_t scene;
     memory_arena_t sceneArena;
