@@ -151,8 +151,8 @@ internal void R_DrawRect(v4 color, v2 position, v2 size)
     glUseProgram(renderer->shaders.quad);
 
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
-    model = M4MultiplyM4(model, M4Scale(v3(size.x, size.y, 1.0f)));
+    model *= M4Translate(v3(position.x, position.y, 0.0f));
+    model *= M4Scale(v3(size.x, size.y, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.quad, "model"), 1, 0, model.flatten);
     glUniform4fv(glGetUniformLocation(renderer->shaders.quad, "drawColor"), 1, color.elements);
@@ -170,14 +170,14 @@ internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 sc
 
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x - (origin.x * area.x),
-                                               position.y - (origin.y * area.y), 0.0f)));
+    model *= M4Translate(v3(position.x - (origin.x * area.x),
+                                               position.y - (origin.y * area.y), 0.0f));
 
-    model = M4MultiplyM4(model, M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f)));
-    model = M4MultiplyM4(model, M4RotateZ(rotation));
-    model = M4MultiplyM4(model, M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f)));
+    model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));
+    model *= M4RotateZ(rotation);
+    model *= M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f));
 
-    model = M4MultiplyM4(model, M4Scale(v3(area.x, area.y, 1.0f)));
+    model *= M4Scale(v3(area.x, area.y, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.sprite, "model"), 1, 0,
                        model.flatten);
@@ -246,8 +246,8 @@ internal void R_DrawTilemap(tilemap_t map, v2 position)
     glUseProgram(renderer->shaders.tilemap);
 
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
-    model = M4MultiplyM4(model, M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f)));
+    model *= M4Translate(v3(position.x, position.y, 0.0f));
+    model *= M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.tilemap, "model"), 1, 0,
                        model.flatten);
@@ -298,8 +298,8 @@ internal void R_DrawText(font_t *font, v2 position, char *text)
     glUseProgram(renderer->shaders.font);
 
     m4 model = M4Identity();
-    model = M4MultiplyM4(model, M4Translate(v3(position.x, position.y, 0.0f)));
-    model = M4MultiplyM4(model, M4Scale(v3(512.0f, 512.0f, 1.0f)));
+    model *= M4Translate(v3(position.x, position.y, 0.0f));
+    model *= M4Scale(v3(512.0f, 512.0f, 1.0f));
 
     glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.font, "model"), 1, 0, model.flatten);
 

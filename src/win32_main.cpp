@@ -113,7 +113,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     case WM_MOUSEMOVE:
         v2 lastMouse = globalOS.mousePosition;
         event.type = OS_EventType_MouseMove;
-        event.delta = V2MinusV2(globalOS.mousePosition, lastMouse);
+        event.delta = globalOS.mousePosition - lastMouse;
         globalOS.mousePosition = W32_GetMousePosition(window);
         OS_PushEvent(event);
         return 0;

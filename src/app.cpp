@@ -60,10 +60,10 @@
 global app_state_t *app;
 global os_state_t *os = NULL;
 
+#include "maths.cpp"
 #include "app_utils.cpp"
 #include "os.cpp"
 #include "audio.cpp"
-#include "maths.cpp"
 #include "memory.cpp"
 #include "opengl.cpp"
 #include "render.cpp"

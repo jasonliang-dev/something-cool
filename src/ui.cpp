@@ -17,9 +17,14 @@ internal ui_id_t UI_IDNull(void)
     return id;
 }
 
-internal b32 UI_IDEqual(ui_id_t a, ui_id_t b)
+internal b32 operator==(ui_id_t a, ui_id_t b)
 {
     return (a.primary == b.primary) && (a.secondary == b.secondary);
+}
+
+internal b32 operator!=(ui_id_t a, ui_id_t b)
+{
+    return !(a == b);
 }
 
 internal ui_id_t UI_MakeID(u32 primary, u32 secondary)
@@ -78,7 +83,7 @@ internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
     Assert(ui->widgetCount < UI_MAX_WIDGETS);
 
     b32 isMouseOver = V4HasPoint(rect, ui->cursor);
-    b32 isHot = UI_IDEqual(ui->hot, id);
+    b32 isHot = ui->hot == id;
 
     if (!isHot && isMouseOver)
     {
@@ -89,12 +94,12 @@ internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
         ui->hot = UI_IDNull();
     }
 
-    if (!UI_IDEqual(ui->active, id) && isHot && ui->leftDown)
+    if (ui->active != id && isHot && ui->leftDown)
     {
         ui->active = id;
     }
 
-    if (UI_IDEqual(ui->active, id))
+    if (ui->active == id)
     {
         if (ui->leftDown)
         {
@@ -128,7 +133,7 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
     (void)text;
 
     b32 isMouseOver = V4HasPoint(rect, ui->cursor);
-    b32 isHot = UI_IDEqual(ui->hot, id);
+    b32 isHot = ui->hot == id;
 
     if (!isHot && isMouseOver)
     {
@@ -141,9 +146,9 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
 
     b32 triggered = false;
 
-    if (UI_IDEqual(ui->active, id) && !ui->leftDown)
+    if (ui->active == id && !ui->leftDown)
     {
-        triggered = UI_IDEqual(ui->hot, id);
+        triggered = isHot;
         ui->active = UI_IDNull();
     }
     else if (isHot && ui->leftDown)
@@ -187,8 +192,8 @@ internal void UI_EndFrame(ui_t *ui)
     {
         ui_widget_t *widget = ui->widgets + i;
 
-        widget->tHot += ((f32)UI_IDEqual(ui->hot, widget->id) - widget->tHot) * 0.05f;
-        widget->tActive += ((f32)UI_IDEqual(ui->active, widget->id) - widget->tActive) * 0.05f;
+        widget->tHot += ((f32)(ui->hot == widget->id) - widget->tHot) * 0.05f;
+        widget->tActive += ((f32)(ui->active == widget->id) - widget->tActive) * 0.05f;
 
         switch (widget->type)
         {

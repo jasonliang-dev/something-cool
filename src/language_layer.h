@@ -23,9 +23,6 @@
 #define F32_EPSILON (0.00001f)
 #define F64_EPSILON (0.000000001f)
 
-#define true 1
-#define false 0
-
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
