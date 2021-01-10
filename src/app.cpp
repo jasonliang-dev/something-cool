@@ -60,16 +60,16 @@
 global app_state_t *app;
 global os_state_t *os = NULL;
 
-#include "app_utils.c"
-#include "os.c"
-#include "audio.c"
-#include "maths.c"
-#include "memory.c"
-#include "opengl.c"
-#include "render.c"
-#include "ui.c"
-#include "scene_game.c"
-#include "scene_menu.c"
+#include "app_utils.cpp"
+#include "os.cpp"
+#include "audio.cpp"
+#include "maths.cpp"
+#include "memory.cpp"
+#include "opengl.cpp"
+#include "render.cpp"
+#include "ui.cpp"
+#include "scene_game.cpp"
+#include "scene_menu.cpp"
 
 void AppLoad(os_state_t *os_)
 {
@@ -77,7 +77,7 @@ void AppLoad(os_state_t *os_)
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
     os->permanentArena = M_ArenaInitialize(Gigabytes(1));
-    app = M_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
+    app = (app_state_t *)M_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
     app->sceneArena = M_ArenaInitialize(Gigabytes(4));
     app->scratchArena = M_ArenaInitialize(Gigabytes(4));
 

@@ -1,9 +1,9 @@
 internal void GameSceneBegin(memory_arena_t *arena)
 {
-    game_scene_t *scene = M_ArenaPushZero(arena, sizeof(game_scene_t));
+    game_scene_t *scene = (game_scene_t *)M_ArenaPushZero(arena, sizeof(game_scene_t));
     scene->bulletPoolCount = 0;
     scene->bulletPoolMax = 1000;
-    scene->bulletPool = M_ArenaPush(arena, sizeof(bullet_t) * scene->bulletPoolMax);
+    scene->bulletPool = (bullet_t *)M_ArenaPush(arena, sizeof(bullet_t) * scene->bulletPoolMax);
 
     scene->player.moveSpeed = 2.0f;
     scene->player.shootCooldown = 0;
@@ -20,7 +20,7 @@ internal void GameSceneEnd(void *memory)
 
 internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
 {
-    game_scene_t *scene = memory;
+    game_scene_t *scene = (game_scene_t *)memory;
 
     v2 cursorPos = GetCursorPosition();
     v2 worldCursor = v2(cursorPos.x + scene->camera.x - (LOW_RES_SCREEN_WIDTH / 2),

@@ -7,4 +7,4 @@ struct scene_t
 };
 
 #define SceneCreate(name)                                                                          \
-    ((scene_t){.Begin = name##SceneBegin, .End = name##SceneEnd, .Update = name##SceneUpdate});
+    (scene_t{name##SceneBegin, name##SceneEnd, name##SceneUpdate});

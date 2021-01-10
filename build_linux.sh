@@ -7,4 +7,4 @@ LIBRARY_LINK="-lm -ldl -lX11 -lGL -lasound"
 mkdir -p build
 cd build
 
-gcc $FLAGS ../src/linux_main.c $BUILD_OPTIONS -o linux_app $LIBRARY_LINK
+gcc $FLAGS ../src/linux_main.cpp $BUILD_OPTIONS -o linux_app $LIBRARY_LINK

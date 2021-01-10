@@ -3,14 +3,14 @@ struct app_resources_t
 {
     sound_t sndJingle;
     sound_t sndImpact;
-    r_font_t fntFont;
-    r_texture_t texPlay;
-    r_texture_t texQuit;
-    r_texture_t texCursor;
-    r_texture_t texBone;
-    r_texture_t texDog;
-    r_texture_t texAtlas;
-    r_tilemap_t map;
+    font_t fntFont;
+    texture_t texPlay;
+    texture_t texQuit;
+    texture_t texCursor;
+    texture_t texBone;
+    texture_t texDog;
+    texture_t texAtlas;
+    tilemap_t map;
 };
 
 typedef struct app_state_t app_state_t;

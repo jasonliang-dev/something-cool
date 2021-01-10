@@ -182,7 +182,7 @@ struct os_state_t
 
     v2 mousePosition;
     u32 eventCount;
-    os_event_t events[4096];
+    os_event_t events[128];
 
     memory_arena_t permanentArena;
 };

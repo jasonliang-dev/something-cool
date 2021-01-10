@@ -75,22 +75,21 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
 {
     CoInitializeExProc(0, COINIT_SPEED_OVER_MEMORY);
 
-    if (FAILED(CoCreateInstanceProc(&CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL,
-                                    &IID_IMMDeviceEnumerator, (void **)(&output->device_enum))))
+    if (FAILED(CoCreateInstanceProc(CLSID_MMDeviceEnumerator, 0, CLSCTX_ALL,
+                                    IID_IMMDeviceEnumerator, (void **)(&output->device_enum))))
     {
         OS_DisplayError("WASAPI Error: Device enumerator retrieval failed.");
         return false;
     }
 
-    if (FAILED(output->device_enum->lpVtbl->GetDefaultAudioEndpoint(output->device_enum, eRender,
-                                                                    eConsole, &output->device)))
+    if (FAILED(output->device_enum->GetDefaultAudioEndpoint(eRender, eConsole, &output->device)))
     {
         OS_DisplayError("WASAPI Error: Default audio endpoint was not found.");
         return false;
     }
 
-    if (FAILED(output->device->lpVtbl->Activate(output->device, &IID_IAudioClient, CLSCTX_ALL, 0,
-                                                (void **)&output->audioClient)))
+    if (FAILED(output->device->Activate(IID_IAudioClient, CLSCTX_ALL, 0,
+                                        (void **)&output->audioClient)))
     {
         OS_DisplayError("WASAPI Error: Could not activate audio device.");
         return false;
@@ -98,7 +97,7 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
 
     WAVEFORMATEX *waveFormat = 0;
 
-    output->audioClient->lpVtbl->GetMixFormat(output->audioClient, &waveFormat);
+    output->audioClient->GetMixFormat(&waveFormat);
 
     WORD bitsPerSample = 16;
     WORD blockAlign = (output->channels * bitsPerSample) / 8;
@@ -116,41 +115,41 @@ internal b32 W32_InitWASAPI(w32_sound_output_t *output)
     output->latencyFrameCount = output->samplesPerSecond / SOUND_LATENCY_FPS;
 
     REFERENCE_TIME requestedSoundDuration = REFTIMES_PER_SEC * 2;
-    if (FAILED(output->audioClient->lpVtbl->Initialize(
-            output->audioClient, AUDCLNT_SHAREMODE_SHARED,
-            AUDCLNT_STREAMFLAGS_RATEADJUST | AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
-                AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
-            requestedSoundDuration, 0, &newWaveFormat, 0)))
+    if (FAILED(output->audioClient->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                               AUDCLNT_STREAMFLAGS_RATEADJUST |
+                                                   AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+                                                   AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
+                                               requestedSoundDuration, 0, &newWaveFormat, 0)))
     {
         OS_DisplayError("WASAPI Error: Audio client initialization failed.");
         return false;
     }
 
-    if (FAILED(output->audioClient->lpVtbl->GetService(output->audioClient, &IID_IAudioRenderClient,
-                                                       (void **)&output->audioRenderClient)))
+    if (FAILED(output->audioClient->GetService(IID_IAudioRenderClient,
+                                               (void **)&output->audioRenderClient)))
     {
         OS_DisplayError("WASAPI Error: Request for audio render service failed.");
         return false;
     }
 
-    output->audioClient->lpVtbl->GetBufferSize(output->audioClient, &output->bufferFrameCount);
+    output->audioClient->GetBufferSize(&output->bufferFrameCount);
 
     output->soundBufferDuration = (REFERENCE_TIME)(
         (f64)REFTIMES_PER_SEC * output->bufferFrameCount / output->samplesPerSecond);
 
-    output->audioClient->lpVtbl->Start(output->audioClient);
+    output->audioClient->Start();
 
     return true;
 }
 
 internal void W32_CleanUpWASAPI(w32_sound_output_t *output)
 {
-        output->audioClient->lpVtbl->Stop(output->audioClient);
+    output->audioClient->Stop();
 
-        output->device_enum->lpVtbl->Release(output->device_enum);
-        output->device->lpVtbl->Release(output->device);
-        output->audioClient->lpVtbl->Release(output->audioClient);
-        output->audioRenderClient->lpVtbl->Release(output->audioRenderClient);
+    output->device_enum->Release();
+    output->device->Release();
+    output->audioClient->Release();
+    output->audioRenderClient->Release();
 }
 
 internal void W32_FillSoundBuffer(u32 sampleCount, i16 *samples, w32_sound_output_t *output)
@@ -158,12 +157,12 @@ internal void W32_FillSoundBuffer(u32 sampleCount, i16 *samples, w32_sound_outpu
     BYTE *data = 0;
     DWORD flags = 0;
 
-    output->audioRenderClient->lpVtbl->GetBuffer(output->audioRenderClient, sampleCount, &data);
+    output->audioRenderClient->GetBuffer(sampleCount, &data);
 
     if (data)
     {
         MemoryCopy(data, samples, sizeof(i16) * sampleCount * output->channels);
     }
 
-    output->audioRenderClient->lpVtbl->ReleaseBuffer(output->audioRenderClient, sampleCount, flags);
+    output->audioRenderClient->ReleaseBuffer(sampleCount, flags);
 }

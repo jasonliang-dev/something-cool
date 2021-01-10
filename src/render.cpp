@@ -91,7 +91,7 @@ internal void R_SetupRendering(renderer_t *renderer)
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    r_shaders_t *shaders = &renderer->shaders;
+    shaders_t *shaders = &renderer->shaders;
     shaders->quad = R_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
     glUseProgram(shaders->quad);
     R_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
@@ -118,7 +118,7 @@ internal void R_SetupRendering(renderer_t *renderer)
     glUseProgram(0);
 }
 
-internal void R_CreateTexture(char *imagePath, r_texture_t *result)
+internal void R_CreateTexture(char *imagePath, texture_t *result)
 {
     i32 channels;
     u8 *imageData =
@@ -162,7 +162,7 @@ internal void R_DrawRect(v4 color, v2 position, v2 size)
     glBindVertexArray(0);
 }
 
-internal void R_DrawSpriteExt(r_texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
     renderer_t *renderer = &app->renderer;
 
@@ -190,12 +190,12 @@ internal void R_DrawSpriteExt(r_texture_t sprite, v2 position, f32 rotation, v2 
     glBindVertexArray(0);
 }
 
-internal void R_DrawSprite(r_texture_t sprite, v2 position, f32 rotation)
+internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
 {
     R_DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0.5f, 0.5f));
 }
 
-internal void R_CreateTilemap(char *jsonPath, r_texture_t atlas, r_tilemap_t *result)
+internal void R_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *result)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
@@ -208,7 +208,7 @@ internal void R_CreateTilemap(char *jsonPath, r_texture_t atlas, r_tilemap_t *re
     result->tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = M_ArenaPushZero(&app->scratchArena, indexSize);
+    v2 *atlasIndex = (v2 *)M_ArenaPushZero(&app->scratchArena, indexSize);
     u32 atlasColumnCount = atlas.width / result->tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -239,7 +239,7 @@ internal void R_CreateTilemap(char *jsonPath, r_texture_t atlas, r_tilemap_t *re
     M_ArenaPop(&app->scratchArena, indexSize);
 }
 
-internal void R_DrawTilemap(r_tilemap_t map, v2 position)
+internal void R_DrawTilemap(tilemap_t map, v2 position)
 {
     renderer_t *renderer = &app->renderer;
 
@@ -263,16 +263,16 @@ internal void R_DrawTilemap(r_tilemap_t map, v2 position)
     glBindVertexArray(0);
 }
 
-internal void R_CreateFont(char *filePath, r_font_t *font)
+internal void R_CreateFont(char *filePath, font_t *font)
 {
     u32 bitmapWidth = 512;
     u32 bitmapHeight = 512;
     f32 fontSize = 32.0f;
 
-    u8 *bitmap = M_ArenaPush(&app->scratchArena, Megabytes(1));
+    u8 *bitmap = (u8 *)M_ArenaPush(&app->scratchArena, Megabytes(1));
     u8 *ttfBuffer = NULL;
     u32 ttfBufferLen = 0;
-    OS_ReadFile(&app->scratchArena, filePath, &ttfBuffer, &ttfBufferLen);
+    OS_ReadFile(&app->scratchArena, filePath, (void **)&ttfBuffer, &ttfBufferLen);
 
     stbtt_BakeFontBitmap(ttfBuffer, 0, fontSize, bitmap, bitmapWidth, bitmapHeight, ' ',
                          ArrayCount(font->bakedCharData), font->bakedCharData);
@@ -287,10 +287,10 @@ internal void R_CreateFont(char *filePath, r_font_t *font)
                  bitmap);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    M_ArenaPop(&app->scratchArena, Megabytes(2));
+    M_ArenaPop(&app->scratchArena, Megabytes(1) + ttfBufferLen);
 }
 
-internal void R_DrawText(r_font_t *font, v2 position, char *text)
+internal void R_DrawText(font_t *font, v2 position, char *text)
 {
     (void)text;
     renderer_t *renderer = &app->renderer;

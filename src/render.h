@@ -1,37 +1,37 @@
-typedef enum r_texture_unit_t r_texture_unit_t;
-enum r_texture_unit_t {
+typedef enum texture_unit_t texture_unit_t;
+enum texture_unit_t {
     TEXTURE_UNIT_NULL,
     TEXTURE_UNIT_SPRITE,
     TEXTURE_UNIT_TILEMAP,
     TEXTURE_UNIT_FONT,
 };
 
-typedef struct r_texture_t r_texture_t;
-struct r_texture_t
+typedef struct texture_t texture_t;
+struct texture_t
 {
     u32 width;
     u32 height;
     u32 textureID;
 };
 
-typedef struct r_tilemap_t r_tilemap_t;
-struct r_tilemap_t
+typedef struct tilemap_t tilemap_t;
+struct tilemap_t
 {
     u32 cols;
     u32 rows;
-    r_texture_t atlas;
+    texture_t atlas;
     u32 tileSize;
 };
 
-typedef struct r_font_t r_font_t;
-struct r_font_t
+typedef struct font_t font_t;
+struct font_t
 {
     stbtt_bakedchar bakedCharData[95]; // ASCII (126 '~') - (32 ' ') = 94
     u32 textureID;
 };
 
-typedef struct r_shaders_t r_shaders_t;
-struct r_shaders_t
+typedef struct shaders_t shaders_t;
+struct shaders_t
 {
     u32 quad;
     u32 sprite;
@@ -45,5 +45,5 @@ struct renderer_t
     u32 quadVAO;
     u32 screenFBO;
     v2 screenScale;
-    r_shaders_t shaders;
+    shaders_t shaders;
 };

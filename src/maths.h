@@ -116,17 +116,17 @@ union m4
 };
 
 #define v2(...)                                                                                    \
-    (v2)                                                                                           \
+    v2                                                                                             \
     {                                                                                              \
         __VA_ARGS__                                                                                \
     }
 #define v3(...)                                                                                    \
-    (v3)                                                                                           \
+    v3                                                                                             \
     {                                                                                              \
         __VA_ARGS__                                                                                \
     }
 #define v4(...)                                                                                    \
-    (v4)                                                                                           \
+    v4                                                                                             \
     {                                                                                              \
         __VA_ARGS__                                                                                \
     }

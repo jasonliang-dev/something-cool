@@ -4,18 +4,18 @@
 #include <mmdeviceapi.h>
 #include <xinput.h>
 
-#include "app.c"
+#include "app.cpp"
 
 global os_state_t globalOS;
 global HDC globalHDC;
 
-#include "win32_file_io.c"
-#include "win32_opengl.c"
-#include "win32_os.c"
-#include "win32_timer.c"
-#include "win32_utils.c"
-#include "win32_wasapi.c"
-#include "win32_xinput.c"
+#include "win32_file_io.cpp"
+#include "win32_opengl.cpp"
+#include "win32_os.cpp"
+#include "win32_timer.cpp"
+#include "win32_utils.cpp"
+#include "win32_wasapi.cpp"
+#include "win32_xinput.cpp"
 
 internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM wParam,
                                               LPARAM lParam)
@@ -45,16 +45,17 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
         return 0;
     case WM_MENUCHAR:
         return MAKELRESULT(0, MNC_CLOSE);
-    case WM_SIZE:
+    case WM_SIZE: {
         i32 width = LOWORD(lParam);
         i32 height = HIWORD(lParam);
         event.type = OS_EventType_WindowResize;
-        event.delta = v2((f32)(width - globalOS.windowWidth),
-                         (f32)(height - globalOS.windowHeight));
+        event.delta =
+            v2((f32)(width - globalOS.windowWidth), (f32)(height - globalOS.windowHeight));
         globalOS.windowWidth = width;
         globalOS.windowHeight = height;
         OS_PushEvent(event);
         return 0;
+    }
     case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
     case WM_KEYDOWN:
@@ -75,7 +76,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
             {
                 os_event_t eventOnce;
                 eventOnce.type = OS_EventType_KeyDown;
-                eventOnce.key = keyInput;
+                eventOnce.key = (os_key_t)keyInput;
                 eventOnce.modifiers = modifiers;
                 OS_PushEvent(eventOnce);
             }
@@ -83,7 +84,7 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
             event.type = OS_EventType_KeyPress;
         }
 
-        event.key = keyInput;
+        event.key = (os_key_t)keyInput;
         event.modifiers = modifiers;
         OS_PushEvent(event);
 
@@ -167,8 +168,8 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
     globalOS.windowHeight = DEFAULT_WINDOW_HEIGHT;
     globalOS.fullscreen = false;
 
-    globalOS.sampleOut = VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(i16) * 2,
-                                      MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    globalOS.sampleOut = (i16 *)VirtualAlloc(0, soundOutput.samplesPerSecond * sizeof(i16) * 2,
+                                             MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
 
     globalHDC = GetDC(window);
@@ -207,8 +208,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
 
         globalOS.sampleCount = 0;
         u32 soundPaddingSize;
-        if (SUCCEEDED(soundOutput.audioClient->lpVtbl->GetCurrentPadding(soundOutput.audioClient,
-                                                                         &soundPaddingSize)))
+        if (SUCCEEDED(soundOutput.audioClient->GetCurrentPadding(&soundPaddingSize)))
         {
             globalOS.samplesPerSecond = soundOutput.samplesPerSecond;
             globalOS.sampleCount = (u32)(soundOutput.latencyFrameCount - soundPaddingSize);

@@ -1,4 +1,4 @@
-internal b32 UI_SpriteButton(r_texture_t sprite, v2 position)
+internal b32 UI_SpriteButton(texture_t sprite, v2 position)
 {
     R_DrawSpriteExt(sprite, position, 0, v2(1, 1), v2(0, 0));
 
