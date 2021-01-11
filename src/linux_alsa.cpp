@@ -1,4 +1,3 @@
-typedef struct linux_sound_output_t linux_sound_output_t;
 struct linux_sound_output_t
 {
     snd_pcm_t *pcm;

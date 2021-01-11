@@ -1,4 +1,4 @@
-internal u32 R_CompileShader(u32 type, const char *source)
+internal u32 Render_CompileShader(u32 type, const char *source)
 {
     u32 shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
@@ -22,18 +22,18 @@ internal u32 R_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void R_OrthoProjection(u32 shader, v2 resolution)
+internal void Render_OrthoProjection(u32 shader, v2 resolution)
 {
     i32 loc = glGetUniformLocation(shader, "projection");
     m4 projection = M4Ortho(0.0f, resolution.width, resolution.height, 0.0f, -1.0f, 1.0f);
     glUniformMatrix4fv(loc, 1, 0, projection.flatten);
 }
 
-internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
+internal u32 Render_InitShader(char *vertexSource, char *fragmentSource)
 {
     u32 shader = glCreateProgram();
-    u32 vertexShader = R_CompileShader(GL_VERTEX_SHADER, vertexSource);
-    u32 fragmentShader = R_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+    u32 vertexShader = Render_CompileShader(GL_VERTEX_SHADER, vertexSource);
+    u32 fragmentShader = Render_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
 
     glAttachShader(shader, vertexShader);
     glAttachShader(shader, fragmentShader);
@@ -46,7 +46,7 @@ internal u32 R_InitShader(char *vertexSource, char *fragmentSource)
     return shader;
 }
 
-internal void R_SetupRendering(renderer_t *renderer)
+internal void Render_SetupRendering(renderer_t *renderer)
 {
     GL_LoadProcedures();
 
@@ -84,41 +84,40 @@ internal void R_SetupRendering(renderer_t *renderer)
                               LOW_RES_SCREEN_HEIGHT);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-        glGenFramebuffers(1, &renderer->screenFBO);
-        glBindFramebuffer(GL_FRAMEBUFFER, renderer->screenFBO);
+        glGenFramebuffers(1, &renderer->pixelFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, renderer->pixelFBO);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
         Assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     shaders_t *shaders = &renderer->shaders;
-    shaders->quad = R_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
+    shaders->quad = Render_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
     glUseProgram(shaders->quad);
-    R_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+    Render_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->sprite = R_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
+    shaders->sprite = Render_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
     glUseProgram(shaders->sprite);
     glUniform1i(glGetUniformLocation(shaders->sprite, "image"), TEXTURE_UNIT_SPRITE);
-    R_OrthoProjection(shaders->sprite, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+    Render_OrthoProjection(shaders->sprite, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->tilemap = R_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
+    shaders->tilemap = Render_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
     glUseProgram(shaders->tilemap);
     glUniform1i(glGetUniformLocation(shaders->tilemap, "atlas"), TEXTURE_UNIT_TILEMAP);
-    R_OrthoProjection(shaders->tilemap, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+    Render_OrthoProjection(shaders->tilemap, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->font = R_InitShader(quadVertexShaderSource, fontFragmentShaderSource);
+    shaders->font = Render_InitShader(quadVertexShaderSource, fontFragmentShaderSource);
     glUseProgram(shaders->font);
     glUniform1i(glGetUniformLocation(shaders->font, "bitmap"), TEXTURE_UNIT_FONT);
-    R_OrthoProjection(shaders->font, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+    Render_OrthoProjection(shaders->font, v2((f32)os->windowWidth, (f32)os->windowHeight));
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glViewport(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT);
 
     glUseProgram(0);
 }
 
-internal void R_CreateTexture(char *imagePath, texture_t *result)
+internal void Render_CreateTexture(char *imagePath, texture_t *result)
 {
     i32 channels;
     u8 *imageData =
@@ -144,7 +143,7 @@ internal void R_CreateTexture(char *imagePath, texture_t *result)
     stbi_image_free(imageData);
 }
 
-internal void R_DrawRect(v4 color, v2 position, v2 size)
+internal void Render_DrawRect(v4 color, v2 position, v2 size)
 {
     renderer_t *renderer = &app->renderer;
 
@@ -162,16 +161,16 @@ internal void R_DrawRect(v4 color, v2 position, v2 size)
     glBindVertexArray(0);
 }
 
-internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+internal void Render_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
     renderer_t *renderer = &app->renderer;
 
     glUseProgram(renderer->shaders.sprite);
 
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
+    v2 translate = position - (origin * area);
     m4 model = M4Identity();
-    model *= M4Translate(v3(position.x - (origin.x * area.x),
-                                               position.y - (origin.y * area.y), 0.0f));
+    model *= M4Translate(v3(translate.x, translate.y, 0.0f));
 
     model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));
     model *= M4RotateZ(rotation);
@@ -190,12 +189,12 @@ internal void R_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 sc
     glBindVertexArray(0);
 }
 
-internal void R_DrawSprite(texture_t sprite, v2 position, f32 rotation)
+internal void Render_DrawSprite(texture_t sprite, v2 position, f32 rotation)
 {
-    R_DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0.5f, 0.5f));
+    Render_DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0.5f, 0.5f));
 }
 
-internal void R_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *result)
+internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *result)
 {
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(jsonPath, 0);
 
@@ -208,7 +207,7 @@ internal void R_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *result
     result->tileSize = tiledMap->tilewidth;
 
     u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = (v2 *)M_ArenaPushZero(&app->scratchArena, indexSize);
+    v2 *atlasIndex = (v2 *)Memory_ArenaPushZero(&app->scratchArena, indexSize);
     u32 atlasColumnCount = atlas.width / result->tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -236,10 +235,10 @@ internal void R_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *result
     glBindVertexArray(0);
 
     cute_tiled_free_map(tiledMap);
-    M_ArenaPop(&app->scratchArena, indexSize);
+    Memory_ArenaPop(&app->scratchArena, indexSize);
 }
 
-internal void R_DrawTilemap(tilemap_t map, v2 position)
+internal void Render_DrawTilemap(tilemap_t map, v2 position)
 {
     renderer_t *renderer = &app->renderer;
 
@@ -263,13 +262,13 @@ internal void R_DrawTilemap(tilemap_t map, v2 position)
     glBindVertexArray(0);
 }
 
-internal void R_CreateFont(char *filePath, font_t *font)
+internal void Render_CreateFont(char *filePath, font_t *font)
 {
     u32 bitmapWidth = 512;
     u32 bitmapHeight = 512;
     f32 fontSize = 32.0f;
 
-    u8 *bitmap = (u8 *)M_ArenaPush(&app->scratchArena, Megabytes(1));
+    u8 *bitmap = (u8 *)Memory_ArenaPush(&app->scratchArena, Megabytes(1));
     u8 *ttfBuffer = NULL;
     u32 ttfBufferLen = 0;
     OS_ReadFile(&app->scratchArena, filePath, (void **)&ttfBuffer, &ttfBufferLen);
@@ -287,10 +286,10 @@ internal void R_CreateFont(char *filePath, font_t *font)
                  bitmap);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    M_ArenaPop(&app->scratchArena, Megabytes(1) + ttfBufferLen);
+    Memory_ArenaPop(&app->scratchArena, Megabytes(1) + ttfBufferLen);
 }
 
-internal void R_DrawText(font_t *font, v2 position, char *text)
+internal void Render_DrawText(font_t *font, v2 position, char *text)
 {
     (void)text;
     renderer_t *renderer = &app->renderer;

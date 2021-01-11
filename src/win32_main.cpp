@@ -25,15 +25,15 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
 
     if (GetKeyState(VK_CONTROL) & 0x8000)
     {
-        modifiers |= KeyModifier_Ctrl;
+        modifiers |= OS_KeyModifier_Ctrl;
     }
     if (GetKeyState(VK_SHIFT) & 0x8000)
     {
-        modifiers |= KeyModifier_Shift;
+        modifiers |= OS_KeyModifier_Shift;
     }
     if (GetKeyState(VK_MENU) & 0x8000)
     {
-        modifiers |= KeyModifier_Alt;
+        modifiers |= OS_KeyModifier_Alt;
     }
 
     switch (message)
@@ -92,22 +92,22 @@ internal LRESULT CALLBACK W32_WindowProcedure(HWND window, UINT message, WPARAM 
     }
     case WM_LBUTTONDOWN:
         event.type = OS_EventType_MouseDown;
-        event.mouseButton = MouseButton_Left;
+        event.mouseButton = OS_MouseButton_Left;
         OS_PushEvent(event);
         return 0;
     case WM_LBUTTONUP:
         event.type = OS_EventType_MouseUp;
-        event.mouseButton = MouseButton_Left;
+        event.mouseButton = OS_MouseButton_Left;
         OS_PushEvent(event);
         return 0;
     case WM_RBUTTONDOWN:
         event.type = OS_EventType_MouseDown;
-        event.mouseButton = MouseButton_Right;
+        event.mouseButton = OS_MouseButton_Right;
         OS_PushEvent(event);
         return 0;
     case WM_RBUTTONUP:
         event.type = OS_EventType_MouseUp;
-        event.mouseButton = MouseButton_Right;
+        event.mouseButton = OS_MouseButton_Right;
         OS_PushEvent(event);
         return 0;
     case WM_MOUSEMOVE:

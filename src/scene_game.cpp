@@ -1,9 +1,10 @@
 internal void GameSceneBegin(memory_arena_t *arena)
 {
-    game_scene_t *scene = (game_scene_t *)M_ArenaPushZero(arena, sizeof(game_scene_t));
+    game_scene_t *scene = (game_scene_t *)Memory_ArenaPushZero(arena, sizeof(game_scene_t));
     scene->bulletPoolCount = 0;
     scene->bulletPoolMax = 1000;
-    scene->bulletPool = (bullet_t *)M_ArenaPush(arena, sizeof(bullet_t) * scene->bulletPoolMax);
+    scene->bulletPool =
+        (bullet_t *)Memory_ArenaPush(arena, sizeof(bullet_t) * scene->bulletPoolMax);
 
     scene->player.moveSpeed = 2.0f;
     scene->player.shootCooldown = 0;
@@ -18,7 +19,7 @@ internal void GameSceneEnd(void *memory)
     (void)memory;
 }
 
-internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
+internal b32 GameScenePixelUpdate(void *memory, scene_t *nextScene)
 {
     game_scene_t *scene = (game_scene_t *)memory;
 
@@ -29,7 +30,7 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
     player_t *player = &scene->player;
     player->vel = v2(0.0f, 0.0f);
 
-    if (app->mouseDown[MouseButton_Left] && player->shootCooldown == 0)
+    if (app->mouseDown[OS_MouseButton_Left] && player->shootCooldown == 0)
     {
         f32 bulletSpeed = 4.0f;
         player->shootCooldown = 10;
@@ -54,19 +55,19 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
         player->shootCooldown--;
     }
 
-    if (app->keyDown[Key_W])
+    if (app->keyDown[OS_Key_W])
     {
         player->vel.y -= 1.0f;
     }
-    if (app->keyDown[Key_S])
+    if (app->keyDown[OS_Key_S])
     {
         player->vel.y += 1.0f;
     }
-    if (app->keyDown[Key_A])
+    if (app->keyDown[OS_Key_A])
     {
         player->vel.x -= 1.0f;
     }
-    if (app->keyDown[Key_D])
+    if (app->keyDown[OS_Key_D])
     {
         player->vel.x += 1.0f;
     }
@@ -97,23 +98,30 @@ internal b32 GameSceneUpdate(void *memory, scene_t *nextScene)
     v2 view = v2(-scene->camera.x + (LOW_RES_SCREEN_WIDTH / 2),
                  -scene->camera.y + (LOW_RES_SCREEN_HEIGHT / 2));
 
-    R_DrawTilemap(app->resources.map, view);
-    R_DrawSpriteExt(app->resources.texDog, player->pos + view, 0,
-                    v2(player->facingLeft ? -1.0f : 1.0f, 1.0f), v2(0.5f, 0.5f));
+    Render_DrawTilemap(app->resources.map, view);
+    Render_DrawSpriteExt(app->resources.texDog, player->pos + view, 0,
+                         v2(player->facingLeft ? -1.0f : 1.0f, 1.0f), v2(0.5f, 0.5f));
 
     for (u32 i = 0; i < scene->bulletPoolCount; i++)
     {
         bullet_t *b = &scene->bulletPool[i];
-        R_DrawSprite(app->resources.texBone, b->pos + view, -b->rot);
+        Render_DrawSprite(app->resources.texBone, b->pos + view, -b->rot);
     }
 
-    R_DrawSprite(app->resources.texCursor, cursorPos, 0);
+    Render_DrawSprite(app->resources.texCursor, cursorPos, 0);
 
-    if (app->keyPress[Key_Esc])
+    if (app->keyPress[OS_Key_Esc])
     {
         *nextScene = SceneCreate(Menu);
         return true;
     }
 
+    return false;
+}
+
+internal b32 GameSceneNativeUpdate(void *memory, scene_t *nextScene)
+{
+    (void)memory;
+    (void)nextScene;
     return false;
 }

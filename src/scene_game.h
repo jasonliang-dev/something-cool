@@ -1,4 +1,3 @@
-typedef struct player_t player_t;
 struct player_t
 {
     v2 pos;
@@ -8,7 +7,6 @@ struct player_t
     b32 facingLeft;
 };
 
-typedef struct bullet_t bullet_t;
 struct bullet_t
 {
     v2 pos;
@@ -16,7 +14,6 @@ struct bullet_t
     f32 rot;
 };
 
-typedef struct game_scene_t game_scene_t;
 struct game_scene_t
 {
     v2 camera;
@@ -28,4 +25,5 @@ struct game_scene_t
 
 internal void GameSceneBegin(memory_arena_t *arena);
 internal void GameSceneEnd(void *memory);
-internal b32 GameSceneUpdate(void *memory, scene_t *nextScene);
+internal b32 GameScenePixelUpdate(void *memory, scene_t *nextScene);
+internal b32 GameSceneNativeUpdate(void *memory, scene_t *nextScene);

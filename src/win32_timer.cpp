@@ -1,4 +1,3 @@
-typedef struct w32_timer_t w32_timer_t;
 struct w32_timer_t
 {
     LARGE_INTEGER perfFrequency;
@@ -16,21 +15,21 @@ internal void W32_InitTimer(w32_timer_t *timer)
 internal void W32_TimerEndFrame(w32_timer_t *timer)
 {
     LARGE_INTEGER endCounter;
-    u64 endCycle = __rdtsc();
     QueryPerformanceCounter(&endCounter);
 
-    u64 cycles = endCycle - timer->lastCycle;
     i64 timeElapsed = endCounter.QuadPart - timer->lastCounter.QuadPart;
+    f32 deltaTime = timeElapsed / (f32)timer->perfFrequency.QuadPart;
 
-    f64 mspf = 1000.0 * timeElapsed / timer->perfFrequency.QuadPart;
-    f64 fps = (f64)timer->perfFrequency.QuadPart / (f64)timeElapsed;
-    f64 mcpf = cycles / (1000.0 * 1000.0);
+    os->deltaTime = deltaTime;
 
-    TCHAR timingBuff[256];
+    // u64 endCycle = __rdtsc();
+    // u64 cycles = endCycle - timer->lastCycle;
 
-    StringCbPrintfA(timingBuff, 256 * sizeof(TCHAR), TEXT("%.02f ms/f,  %.02f fps,  %.02f mc/f\n"),
-                    mspf, fps, mcpf);
-    // OutputDebugStringA(timingBuff);
+    // f64 msPerFrame = 1000.0f * timeElapsed / timer->perfFrequency.QuadPart;
+    // f64 framesPerSecond = (f64)timer->perfFrequency.QuadPart / (f64)timeElapsed;
+    // f64 mcPerFrame = cycles / (1000.0 * 1000.0);
+
+    // OS_DebugPrint("%.02f ms/f,  %.02f fps,  %.02f mc/f\n", deltaTime * 1000.0f, fps, mcPerFrame);
 
     timer->lastCounter = endCounter;
 }

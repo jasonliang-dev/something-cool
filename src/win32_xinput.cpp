@@ -1,6 +1,5 @@
 #define W32_MAX_GAMEPADS 4
 
-typedef struct w32_gamepad_input_t w32_gamepad_input_t;
 struct w32_gamepad_input_t
 {
     b32 connected;
@@ -8,7 +7,7 @@ struct w32_gamepad_input_t
     v2 joystick2;
     f32 triggerLeft;
     f32 triggerRight;
-    i32 buttonStates[GamepadButton_Max];
+    i32 buttonStates[OS_GamepadButton_Max];
 };
 
 w32_gamepad_input_t globalGamepads[W32_MAX_GAMEPADS];
@@ -66,35 +65,39 @@ internal void W32_UpdateXInput(void)
             globalGamepads[i].connected = true;
             XINPUT_GAMEPAD *pad = &controller_state.Gamepad;
 
-            for (u32 j = 0; j < GamepadButton_Max; ++j)
+            for (u32 j = 0; j < OS_GamepadButton_Max; ++j)
             {
                 globalGamepads[i].buttonStates[j] = 0;
             }
 
-            globalGamepads[i].buttonStates[GamepadButton_DPadUp] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_DPadUp] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-            globalGamepads[i].buttonStates[GamepadButton_DPadDown] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_DPadDown] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-            globalGamepads[i].buttonStates[GamepadButton_DPadLeft] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_DPadLeft] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-            globalGamepads[i].buttonStates[GamepadButton_DPadRight] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_DPadRight] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-            globalGamepads[i].buttonStates[GamepadButton_Start] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_Start] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_START);
-            globalGamepads[i].buttonStates[GamepadButton_Back] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_Back] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_BACK);
-            globalGamepads[i].buttonStates[GamepadButton_LeftThumb] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_LeftThumb] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_LEFT_THUMB);
-            globalGamepads[i].buttonStates[GamepadButton_RightThumb] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_RightThumb] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_RIGHT_THUMB);
-            globalGamepads[i].buttonStates[GamepadButton_LeftShoulder] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_LeftShoulder] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-            globalGamepads[i].buttonStates[GamepadButton_RightShoulder] |=
+            globalGamepads[i].buttonStates[OS_GamepadButton_RightShoulder] |=
                 !!(pad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-            globalGamepads[i].buttonStates[GamepadButton_A] |= !!(pad->wButtons & XINPUT_GAMEPAD_A);
-            globalGamepads[i].buttonStates[GamepadButton_B] |= !!(pad->wButtons & XINPUT_GAMEPAD_B);
-            globalGamepads[i].buttonStates[GamepadButton_X] |= !!(pad->wButtons & XINPUT_GAMEPAD_X);
-            globalGamepads[i].buttonStates[GamepadButton_Y] |= !!(pad->wButtons & XINPUT_GAMEPAD_Y);
+            globalGamepads[i].buttonStates[OS_GamepadButton_A] |=
+                !!(pad->wButtons & XINPUT_GAMEPAD_A);
+            globalGamepads[i].buttonStates[OS_GamepadButton_B] |=
+                !!(pad->wButtons & XINPUT_GAMEPAD_B);
+            globalGamepads[i].buttonStates[OS_GamepadButton_X] |=
+                !!(pad->wButtons & XINPUT_GAMEPAD_X);
+            globalGamepads[i].buttonStates[OS_GamepadButton_Y] |=
+                !!(pad->wButtons & XINPUT_GAMEPAD_Y);
 
             globalGamepads[i].joystick1.x = pad->sThumbLX / 32768.f;
             globalGamepads[i].joystick1.y = pad->sThumbLY / 32768.f;

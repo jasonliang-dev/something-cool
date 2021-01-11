@@ -1,4 +1,3 @@
-typedef struct w32_sound_output_t w32_sound_output_t;
 struct w32_sound_output_t
 {
     IMMDeviceEnumerator *device_enum;

@@ -38,118 +38,118 @@ internal void W32_KeyCodeToOSKey(u64 vkeyCode, u64 *osKey, u32 *modifiers)
 {
     if ((vkeyCode >= 'A' && vkeyCode <= 'Z') || (vkeyCode >= '0' && vkeyCode <= '9'))
     {
-        *osKey = (vkeyCode >= 'A' && vkeyCode <= 'Z') ? Key_A + (vkeyCode - 'A')
-                                                        : Key_0 + (vkeyCode - '0');
+        *osKey = (vkeyCode >= 'A' && vkeyCode <= 'Z') ? OS_Key_A + (vkeyCode - 'A')
+                                                      : OS_Key_0 + (vkeyCode - '0');
     }
     else if (vkeyCode >= VK_F1 && vkeyCode <= VK_F12)
     {
-        *osKey = Key_F1 + vkeyCode - VK_F1;
+        *osKey = OS_Key_F1 + vkeyCode - VK_F1;
     }
     else if (vkeyCode == VK_ESCAPE)
     {
-        *osKey = Key_Esc;
+        *osKey = OS_Key_Esc;
     }
     else if (vkeyCode == VK_OEM_3)
     {
-        *osKey = Key_GraveAccent;
+        *osKey = OS_Key_GraveAccent;
     }
     else if (vkeyCode == VK_OEM_MINUS)
     {
-        *osKey = Key_Minus;
+        *osKey = OS_Key_Minus;
     }
     else if (vkeyCode == VK_OEM_PLUS)
     {
-        *osKey = Key_Equal;
+        *osKey = OS_Key_Equal;
     }
     else if (vkeyCode == VK_BACK)
     {
-        *osKey = Key_Backspace;
+        *osKey = OS_Key_Backspace;
     }
     else if (vkeyCode == VK_TAB)
     {
-        *osKey = Key_Tab;
+        *osKey = OS_Key_Tab;
     }
     else if (vkeyCode == VK_SPACE)
     {
-        *osKey = Key_Space;
+        *osKey = OS_Key_Space;
     }
     else if (vkeyCode == VK_RETURN)
     {
-        *osKey = Key_Enter;
+        *osKey = OS_Key_Enter;
     }
     else if (vkeyCode == VK_CONTROL)
     {
-        *osKey = Key_Ctrl;
-        *modifiers &= ~KeyModifier_Ctrl;
+        *osKey = OS_Key_Ctrl;
+        *modifiers &= ~OS_KeyModifier_Ctrl;
     }
     else if (vkeyCode == VK_SHIFT)
     {
-        *osKey = Key_Shift;
-        *modifiers &= ~KeyModifier_Shift;
+        *osKey = OS_Key_Shift;
+        *modifiers &= ~OS_KeyModifier_Shift;
     }
     else if (vkeyCode == VK_MENU)
     {
-        *osKey = Key_Alt;
-        *modifiers &= ~KeyModifier_Alt;
+        *osKey = OS_Key_Alt;
+        *modifiers &= ~OS_KeyModifier_Alt;
     }
     else if (vkeyCode == VK_UP)
     {
-        *osKey = Key_Up;
+        *osKey = OS_Key_Up;
     }
     else if (vkeyCode == VK_LEFT)
     {
-        *osKey = Key_Left;
+        *osKey = OS_Key_Left;
     }
     else if (vkeyCode == VK_DOWN)
     {
-        *osKey = Key_Down;
+        *osKey = OS_Key_Down;
     }
     else if (vkeyCode == VK_RIGHT)
     {
-        *osKey = Key_Right;
+        *osKey = OS_Key_Right;
     }
     else if (vkeyCode == VK_DELETE)
     {
-        *osKey = Key_Delete;
+        *osKey = OS_Key_Delete;
     }
     else if (vkeyCode == VK_PRIOR)
     {
-        *osKey = Key_PageUp;
+        *osKey = OS_Key_PageUp;
     }
     else if (vkeyCode == VK_NEXT)
     {
-        *osKey = Key_PageDown;
+        *osKey = OS_Key_PageDown;
     }
     else if (vkeyCode == VK_HOME)
     {
-        *osKey = Key_Home;
+        *osKey = OS_Key_Home;
     }
     else if (vkeyCode == VK_END)
     {
-        *osKey = Key_End;
+        *osKey = OS_Key_End;
     }
     else if (vkeyCode == VK_OEM_2)
     {
-        *osKey = Key_ForwardSlash;
+        *osKey = OS_Key_ForwardSlash;
     }
     else if (vkeyCode == VK_OEM_PERIOD)
     {
-        *osKey = Key_Period;
+        *osKey = OS_Key_Period;
     }
     else if (vkeyCode == VK_OEM_COMMA)
     {
-        *osKey = Key_Comma;
+        *osKey = OS_Key_Comma;
     }
     else if (vkeyCode == VK_OEM_7)
     {
-        *osKey = Key_Quote;
+        *osKey = OS_Key_Quote;
     }
     else if (vkeyCode == VK_OEM_4)
     {
-        *osKey = Key_LeftBracket;
+        *osKey = OS_Key_LeftBracket;
     }
     else if (vkeyCode == VK_OEM_6)
     {
-        *osKey = Key_RightBracket;
+        *osKey = OS_Key_RightBracket;
     }
 }

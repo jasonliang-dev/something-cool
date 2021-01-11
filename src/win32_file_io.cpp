@@ -29,7 +29,7 @@ internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *l
         CloseHandle(file);
     }
 
-    u8 *readData = (u8 *)M_ArenaPush(arena, readBytes + 1);
+    u8 *readData = (u8 *)Memory_ArenaPush(arena, readBytes + 1);
     DWORD bytesRead = 0;
     OVERLAPPED overlapped = {0};
 

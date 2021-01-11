@@ -1,82 +1,82 @@
-internal v2 operator+(v2 a, v2 b)
+internal inline v2 operator+(v2 a, v2 b)
 {
     v2 c = {a.x + b.x, a.y + b.y};
     return c;
 }
 
-internal v2 operator+=(v2 &a, v2 b)
+internal inline v2 operator+=(v2 &a, v2 b)
 {
     return a = a + b;
 }
 
-internal v2 operator-(v2 a, v2 b)
+internal inline v2 operator-(v2 a, v2 b)
 {
     v2 c = {a.x - b.x, a.y - b.y};
     return c;
 }
 
-internal v2 operator-=(v2 &a, v2 b)
+internal inline v2 operator-=(v2 &a, v2 b)
 {
     return a = a - b;
 }
 
-internal v2 operator*(v2 a, v2 b)
+internal inline v2 operator*(v2 a, v2 b)
 {
     v2 c = {a.x * b.x, a.y * b.y};
     return c;
 }
 
-internal v2 operator*=(v2 &a, v2 b)
+internal inline v2 operator*=(v2 &a, v2 b)
 {
     return a = a * b;
 }
 
-internal v2 operator*(v2 v, f32 f)
+internal inline v2 operator*(v2 v, f32 f)
 {
     v.x *= f;
     v.y *= f;
     return v;
 }
 
-internal v2 operator*=(v2 &v, f32 f)
+internal inline v2 operator*=(v2 &v, f32 f)
 {
     return v = v * f;
 }
 
-internal v2 operator/(v2 a, v2 b)
+internal inline v2 operator/(v2 a, v2 b)
 {
     v2 c = {a.x / b.x, a.y / b.y};
     return c;
 }
 
-internal v2 operator/=(v2 &a, v2 b)
+internal inline v2 operator/=(v2 &a, v2 b)
 {
     return a = a / b;
 }
 
-internal v2 operator/(v2 v, f32 f)
+internal inline v2 operator/(v2 v, f32 f)
 {
     v.x /= f;
     v.y /= f;
     return v;
 }
 
-internal v2 operator/=(v2 &v, f32 f)
+internal inline v2 operator/=(v2 &v, f32 f)
 {
     return v = v / f;
 }
 
-internal f32 V2LengthSquared(v2 a)
+internal inline f32 V2LengthSquared(v2 a)
 {
     return a.x * a.x + a.y * a.y;
 }
 
-internal f32 V2Length(v2 a)
+internal inline f32 V2Length(v2 a)
 {
     return SquareRoot(V2LengthSquared(a));
 }
 
-internal v2 V2Normalize(v2 v)
+internal inline v2 V2Normalize(v2 v)
 {
     v2 result;
     f32 length = V2Length(v);
@@ -95,41 +95,41 @@ internal v2 V2Normalize(v2 v)
     return result;
 }
 
-internal f32 V2Dot(v2 a, v2 b)
+internal inline f32 V2Dot(v2 a, v2 b)
 {
     return a.x * b.x + a.y * b.y;
 }
 
-internal f32 PointDirection(v2 a, v2 b)
+internal inline f32 PointDirection(v2 a, v2 b)
 {
     f32 x = b.x - a.x;
     f32 y = b.y - a.y;
     return ArcTan2(y, x);
 }
 
-internal v3 operator+(v3 a, v3 b)
+internal inline v3 operator+(v3 a, v3 b)
 {
     v3 c = {a.x + b.x, a.y + b.y, a.z + b.z};
     return c;
 }
 
-internal v3 operator+=(v3 &a, v3 b)
+internal inline v3 operator+=(v3 &a, v3 b)
 {
     return a = a + b;
 }
 
-internal v3 operator-(v3 a, v3 b)
+internal inline v3 operator-(v3 a, v3 b)
 {
     v3 c = {a.x - b.x, a.y - b.y, a.z - b.z};
     return c;
 }
 
-internal v3 operator-=(v3 &a, v3 b)
+internal inline v3 operator-=(v3 &a, v3 b)
 {
     return a = a - b;
 }
 
-internal v3 operator*(v3 v, f32 f)
+internal inline v3 operator*(v3 v, f32 f)
 {
     v.x *= f;
     v.y *= f;
@@ -137,12 +137,12 @@ internal v3 operator*(v3 v, f32 f)
     return v;
 }
 
-internal v3 operator*=(v3 &v, f32 f)
+internal inline v3 operator*=(v3 &v, f32 f)
 {
     return v = v * f;
 }
 
-internal v3 operator/(v3 v, f32 f)
+internal inline v3 operator/(v3 v, f32 f)
 {
     v.x /= f;
     v.y /= f;
@@ -150,22 +150,22 @@ internal v3 operator/(v3 v, f32 f)
     return v;
 }
 
-internal v3 operator/=(v3 &v, f32 f)
+internal inline v3 operator/=(v3 &v, f32 f)
 {
     return v = v / f;
 }
 
-internal f32 V3LengthSquared(v3 a)
+internal inline f32 V3LengthSquared(v3 a)
 {
     return a.x * a.x + a.y * a.y + a.z * a.z;
 }
 
-internal f32 V3Length(v3 a)
+internal inline f32 V3Length(v3 a)
 {
     return SquareRoot(V3LengthSquared(a));
 }
 
-internal v3 V3Normalize(v3 v)
+internal inline v3 V3Normalize(v3 v)
 {
     v3 result;
     f32 length = V3Length(v);
@@ -186,12 +186,12 @@ internal v3 V3Normalize(v3 v)
     return result;
 }
 
-internal f32 V3Dot(v3 a, v3 b)
+internal inline f32 V3Dot(v3 a, v3 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
-internal v3 V3Cross(v3 a, v3 b)
+internal inline v3 V3Cross(v3 a, v3 b)
 {
     v3 result = {
         a.y * b.z - a.z * b.y,
@@ -201,39 +201,39 @@ internal v3 V3Cross(v3 a, v3 b)
     return result;
 }
 
-internal b32 V4HasPoint(v4 v, v2 p)
+internal inline b32 V4HasPoint(v4 v, v2 p)
 {
     return p.x >= v.x && p.x <= v.x + v.width && p.y >= v.y && p.y <= v.y + v.height;
 }
 
-internal f32 V4Dot(v4 a, v4 b)
+internal inline f32 V4Dot(v4 a, v4 b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 }
 
-internal v4 operator+(v4 a, v4 b)
+internal inline v4 operator+(v4 a, v4 b)
 {
     v4 c = {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
     return c;
 }
 
-internal v4 operator+=(v4 &a, v4 b)
+internal inline v4 operator+=(v4 &a, v4 b)
 {
     return a = a + b;
 }
 
-internal v4 operator-(v4 a, v4 b)
+internal inline v4 operator-(v4 a, v4 b)
 {
     v4 c = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
     return c;
 }
 
-internal v4 operator-=(v4 &a, v4 b)
+internal inline v4 operator-=(v4 &a, v4 b)
 {
     return a = a - b;
 }
 
-internal v4 operator*(v4 v, m4 m)
+internal inline v4 operator*(v4 v, m4 m)
 {
     v4 result = {0};
 
@@ -246,12 +246,12 @@ internal v4 operator*(v4 v, m4 m)
     return result;
 }
 
-internal v4 operator*=(v4 &v, m4 m)
+internal inline v4 operator*=(v4 &v, m4 m)
 {
     return v = v * m;
 }
 
-internal m4 M4Diagonal(f32 diagonal)
+internal inline m4 M4Diagonal(f32 diagonal)
 {
     m4 m = {{
         {diagonal},
@@ -262,7 +262,7 @@ internal m4 M4Diagonal(f32 diagonal)
     return m;
 }
 
-internal m4 M4Identity()
+internal inline m4 M4Identity()
 {
     m4 m = {{
         {1.0f},
@@ -273,7 +273,7 @@ internal m4 M4Identity()
     return m;
 }
 
-internal m4 operator*(m4 a, m4 b)
+internal inline m4 operator*(m4 a, m4 b)
 {
     m4 m = {0};
 
@@ -291,12 +291,12 @@ internal m4 operator*(m4 a, m4 b)
     return m;
 }
 
-internal m4 operator*=(m4 &a, m4 b)
+internal inline m4 operator*=(m4 &a, m4 b)
 {
     return a = a * b;
 }
 
-internal m4 operator*(m4 m, f32 f)
+internal inline m4 operator*(m4 m, f32 f)
 {
     for (int slow = 0; slow < 4; slow++)
     {
@@ -309,12 +309,12 @@ internal m4 operator*(m4 m, f32 f)
     return m;
 }
 
-internal m4 operator*=(m4 &m, f32 f)
+internal inline m4 operator*=(m4 &m, f32 f)
 {
     return m = m * f;
 }
 
-internal m4 M4Translate(v3 translation)
+internal inline m4 M4Translate(v3 translation)
 {
     m4 result = M4Identity();
     result.elements[3][0] = translation.x;
@@ -323,7 +323,7 @@ internal m4 M4Translate(v3 translation)
     return result;
 }
 
-internal m4 M4Scale(v3 scale)
+internal inline m4 M4Scale(v3 scale)
 {
     m4 result = M4Identity();
     result.elements[0][0] = scale.x;
@@ -332,7 +332,7 @@ internal m4 M4Scale(v3 scale)
     return result;
 }
 
-internal m4 M4RotateX(f32 angle)
+internal inline m4 M4RotateX(f32 angle)
 {
     m4 result = M4Identity();
     f32 c = Cos(angle);
@@ -346,7 +346,7 @@ internal m4 M4RotateX(f32 angle)
     return result;
 }
 
-internal m4 M4RotateY(f32 angle)
+internal inline m4 M4RotateY(f32 angle)
 {
     m4 result = M4Identity();
     f32 c = Cos(angle);
@@ -360,7 +360,7 @@ internal m4 M4RotateY(f32 angle)
     return result;
 }
 
-internal m4 M4RotateZ(f32 angle)
+internal inline m4 M4RotateZ(f32 angle)
 {
     m4 result = M4Identity();
     f32 c = Cos(angle);
@@ -374,7 +374,7 @@ internal m4 M4RotateZ(f32 angle)
     return result;
 }
 
-internal m4 M4Rotate(f32 angle, v3 axis)
+internal inline m4 M4Rotate(f32 angle, v3 axis)
 {
     m4 result = {0};
     f32 c = Cos(angle);
@@ -397,7 +397,7 @@ internal m4 M4Rotate(f32 angle, v3 axis)
     return result;
 }
 
-internal m4 M4Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
+internal inline m4 M4Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
 {
     m4 result = {0};
 
@@ -520,7 +520,7 @@ internal v3 HSVToRGB(v3 hsv)
     return rgb;
 }
 
-internal f32 Clampf(f32 v, f32 lo, f32 hi)
+internal inline f32 Clampf(f32 v, f32 lo, f32 hi)
 {
     return (lo > v) ? lo : ((v > hi) ? hi : v);
 }

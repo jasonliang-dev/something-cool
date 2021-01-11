@@ -1,106 +1,103 @@
-typedef enum os_key_t os_key_t;
 enum os_key_t
 {
-    Key_Null,
-    Key_Esc,
-    Key_F1,
-    Key_F2,
-    Key_F3,
-    Key_F4,
-    Key_F5,
-    Key_F6,
-    Key_F7,
-    Key_F8,
-    Key_F9,
-    Key_F10,
-    Key_F11,
-    Key_F12,
-    Key_GraveAccent,
-    Key_0,
-    Key_1,
-    Key_2,
-    Key_3,
-    Key_4,
-    Key_5,
-    Key_6,
-    Key_7,
-    Key_8,
-    Key_9,
-    Key_Minus,
-    Key_Equal,
-    Key_Backspace,
-    Key_Delete,
-    Key_Tab,
-    Key_A,
-    Key_B,
-    Key_C,
-    Key_D,
-    Key_E,
-    Key_F,
-    Key_G,
-    Key_H,
-    Key_I,
-    Key_J,
-    Key_K,
-    Key_L,
-    Key_M,
-    Key_N,
-    Key_O,
-    Key_P,
-    Key_Q,
-    Key_R,
-    Key_S,
-    Key_T,
-    Key_U,
-    Key_V,
-    Key_W,
-    Key_X,
-    Key_Y,
-    Key_Z,
-    Key_Space,
-    Key_Enter,
-    Key_Ctrl,
-    Key_Shift,
-    Key_Alt,
-    Key_Up,
-    Key_Left,
-    Key_Down,
-    Key_Right,
-    Key_PageUp,
-    Key_PageDown,
-    Key_Home,
-    Key_End,
-    Key_ForwardSlash,
-    Key_Period,
-    Key_Comma,
-    Key_Quote,
-    Key_LeftBracket,
-    Key_RightBracket,
-    Key_Max
+    OS_Key_Null,
+    OS_Key_Esc,
+    OS_Key_F1,
+    OS_Key_F2,
+    OS_Key_F3,
+    OS_Key_F4,
+    OS_Key_F5,
+    OS_Key_F6,
+    OS_Key_F7,
+    OS_Key_F8,
+    OS_Key_F9,
+    OS_Key_F10,
+    OS_Key_F11,
+    OS_Key_F12,
+    OS_Key_GraveAccent,
+    OS_Key_0,
+    OS_Key_1,
+    OS_Key_2,
+    OS_Key_3,
+    OS_Key_4,
+    OS_Key_5,
+    OS_Key_6,
+    OS_Key_7,
+    OS_Key_8,
+    OS_Key_9,
+    OS_Key_Minus,
+    OS_Key_Equal,
+    OS_Key_Backspace,
+    OS_Key_Delete,
+    OS_Key_Tab,
+    OS_Key_A,
+    OS_Key_B,
+    OS_Key_C,
+    OS_Key_D,
+    OS_Key_E,
+    OS_Key_F,
+    OS_Key_G,
+    OS_Key_H,
+    OS_Key_I,
+    OS_Key_J,
+    OS_Key_K,
+    OS_Key_L,
+    OS_Key_M,
+    OS_Key_N,
+    OS_Key_O,
+    OS_Key_P,
+    OS_Key_Q,
+    OS_Key_R,
+    OS_Key_S,
+    OS_Key_T,
+    OS_Key_U,
+    OS_Key_V,
+    OS_Key_W,
+    OS_Key_X,
+    OS_Key_Y,
+    OS_Key_Z,
+    OS_Key_Space,
+    OS_Key_Enter,
+    OS_Key_Ctrl,
+    OS_Key_Shift,
+    OS_Key_Alt,
+    OS_Key_Up,
+    OS_Key_Left,
+    OS_Key_Down,
+    OS_Key_Right,
+    OS_Key_PageUp,
+    OS_Key_PageDown,
+    OS_Key_Home,
+    OS_Key_End,
+    OS_Key_ForwardSlash,
+    OS_Key_Period,
+    OS_Key_Comma,
+    OS_Key_Quote,
+    OS_Key_LeftBracket,
+    OS_Key_RightBracket,
+    OS_Key_Max
 };
 
-typedef enum os_gamepad_button_t os_gamepad_button_t;
 enum os_gamepad_button_t
 {
-    GamepadButton_Null,
-    GamepadButton_DPadUp,
-    GamepadButton_DPadDown,
-    GamepadButton_DPadLeft,
-    GamepadButton_DPadRight,
-    GamepadButton_Start,
-    GamepadButton_Back,
-    GamepadButton_LeftThumb,
-    GamepadButton_RightThumb,
-    GamepadButton_LeftShoulder,
-    GamepadButton_RightShoulder,
-    GamepadButton_A,
-    GamepadButton_B,
-    GamepadButton_X,
-    GamepadButton_Y,
-    GamepadButton_Max
+    OS_GamepadButton_Null,
+    OS_GamepadButton_DPadUp,
+    OS_GamepadButton_DPadDown,
+    OS_GamepadButton_DPadLeft,
+    OS_GamepadButton_DPadRight,
+    OS_GamepadButton_Start,
+    OS_GamepadButton_Back,
+    OS_GamepadButton_LeftThumb,
+    OS_GamepadButton_RightThumb,
+    OS_GamepadButton_LeftShoulder,
+    OS_GamepadButton_RightShoulder,
+    OS_GamepadButton_A,
+    OS_GamepadButton_B,
+    OS_GamepadButton_X,
+    OS_GamepadButton_Y,
+    OS_GamepadButton_Max
 };
 
-typedef enum os_event_type_t os_event_type_t;
 enum os_event_type_t
 {
     OS_EventType_Null,
@@ -133,27 +130,24 @@ enum os_event_type_t
     OS_EventType_Max
 };
 
-typedef enum os_mouse_button_t os_mouse_button_t;
 enum os_mouse_button_t
 {
-    MouseButton_Null,
-    MouseButton_Left,
-    MouseButton_Right,
-    MouseButton_Middle,
-    MouseButton_4,
-    MouseButton_5,
-    MouseButton_Max
+    OS_MouseButton_Null,
+    OS_MouseButton_Left,
+    OS_MouseButton_Right,
+    OS_MouseButton_Middle,
+    OS_MouseButton_4,
+    OS_MouseButton_5,
+    OS_MouseButton_Max
 };
 
-typedef enum os_key_modifiers_t os_key_modifiers_t;
 enum os_key_modifiers_t
 {
-    KeyModifier_Ctrl = (1 << 0),
-    KeyModifier_Shift = (1 << 1),
-    KeyModifier_Alt = (1 << 2)
+    OS_KeyModifier_Ctrl = (1 << 0),
+    OS_KeyModifier_Shift = (1 << 1),
+    OS_KeyModifier_Alt = (1 << 2)
 };
 
-typedef struct os_event_t os_event_t;
 struct os_event_t
 {
     os_event_type_t type;
@@ -168,13 +162,13 @@ struct os_event_t
     // v2 scroll;
 };
 
-typedef struct os_state_t os_state_t;
 struct os_state_t
 {
     volatile b32 running;
     u32 windowWidth;
     u32 windowHeight;
     b32 fullscreen;
+    f32 deltaTime;
 
     i16 *sampleOut;
     u32 sampleCount;

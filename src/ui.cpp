@@ -1,9 +1,9 @@
 internal b32 UI_SpriteButton(texture_t sprite, v2 position)
 {
-    R_DrawSpriteExt(sprite, position, 0, v2(1, 1), v2(0, 0));
+    Render_DrawSpriteExt(sprite, position, 0, v2(1, 1), v2(0, 0));
 
     v4 bounds = v4(position.x, position.y, (f32)sprite.width, (f32)sprite.height);
-    if (V4HasPoint(bounds, GetCursorPosition()) && app->mousePress[MouseButton_Left])
+    if (V4HasPoint(bounds, GetCursorPosition()) && app->mousePress[OS_MouseButton_Left])
     {
         return true;
     }
@@ -192,20 +192,21 @@ internal void UI_EndFrame(ui_t *ui)
     {
         ui_widget_t *widget = ui->widgets + i;
 
-        widget->tHot += ((f32)(ui->hot == widget->id) - widget->tHot) * 0.05f;
-        widget->tActive += ((f32)(ui->active == widget->id) - widget->tActive) * 0.05f;
+        f32 dt = os->deltaTime * 4.0f;
+        widget->tHot += ((f32)(ui->hot == widget->id) - widget->tHot) * dt;
+        widget->tActive += ((f32)(ui->active == widget->id) - widget->tActive) * dt;
 
         switch (widget->type)
         {
         case UI_WIDGET_BUTTON: {
             f32 col = 0.6f + widget->tHot * 0.4f - widget->tActive * 0.5f;
-            R_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.wh);
+            Render_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.wh);
             break;
         }
         case UI_WIDGET_SLIDER:
-            R_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), widget->box.xy, widget->box.wh);
-            R_DrawRect(v4(1, 1, 1, 1), widget->box.xy,
-                       v2(widget->box.width * widget->slider.value, widget->box.height));
+            Render_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), widget->box.xy, widget->box.wh);
+            Render_DrawRect(v4(1, 1, 1, 1), widget->box.xy,
+                            v2(widget->box.width * widget->slider.value, widget->box.height));
             break;
         default:
             Assert(!"Unhandled UI widget type");

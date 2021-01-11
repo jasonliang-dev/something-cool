@@ -1,6 +1,6 @@
 #define MEMORY_ARENA_COMMIT_SIZE Kilobytes(4)
 
-internal memory_arena_t M_ArenaInitialize(u64 cap)
+internal memory_arena_t Memory_ArenaInitialize(u64 cap)
 {
     memory_arena_t arena = {0};
     arena.max = cap;
@@ -10,7 +10,7 @@ internal memory_arena_t M_ArenaInitialize(u64 cap)
     return arena;
 }
 
-internal void *M_ArenaPush(memory_arena_t *arena, u64 size)
+internal void *Memory_ArenaPush(memory_arena_t *arena, u64 size)
 {
     void *memory = 0;
 
@@ -28,14 +28,14 @@ internal void *M_ArenaPush(memory_arena_t *arena, u64 size)
     return memory;
 }
 
-internal void *M_ArenaPushZero(memory_arena_t *arena, u64 size)
+internal void *Memory_ArenaPushZero(memory_arena_t *arena, u64 size)
 {
-    void *memory = M_ArenaPush(arena, size);
+    void *memory = Memory_ArenaPush(arena, size);
     MemorySet(memory, 0, size);
     return memory;
 }
 
-internal void M_ArenaPop(memory_arena_t *arena, u64 size)
+internal void Memory_ArenaPop(memory_arena_t *arena, u64 size)
 {
     if (size > arena->allocPosition)
     {
@@ -45,12 +45,12 @@ internal void M_ArenaPop(memory_arena_t *arena, u64 size)
     arena->allocPosition -= size;
 }
 
-internal void M_ArenaClear(memory_arena_t *arena)
+internal void Memory_ArenaClear(memory_arena_t *arena)
 {
-    M_ArenaPop(arena, arena->allocPosition);
+    Memory_ArenaPop(arena, arena->allocPosition);
 }
 
-internal void M_ArenaRelease(memory_arena_t *arena)
+internal void Memory_ArenaRelease(memory_arena_t *arena)
 {
     OS_Release(arena->base, arena->max);
 }

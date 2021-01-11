@@ -1,6 +1,6 @@
 internal void MenuSceneBegin(memory_arena_t *arena)
 {
-    menu_scene_t *scene = (menu_scene_t *)M_ArenaPushZero(arena, sizeof(menu_scene_t));
+    menu_scene_t *scene = (menu_scene_t *)Memory_ArenaPushZero(arena, sizeof(menu_scene_t));
     (void)scene;
 
     OS_ShowCursor(true);
@@ -11,7 +11,7 @@ internal void MenuSceneEnd(void *memory)
     (void)memory;
 }
 
-internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
+internal b32 MenuScenePixelUpdate(void *memory, scene_t *nextScene)
 {
     b32 result = false;
 
@@ -20,8 +20,8 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
 
     ui_input_t uiInput;
     uiInput.cursor = GetCursorPosition();
-    uiInput.leftDown = app->mouseDown[MouseButton_Left];
-    uiInput.rightDown = app->mouseDown[MouseButton_Right];
+    uiInput.leftDown = app->mouseDown[OS_MouseButton_Left];
+    uiInput.rightDown = app->mouseDown[OS_MouseButton_Right];
 
     UI_BeginFrame(&app->ui, &uiInput);
     {
@@ -40,8 +40,6 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
     }
     UI_EndFrame(&app->ui);
 
-    R_DrawText(&app->resources.fntFont, v2(10, 10), "The quick brown fox jumped over the lazy dog");
-
     if (UI_SpriteButton(app->resources.texPlay,
                         v2((LOW_RES_SCREEN_WIDTH - app->resources.texPlay.width) / 2.0f, 32.0f)))
     {
@@ -57,4 +55,15 @@ internal b32 MenuSceneUpdate(void *memory, scene_t *nextScene)
     }
 
     return result;
+}
+
+internal b32 MenuSceneNativeUpdate(void *memory, scene_t *nextScene)
+{
+    (void)memory;
+    (void)nextScene;
+
+    Render_DrawText(&app->resources.fntFont, v2(10, 10),
+                    "The quick brown fox jumped over the lazy dog.");
+
+    return false;
 }

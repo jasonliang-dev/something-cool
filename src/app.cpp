@@ -76,34 +76,36 @@ void AppLoad(os_state_t *os_)
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
-    os->permanentArena = M_ArenaInitialize(Gigabytes(1));
-    app = (app_state_t *)M_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
-    app->sceneArena = M_ArenaInitialize(Gigabytes(4));
-    app->scratchArena = M_ArenaInitialize(Gigabytes(4));
+    os->permanentArena = Memory_ArenaInitialize(Gigabytes(1));
+    app = (app_state_t *)Memory_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
+    app->sceneArena = Memory_ArenaInitialize(Gigabytes(4));
+    app->scratchArena = Memory_ArenaInitialize(Gigabytes(4));
 
     MemorySet(app->keyDown, 0, sizeof(app->keyDown));
     MemorySet(app->mouseDown, 0, sizeof(app->mouseDown));
     app->renderer.screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowWidth,
                                    LOW_RES_SCREEN_HEIGHT / (f32)os->windowHeight);
 
+    app->isWireframe = false;
+
     {
-        R_SetupRendering(&app->renderer);
+        Render_SetupRendering(&app->renderer);
 
         app_resources_t *resources = &app->resources;
 
         Audio_LoadSoundFromFile("res/jingle.ogg", &resources->sndJingle);
         Audio_LoadSoundFromFile("res/impact.ogg", &resources->sndImpact);
 
-        R_CreateFont("res/source-sans-pro.ttf", &resources->fntFont);
+        Render_CreateFont("res/source-sans-pro.ttf", &resources->fntFont);
 
-        R_CreateTexture("res/play.png", &resources->texPlay);
-        R_CreateTexture("res/quit.png", &resources->texQuit);
-        R_CreateTexture("res/cursor.png", &resources->texCursor);
-        R_CreateTexture("res/bone.png", &resources->texBone);
-        R_CreateTexture("res/dog.png", &resources->texDog);
-        R_CreateTexture("res/atlas.png", &resources->texAtlas);
+        Render_CreateTexture("res/play.png", &resources->texPlay);
+        Render_CreateTexture("res/quit.png", &resources->texQuit);
+        Render_CreateTexture("res/cursor.png", &resources->texCursor);
+        Render_CreateTexture("res/bone.png", &resources->texBone);
+        Render_CreateTexture("res/dog.png", &resources->texDog);
+        Render_CreateTexture("res/atlas.png", &resources->texAtlas);
 
-        R_CreateTilemap("res/map.json", resources->texAtlas, &resources->map);
+        Render_CreateTilemap("res/map.json", resources->texAtlas, &resources->map);
 
         GL_CheckForErrors();
     }
@@ -130,6 +132,9 @@ void AppUpdate(void)
         case OS_EventType_WindowResize:
             app->renderer.screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowWidth,
                                            LOW_RES_SCREEN_HEIGHT / (f32)os->windowHeight);
+            glUseProgram(app->renderer.shaders.font);
+            Render_OrthoProjection(app->renderer.shaders.font,
+                                   v2((f32)os->windowWidth, (f32)os->windowHeight));
             break;
         case OS_EventType_KeyPress:
             app->keyPress[event.key] = true;
@@ -152,32 +157,46 @@ void AppUpdate(void)
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, app->renderer.screenFBO);
+    if (app->keyPress[OS_Key_F3])
+    {
+        glPolygonMode(GL_FRONT_AND_BACK,
+                      (app->isWireframe = !app->isWireframe) ? GL_LINE : GL_FILL);
+    }
+
+    glViewport(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, app->renderer.pixelFBO);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    b32 hasNextScene;
     scene_t nextScene;
-    if (app->scene.Update(app->sceneArena.base, &nextScene))
-    {
-        app->scene.End(app->sceneArena.base);
-        M_ArenaClear(&app->sceneArena);
-        app->scene = nextScene;
-        app->scene.Begin(&app->sceneArena);
-    }
+
+    hasNextScene = app->scene.PixelUpdate(app->sceneArena.base, &nextScene);
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(0, 0, LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT, 0, 0, os->windowWidth,
                       os->windowHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
+    glViewport(0, 0, os->windowWidth, os->windowHeight);
+    hasNextScene = app->scene.NativeUpdate(app->sceneArena.base, &nextScene) || hasNextScene;
+
     OS_GLSwapBuffers();
     GL_CheckForErrors();
 
-    if (app->keyPress[Key_F11])
+    Audio_Update(&app->audio);
+
+    if (hasNextScene)
+    {
+        app->scene.End(app->sceneArena.base);
+        Memory_ArenaClear(&app->sceneArena);
+        app->scene = nextScene;
+        app->scene.Begin(&app->sceneArena);
+    }
+
+    if (app->keyPress[OS_Key_F11])
     {
         os->fullscreen = !os->fullscreen;
     }
-
-    Audio_Update(&app->audio);
 }
 
 void AppClose(void)

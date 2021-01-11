@@ -1,4 +1,3 @@
-typedef struct memory_arena_t memory_arena_t;
 struct memory_arena_t
 {
     void *base;

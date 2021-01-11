@@ -1,4 +1,3 @@
-typedef union v2 v2;
 union v2
 {
     struct
@@ -16,7 +15,6 @@ union v2
     float elements[2];
 };
 
-typedef union v3 v3;
 union v3
 {
     struct
@@ -48,7 +46,6 @@ union v3
     f32 elements[3];
 };
 
-typedef union v4 v4;
 union v4
 {
     struct
@@ -108,7 +105,6 @@ union v4
     f32 elements[4];
 };
 
-typedef union m4 m4;
 union m4
 {
     f32 elements[4][4];
