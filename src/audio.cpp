@@ -24,13 +24,11 @@ internal void Audio_PlaySound(audio_t *audio, sound_t *sound)
 {
     for (u32 i = 0; i < AUDIO_SOURCE_MAX; i++)
     {
-        audio_source_t *source = &audio->sources[i];
-
         if (!audio->playing[i])
         {
             audio->playing[i] = true;
-            source->sound = sound;
-            source->playPosition = 0;
+            audio->sources[i].sound = sound;
+            audio->sources[i].playPosition = 0;
             return;
         }
     }

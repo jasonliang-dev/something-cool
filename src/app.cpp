@@ -9,6 +9,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_TRUETYPE_IMPLEMENTATION
 
+#define STBI_ONLY_PNG
+
 #if PLATFORM_WIN32
 
 #include "ext/cute_tiled.h"
@@ -54,7 +56,6 @@
 #include "scene.h"
 #include "scene_game.h"
 #include "scene_menu.h"
-#include "shaders.h"
 #include "app.h"
 
 global app_state_t *app;
@@ -76,10 +77,12 @@ void AppLoad(os_state_t *os_)
     os = os_;
     OS_DebugPrint("APP_PERMANENT_LOAD\n");
 
-    os->permanentArena = Memory_ArenaInitialize(Gigabytes(1));
-    app = (app_state_t *)Memory_ArenaPushZero(&os->permanentArena, sizeof(app_state_t));
+    app = (app_state_t *)OS_Reserve(sizeof(app_state_t));
+    OS_Commit(app, sizeof(app_state_t));
+
+    app->permanentArena = Memory_ArenaInitialize(Gigabytes(1));
     app->sceneArena = Memory_ArenaInitialize(Gigabytes(4));
-    app->scratchArena = Memory_ArenaInitialize(Gigabytes(4));
+    app->scratchArena = Memory_ArenaInitialize(Gigabytes(1));
 
     MemorySet(app->keyDown, 0, sizeof(app->keyDown));
     MemorySet(app->mouseDown, 0, sizeof(app->mouseDown));
@@ -107,6 +110,7 @@ void AppLoad(os_state_t *os_)
 
         Render_CreateTilemap("res/map.json", resources->texAtlas, &resources->map);
 
+        Memory_ArenaClear(&app->scratchArena);
         GL_CheckForErrors();
     }
 

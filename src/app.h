@@ -27,6 +27,7 @@ struct app_state_t
     b32 isWireframe;
 
     scene_t scene;
+    memory_arena_t permanentArena;
     memory_arena_t sceneArena;
     memory_arena_t scratchArena;
 };

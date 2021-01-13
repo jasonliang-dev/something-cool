@@ -1,7 +1,6 @@
-internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *len)
+internal u32 OS_ReadFile(memory_arena_t *arena, char *path, void **data)
 {
     *data = 0;
-    *len = 0;
 
     HANDLE file = {0};
 
@@ -20,13 +19,14 @@ internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *l
                       flagsAndAttributes, templateFile);
     if (file == INVALID_HANDLE_VALUE)
     {
-        return;
+        return 0;
     }
 
     DWORD readBytes = GetFileSize(file, 0);
     if (!readBytes)
     {
         CloseHandle(file);
+        return 0;
     }
 
     u8 *readData = (u8 *)Memory_ArenaPush(arena, readBytes + 1);
@@ -36,9 +36,9 @@ internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *l
     ReadFile(file, readData, readBytes, &bytesRead, &overlapped);
 
     readData[readBytes] = 0;
-
     *data = readData;
-    *len = bytesRead;
 
     CloseHandle(file);
+
+    return bytesRead;
 }

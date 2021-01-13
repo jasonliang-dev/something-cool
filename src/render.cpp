@@ -22,15 +22,21 @@ internal u32 Render_CompileShader(u32 type, const char *source)
     return shader;
 }
 
-internal void Render_OrthoProjection(u32 shader, v2 resolution)
+internal u32 Render_InitShader(char *pathToVertex, char *pathToFragment)
 {
-    i32 loc = glGetUniformLocation(shader, "projection");
-    m4 projection = M4Ortho(0.0f, resolution.width, resolution.height, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(loc, 1, 0, projection.flatten);
-}
+    char *vertexSource = NULL;
+    char *fragmentSource = NULL;
 
-internal u32 Render_InitShader(char *vertexSource, char *fragmentSource)
-{
+    if (OS_ReadFile(&app->scratchArena, pathToVertex, (void **)&vertexSource) == 0)
+    {
+        OS_DisplayError("Cannot read vertex shader");
+    }
+
+    if (OS_ReadFile(&app->scratchArena, pathToFragment, (void **)&fragmentSource) == 0)
+    {
+        OS_DisplayError("Cannot read fragment shader");
+    }
+
     u32 shader = glCreateProgram();
     u32 vertexShader = Render_CompileShader(GL_VERTEX_SHADER, vertexSource);
     u32 fragmentShader = Render_CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
@@ -44,6 +50,13 @@ internal u32 Render_InitShader(char *vertexSource, char *fragmentSource)
     glDeleteShader(fragmentShader);
 
     return shader;
+}
+
+internal void Render_OrthoProjection(u32 shader, v2 resolution)
+{
+    i32 loc = glGetUniformLocation(shader, "projection");
+    m4 projection = M4Ortho(0.0f, resolution.width, resolution.height, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(loc, 1, 0, projection.flatten);
 }
 
 internal void Render_SetupRendering(renderer_t *renderer)
@@ -92,21 +105,21 @@ internal void Render_SetupRendering(renderer_t *renderer)
     }
 
     shaders_t *shaders = &renderer->shaders;
-    shaders->quad = Render_InitShader(quadVertexShaderSource, quadFragmentShaderSource);
+    shaders->quad = Render_InitShader("res/quad.vert", "res/quad.frag");
     glUseProgram(shaders->quad);
     Render_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->sprite = Render_InitShader(quadVertexShaderSource, spriteFragmentShaderSource);
+    shaders->sprite = Render_InitShader("res/quad.vert", "res/sprite.frag");
     glUseProgram(shaders->sprite);
     glUniform1i(glGetUniformLocation(shaders->sprite, "image"), TEXTURE_UNIT_SPRITE);
     Render_OrthoProjection(shaders->sprite, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->tilemap = Render_InitShader(tilemapVertexShaderSource, tilemapFragmentShaderSource);
+    shaders->tilemap = Render_InitShader("res/tilemap.vert", "res/tilemap.frag");
     glUseProgram(shaders->tilemap);
     glUniform1i(glGetUniformLocation(shaders->tilemap, "atlas"), TEXTURE_UNIT_TILEMAP);
     Render_OrthoProjection(shaders->tilemap, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->font = Render_InitShader(quadVertexShaderSource, fontFragmentShaderSource);
+    shaders->font = Render_InitShader("res/quad.vert", "res/font.frag");
     glUseProgram(shaders->font);
     glUniform1i(glGetUniformLocation(shaders->font, "bitmap"), TEXTURE_UNIT_FONT);
     Render_OrthoProjection(shaders->font, v2((f32)os->windowWidth, (f32)os->windowHeight));
@@ -235,7 +248,6 @@ internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *r
     glBindVertexArray(0);
 
     cute_tiled_free_map(tiledMap);
-    Memory_ArenaPop(&app->scratchArena, indexSize);
 }
 
 internal void Render_DrawTilemap(tilemap_t map, v2 position)
@@ -270,8 +282,7 @@ internal void Render_CreateFont(char *filePath, font_t *font)
 
     u8 *bitmap = (u8 *)Memory_ArenaPush(&app->scratchArena, Megabytes(1));
     u8 *ttfBuffer = NULL;
-    u32 ttfBufferLen = 0;
-    OS_ReadFile(&app->scratchArena, filePath, (void **)&ttfBuffer, &ttfBufferLen);
+    OS_ReadFile(&app->scratchArena, filePath, (void **)&ttfBuffer);
 
     stbtt_BakeFontBitmap(ttfBuffer, 0, fontSize, bitmap, bitmapWidth, bitmapHeight, ' ',
                          ArrayCount(font->bakedCharData), font->bakedCharData);
@@ -286,7 +297,6 @@ internal void Render_CreateFont(char *filePath, font_t *font)
                  bitmap);
 
     glBindTexture(GL_TEXTURE_2D, 0);
-    Memory_ArenaPop(&app->scratchArena, Megabytes(1) + ttfBufferLen);
 }
 
 internal void Render_DrawText(font_t *font, v2 position, char *text)

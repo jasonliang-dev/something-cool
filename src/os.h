@@ -177,8 +177,6 @@ struct os_state_t
     v2 mousePosition;
     u32 eventCount;
     os_event_t events[128];
-
-    memory_arena_t permanentArena;
 };
 
 // forward declare platform specific functions
@@ -186,7 +184,7 @@ internal void *OS_Reserve(u64 size);
 internal void OS_Release(void *memory, u64 size);
 internal void OS_Commit(void *memory, u64 size);
 internal void OS_Decommit(void *memory, u64 size);
-internal void OS_ReadFile(memory_arena_t *arena, char *path, void **data, u32 *len);
+internal u32 OS_ReadFile(memory_arena_t *arena, char *path, void **data);
 internal void OS_ShowCursor(b32 shown);
 internal void OS_GLSwapBuffers(void);
 internal void *OS_LoadOpenGLProcedure(char *name);
