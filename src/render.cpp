@@ -14,7 +14,7 @@ internal u32 Render_CompileShader(u32 type, const char *source)
         char message[512] = {0};
         length = Max((u32)length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
-        OS_DisplayError(message);
+        OS_DisplayError("Cannot compile shader: %s", message);
 
         return 0;
     }
@@ -119,7 +119,7 @@ internal void Render_SetupRendering(renderer_t *renderer)
     glUniform1i(glGetUniformLocation(shaders->tilemap, "atlas"), TEXTURE_UNIT_TILEMAP);
     Render_OrthoProjection(shaders->tilemap, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
 
-    shaders->font = Render_InitShader("res/quad.vert", "res/font.frag");
+    shaders->font = Render_InitShader("res/font.vert", "res/font.frag");
     glUseProgram(shaders->font);
     glUniform1i(glGetUniformLocation(shaders->font, "bitmap"), TEXTURE_UNIT_FONT);
     Render_OrthoProjection(shaders->font, v2((f32)os->windowWidth, (f32)os->windowHeight));
@@ -158,27 +158,25 @@ internal void Render_CreateTexture(char *imagePath, texture_t *result)
 
 internal void Render_DrawRect(v4 color, v2 position, v2 size)
 {
-    renderer_t *renderer = &app->renderer;
-
-    glUseProgram(renderer->shaders.quad);
+    u32 shader = app->renderer.shaders.quad;
+    glUseProgram(shader);
 
     m4 model = M4Identity();
     model *= M4Translate(v3(position.x, position.y, 0.0f));
     model *= M4Scale(v3(size.x, size.y, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.quad, "model"), 1, 0, model.flatten);
-    glUniform4fv(glGetUniformLocation(renderer->shaders.quad, "drawColor"), 1, color.elements);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
+    glUniform4fv(glGetUniformLocation(shader, "drawColor"), 1, color.elements);
 
-    glBindVertexArray(renderer->quadVAO);
+    glBindVertexArray(app->renderer.quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
 
 internal void Render_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
-    renderer_t *renderer = &app->renderer;
-
-    glUseProgram(renderer->shaders.sprite);
+    u32 shader = app->renderer.shaders.sprite;
+    glUseProgram(shader);
 
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     v2 translate = position - (origin * area);
@@ -191,15 +189,15 @@ internal void Render_DrawSpriteExt(texture_t sprite, v2 position, f32 rotation, 
 
     model *= M4Scale(v3(area.x, area.y, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.sprite, "model"), 1, 0,
-                       model.flatten);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
 
     glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_SPRITE);
     glBindTexture(GL_TEXTURE_2D, sprite.textureID);
 
-    glBindVertexArray(renderer->quadVAO);
+    glBindVertexArray(app->renderer.quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 internal void Render_DrawSprite(texture_t sprite, v2 position, f32 rotation)
@@ -219,8 +217,8 @@ internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *r
     result->atlas = atlas;
     result->tileSize = tiledMap->tilewidth;
 
-    u32 indexSize = sizeof(v2) * layer->data_count;
-    v2 *atlasIndex = (v2 *)Memory_ArenaPushZero(&app->scratchArena, indexSize);
+    u32 tileDataCount = sizeof(v2) * layer->data_count;
+    v2 *tileData = (v2 *)Memory_ArenaPushZero(&app->scratchArena, tileDataCount);
     u32 atlasColumnCount = atlas.width / result->tileSize;
 
     for (i32 i = 0; i < layer->data_count; i++)
@@ -230,7 +228,7 @@ internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *r
         u32 column = tile % atlasColumnCount;
         u32 row = tile / atlasColumnCount;
 
-        atlasIndex[i] = v2((f32)column, (f32)row);
+        tileData[i] = v2((f32)column, (f32)row);
     }
 
     glBindVertexArray(app->renderer.quadVAO);
@@ -238,7 +236,7 @@ internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *r
     u32 vbo;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, indexSize, atlasIndex, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, tileDataCount, tileData, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(v2), 0);
@@ -252,35 +250,34 @@ internal void Render_CreateTilemap(char *jsonPath, texture_t atlas, tilemap_t *r
 
 internal void Render_DrawTilemap(tilemap_t map, v2 position)
 {
-    renderer_t *renderer = &app->renderer;
-
-    glUseProgram(renderer->shaders.tilemap);
+    u32 shader = app->renderer.shaders.tilemap;
+    glUseProgram(shader);
 
     m4 model = M4Identity();
     model *= M4Translate(v3(position.x, position.y, 0.0f));
     model *= M4Scale(v3((f32)map.tileSize, (f32)map.tileSize, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.tilemap, "model"), 1, 0,
-                       model.flatten);
-    glUniform2i(glGetUniformLocation(renderer->shaders.tilemap, "mapSize"), map.cols, map.rows);
-    glUniform2f(glGetUniformLocation(renderer->shaders.tilemap, "atlasSize"),
-                1.0f * map.atlas.width / map.tileSize, 1.0f * map.atlas.height / map.tileSize);
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
+    glUniform2i(glGetUniformLocation(shader, "mapSize"), map.cols, map.rows);
+    glUniform2f(glGetUniformLocation(shader, "atlasSize"), 1.0f * map.atlas.width / map.tileSize,
+                1.0f * map.atlas.height / map.tileSize);
 
     glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_TILEMAP);
     glBindTexture(GL_TEXTURE_2D, map.atlas.textureID);
 
-    glBindVertexArray(renderer->quadVAO);
+    glBindVertexArray(app->renderer.quadVAO);
     glDrawArraysInstanced(GL_TRIANGLES, 0, 6, map.cols * map.rows);
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-internal void Render_CreateFont(char *filePath, font_t *font)
+internal void Render_CreateFont(char *filePath, font_t *font, f32 fontSize)
 {
     u32 bitmapWidth = 512;
     u32 bitmapHeight = 512;
-    f32 fontSize = 32.0f;
+    font->size = fontSize;
 
-    u8 *bitmap = (u8 *)Memory_ArenaPush(&app->scratchArena, Megabytes(1));
+    u8 *bitmap = (u8 *)Memory_ArenaPush(&app->scratchArena, bitmapWidth * bitmapHeight);
     u8 *ttfBuffer = NULL;
     OS_ReadFile(&app->scratchArena, filePath, (void **)&ttfBuffer);
 
@@ -290,6 +287,8 @@ internal void Render_CreateFont(char *filePath, font_t *font)
     glGenTextures(1, &font->textureID);
     glBindTexture(GL_TEXTURE_2D, font->textureID);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -301,21 +300,35 @@ internal void Render_CreateFont(char *filePath, font_t *font)
 
 internal void Render_DrawText(font_t *font, v2 position, char *text)
 {
-    (void)text;
-    renderer_t *renderer = &app->renderer;
+    u32 shader = app->renderer.shaders.font;
+    glUseProgram(shader);
 
-    glUseProgram(renderer->shaders.font);
+    glBindVertexArray(app->renderer.quadVAO);
 
-    m4 model = M4Identity();
-    model *= M4Translate(v3(position.x, position.y, 0.0f));
-    model *= M4Scale(v3(512.0f, 512.0f, 1.0f));
+    while (*text)
+    {
+        stbtt_aligned_quad quad;
+        stbtt_GetBakedQuad(font->bakedCharData, 512, 512, *text - ' ', &position.x, &position.y,
+                           &quad, 1);
 
-    glUniformMatrix4fv(glGetUniformLocation(renderer->shaders.font, "model"), 1, 0, model.flatten);
+        v4 source = {quad.s0, quad.t0, quad.s1 - quad.s0, quad.t1 - quad.t0};
+        v4 dest = {quad.x0, quad.y0, quad.x1 - quad.x0, quad.y1 - quad.y0};
 
-    glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_FONT);
-    glBindTexture(GL_TEXTURE_2D, font->textureID);
+        m4 model = M4Identity();
+        model *= M4Translate(v3(dest.x, dest.y + font->size, 0.0f));
+        model *= M4Scale(v3(dest.width, dest.height, 1.0f));
 
-    glBindVertexArray(renderer->quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+        glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
+        glUniform4fv(glGetUniformLocation(shader, "source"), 1, source.elements);
+
+        glActiveTexture(GL_TEXTURE0 + TEXTURE_UNIT_FONT);
+        glBindTexture(GL_TEXTURE_2D, font->textureID);
+
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        text++;
+    }
+
     glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }

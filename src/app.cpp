@@ -99,7 +99,7 @@ void AppLoad(os_state_t *os_)
         Audio_LoadSoundFromFile("res/jingle.ogg", &resources->sndJingle);
         Audio_LoadSoundFromFile("res/impact.ogg", &resources->sndImpact);
 
-        Render_CreateFont("res/source-sans-pro.ttf", &resources->fntFont);
+        Render_CreateFont("res/source-sans-pro.ttf", &resources->fntFont, 32.0f);
 
         Render_CreateTexture("res/play.png", &resources->texPlay);
         Render_CreateTexture("res/quit.png", &resources->texQuit);

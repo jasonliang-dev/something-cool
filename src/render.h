@@ -23,8 +23,9 @@ struct tilemap_t
 
 struct font_t
 {
-    stbtt_bakedchar bakedCharData[95]; // ASCII (126 '~') - (32 ' ') = 94
     u32 textureID;
+    f32 size;
+    stbtt_bakedchar bakedCharData[95]; // ASCII (126 '~') - (32 ' ') = 94
 };
 
 struct shaders_t

@@ -43,6 +43,10 @@ internal void OS_DisplayError(char *format, ...)
 
     MessageBoxA(NULL, buff, "If you're reading this, then I'm a bad programmer",
                 MB_OK | MB_ICONEXCLAMATION);
+
+#if defined(PLATFORM_WIN32) && defined(DEBUG)
+    DebugBreak();
+#endif
 }
 
 internal void OS_ShowCursor(b32 shown)
