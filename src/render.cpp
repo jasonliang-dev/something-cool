@@ -107,7 +107,7 @@ internal void Render_SetupRendering(renderer_t *renderer)
     shaders_t *shaders = &renderer->shaders;
     shaders->quad = Render_InitShader("res/quad.vert", "res/quad.frag");
     glUseProgram(shaders->quad);
-    Render_OrthoProjection(shaders->quad, v2(LOW_RES_SCREEN_WIDTH, LOW_RES_SCREEN_HEIGHT));
+    Render_OrthoProjection(shaders->quad, GetWindowResolution());
 
     shaders->sprite = Render_InitShader("res/quad.vert", "res/sprite.frag");
     glUseProgram(shaders->sprite);
@@ -122,7 +122,7 @@ internal void Render_SetupRendering(renderer_t *renderer)
     shaders->font = Render_InitShader("res/font.vert", "res/font.frag");
     glUseProgram(shaders->font);
     glUniform1i(glGetUniformLocation(shaders->font, "bitmap"), TEXTURE_UNIT_FONT);
-    Render_OrthoProjection(shaders->font, v2((f32)os->windowWidth, (f32)os->windowHeight));
+    Render_OrthoProjection(shaders->font, GetWindowResolution());
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

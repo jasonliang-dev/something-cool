@@ -20,5 +20,10 @@ internal b32 OS_GetNextEvent(os_event_t *event)
 internal void OS_AssertionFailure(char *expresssion, char *file, u32 line)
 {
     OS_DisplayError("ASSERT FAILED: (%s) %s:%d", expresssion, file, line);
+
+#if defined(PLATFORM_WIN32) && defined(DEBUG)
+    DebugBreak();
+#endif
+
     *(int *)0 = 0;
 }

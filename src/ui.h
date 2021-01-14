@@ -31,18 +31,16 @@ struct ui_widget_t
 
     union
     {
-        struct ui_slider_t
+        struct
+        {
+            char *text;
+        } button;
+
+        struct
         {
             f32 value;
         } slider;
     };
-};
-
-struct ui_input_t
-{
-    v2 cursor;
-    b32 leftDown;
-    b32 rightDown;
 };
 
 struct ui_flex_stack_t
@@ -55,9 +53,6 @@ struct ui_flex_stack_t
 
 struct ui_t
 {
-    v2 cursor;
-    b32 leftDown;
-    b32 rightDown;
 
     u32 widgetCount;
     ui_widget_t widgets[UI_MAX_WIDGETS];

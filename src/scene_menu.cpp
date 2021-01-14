@@ -18,28 +18,6 @@ internal b32 MenuScenePixelUpdate(void *memory, scene_t *nextScene)
     menu_scene_t *scene = (menu_scene_t *)memory;
     (void)scene;
 
-    ui_input_t uiInput;
-    uiInput.cursor = GetCursorPosition();
-    uiInput.leftDown = app->mouseDown[OS_MouseButton_Left];
-    uiInput.rightDown = app->mouseDown[OS_MouseButton_Right];
-
-    UI_BeginFrame(&app->ui, &uiInput);
-    {
-        UI_PushFlex(&app->ui, v2(32, 32), v2(64, 16), UI_FLEX_COLUMN);
-        {
-            if (UI_Button(&app->ui, UI_AutoID(), "Sample Text"))
-            {
-                OS_DebugPrint("Clicked\n");
-            }
-
-            persistent f32 slider = 0.5f;
-
-            slider = UI_Slider(&app->ui, UI_AutoID(), slider);
-        }
-        UI_PopFlex(&app->ui);
-    }
-    UI_EndFrame(&app->ui);
-
     if (UI_SpriteButton(app->resources.texPlay,
                         v2((LOW_RES_SCREEN_WIDTH - app->resources.texPlay.width) / 2.0f, 32.0f)))
     {
@@ -62,8 +40,25 @@ internal b32 MenuSceneNativeUpdate(void *memory, scene_t *nextScene)
     (void)memory;
     (void)nextScene;
 
-    Render_DrawText(&app->resources.fntFont, v2(10, 10),
-                    "The quick brown fox jumped over the lazy dog.");
+    UI_BeginFrame(&app->ui);
+    {
+        UI_PushFlex(&app->ui, v2(50, 50), v2(256, 64), UI_FLEX_COLUMN);
+        {
+            if (UI_Button(&app->ui, UI_AutoID(), "Sample Text"))
+            {
+                OS_DebugPrint("Clicked\n");
+            }
+
+            persistent f32 slider = 0.5f;
+
+            slider = UI_Slider(&app->ui, UI_AutoID(), slider);
+        }
+        UI_PopFlex(&app->ui);
+    }
+    UI_EndFrame(&app->ui);
+
+    Render_DrawText(&app->resources.fntFont, v2(0, 0),
+                    "The quick brown fox jumped over the lazy dog.|");
 
     return false;
 }

@@ -82,7 +82,7 @@ internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
 {
     Assert(ui->widgetCount < UI_MAX_WIDGETS);
 
-    b32 isMouseOver = V4HasPoint(rect, ui->cursor);
+    b32 isMouseOver = V4HasPoint(rect, os->mousePosition);
     b32 isHot = ui->hot == id;
 
     if (!isHot && isMouseOver)
@@ -94,16 +94,16 @@ internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
         ui->hot = UI_IDNull();
     }
 
-    if (ui->active != id && isHot && ui->leftDown)
+    if (ui->active != id && isHot && app->mousePress[OS_MouseButton_Left])
     {
         ui->active = id;
     }
 
     if (ui->active == id)
     {
-        if (ui->leftDown)
+        if (app->mouseDown[OS_MouseButton_Left])
         {
-            value = (ui->cursor.x - rect.x) / rect.width;
+            value = (os->mousePosition.x - rect.x) / rect.width;
         }
         else
         {
@@ -130,9 +130,7 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
 {
     Assert(ui->widgetCount < UI_MAX_WIDGETS);
 
-    (void)text;
-
-    b32 isMouseOver = V4HasPoint(rect, ui->cursor);
+    b32 isMouseOver = V4HasPoint(rect, os->mousePosition);
     b32 isHot = ui->hot == id;
 
     if (!isHot && isMouseOver)
@@ -146,12 +144,12 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
 
     b32 triggered = false;
 
-    if (ui->active == id && !ui->leftDown)
+    if (ui->active == id && !app->mouseDown[OS_MouseButton_Left])
     {
         triggered = isHot;
         ui->active = UI_IDNull();
     }
-    else if (isHot && ui->leftDown)
+    else if (isHot && app->mousePress[OS_MouseButton_Left])
     {
         ui->active = id;
     }
@@ -160,6 +158,7 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
     widget->type = UI_WIDGET_BUTTON;
     widget->id = id;
     widget->box = rect;
+    widget->button.text = text;
 
     return triggered;
 }
@@ -176,12 +175,8 @@ internal void UI_Init(ui_t *ui)
     ui->active = UI_IDNull();
 }
 
-internal void UI_BeginFrame(ui_t *ui, ui_input_t *input)
+internal void UI_BeginFrame(ui_t *ui)
 {
-    ui->cursor = input->cursor;
-    ui->leftDown = input->leftDown;
-    ui->rightDown = input->rightDown;
-
     ui->widgetCount = 0;
     ui->flexStackCount = 0;
 }
@@ -201,6 +196,7 @@ internal void UI_EndFrame(ui_t *ui)
         case UI_WIDGET_BUTTON: {
             f32 col = 0.6f + widget->tHot * 0.4f - widget->tActive * 0.5f;
             Render_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.wh);
+            Render_DrawText(&app->resources.fntFont, widget->box.xy, widget->button.text);
             break;
         }
         case UI_WIDGET_SLIDER:

@@ -136,9 +136,10 @@ void AppUpdate(void)
         case OS_EventType_WindowResize:
             app->renderer.screenScale = v2(LOW_RES_SCREEN_WIDTH / (f32)os->windowWidth,
                                            LOW_RES_SCREEN_HEIGHT / (f32)os->windowHeight);
+            glUseProgram(app->renderer.shaders.quad);
+            Render_OrthoProjection(app->renderer.shaders.quad, GetWindowResolution());
             glUseProgram(app->renderer.shaders.font);
-            Render_OrthoProjection(app->renderer.shaders.font,
-                                   v2((f32)os->windowWidth, (f32)os->windowHeight));
+            Render_OrthoProjection(app->renderer.shaders.font, GetWindowResolution());
             break;
         case OS_EventType_KeyPress:
             app->keyPress[event.key] = true;
