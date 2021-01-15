@@ -142,9 +142,22 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR comma
         return 1;
     }
 
-    HWND window = CreateWindow("ApplicationWindowClass", WINDOW_TITLE, WS_OVERLAPPEDWINDOW,
-                               CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WINDOW_WIDTH,
-                               DEFAULT_WINDOW_HEIGHT, NULL, NULL, instance, NULL);
+    DWORD windowStyle = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME;
+    RECT windowSize;
+    windowSize.left = 0;
+    windowSize.top = 0;
+    windowSize.right = DEFAULT_WINDOW_WIDTH;
+    windowSize.bottom = DEFAULT_WINDOW_HEIGHT;
+
+    if (!AdjustWindowRect(&windowSize, windowStyle, 0))
+    {
+        OS_DisplayError("Cannot find desired client size");
+        return 1;
+    }
+
+    HWND window = CreateWindow("ApplicationWindowClass", WINDOW_TITLE, windowStyle, CW_USEDEFAULT,
+                               CW_USEDEFAULT, windowSize.right - windowSize.left,
+                               windowSize.bottom - windowSize.top, NULL, NULL, instance, NULL);
 
     if (!window)
     {

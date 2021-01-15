@@ -5,8 +5,9 @@ out vec4 color;
 
 uniform sampler2D bitmap;
 uniform vec4 source;
+uniform vec4 textColor;
 
 void main()
 {
-    color = vec4(1, 1, 1, texture(bitmap, texCoords * source.zw + source.xy).r);
+    color = textColor * vec4(1, 1, 1, texture(bitmap, texCoords * source.zw + source.xy).r);
 }

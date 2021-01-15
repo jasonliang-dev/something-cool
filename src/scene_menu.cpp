@@ -57,8 +57,8 @@ internal b32 MenuSceneNativeUpdate(void *memory, scene_t *nextScene)
     }
     UI_EndFrame(&app->ui);
 
-    Render_DrawText(&app->resources.fntFont, v2(0, 0),
-                    "The quick brown fox jumped over the lazy dog.|");
+    Render_DrawTextExt(&app->resources.fntFont, v2(0, 0),
+                       "The quick brown fox jumped over the lazy dog.|", v4(1, 0, 1, 1));
 
     return false;
 }

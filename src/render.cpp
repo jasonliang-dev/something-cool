@@ -298,12 +298,13 @@ internal void Render_CreateFont(char *filePath, font_t *font, f32 fontSize)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-internal void Render_DrawText(font_t *font, v2 position, char *text)
+internal void Render_DrawTextExt(font_t *font, v2 position, char *text, v4 color)
 {
     u32 shader = app->renderer.shaders.font;
     glUseProgram(shader);
 
     glBindVertexArray(app->renderer.quadVAO);
+    glUniform4fv(glGetUniformLocation(shader, "textColor"), 1, color.elements);
 
     while (*text)
     {
@@ -331,4 +332,9 @@ internal void Render_DrawText(font_t *font, v2 position, char *text)
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+internal void Render_DrawText(font_t *font, v2 position, char *text)
+{
+    Render_DrawTextExt(font, position, text, v4(1, 1, 1, 1));
 }
