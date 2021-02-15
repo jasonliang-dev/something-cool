@@ -73,7 +73,7 @@ internal inline f32 V2LengthSquared(v2 a)
 
 internal inline f32 V2Length(v2 a)
 {
-    return SquareRoot(V2LengthSquared(a));
+    return Sqrt(V2LengthSquared(a));
 }
 
 internal inline v2 V2Normalize(v2 v)
@@ -162,7 +162,7 @@ internal inline f32 V3LengthSquared(v3 a)
 
 internal inline f32 V3Length(v3 a)
 {
-    return SquareRoot(V3LengthSquared(a));
+    return Sqrt(V3LengthSquared(a));
 }
 
 internal inline v3 V3Normalize(v3 v)
@@ -439,7 +439,7 @@ internal v3 RGBToHSV(v3 rgb)
 
     f32 chroma = r - (g < b ? g : b);
     v3 result;
-    result.x = AbsoluteValue(k + (g - b) / (6.f * chroma + 1e-20f));
+    result.x = Abs(k + (g - b) / (6.f * chroma + 1e-20f));
     result.y = chroma / (r + 1e-20f);
     result.z = r;
     return result;

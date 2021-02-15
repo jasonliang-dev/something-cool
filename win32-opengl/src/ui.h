@@ -51,7 +51,7 @@ struct ui_flex_stack_t
     f32 progress;
 };
 
-struct ui_t
+struct ui_state_t
 {
 
     u32 widgetCount;

@@ -1,0 +1,7 @@
+build/*
+!build/data/
+!build/data/*
+.vs
+
+sdl2
+sdl2_image

@@ -80,9 +80,9 @@ void AppLoad(os_state_t *os_)
     app = (app_state_t *)OS_Reserve(sizeof(app_state_t));
     OS_Commit(app, sizeof(app_state_t));
 
-    app->permanentArena = Memory_ArenaInitialize(Gigabytes(1));
-    app->sceneArena = Memory_ArenaInitialize(Gigabytes(4));
-    app->scratchArena = Memory_ArenaInitialize(Gigabytes(1));
+    app->permanentArena = Memory_ArenaInit(Gigabytes(1));
+    app->sceneArena = Memory_ArenaInit(Gigabytes(4));
+    app->scratchArena = Memory_ArenaInit(Gigabytes(1));
 
     MemorySet(app->keyDown, 0, sizeof(app->keyDown));
     MemorySet(app->mouseDown, 0, sizeof(app->mouseDown));

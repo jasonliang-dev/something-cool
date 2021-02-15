@@ -1,0 +1,5 @@
+BasedOnStyle: Microsoft
+ColumnLimit: 100
+SortIncludes: false
+BraceWrapping:
+  AfterUnion: true

@@ -93,7 +93,6 @@ union v4
         union
         {
             v2 zw;
-            v2 wh;
             struct
             {
                 f32 width;

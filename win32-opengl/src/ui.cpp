@@ -33,7 +33,7 @@ internal ui_id_t UI_MakeID(u32 primary, u32 secondary)
     return id;
 }
 
-internal v4 UI_GetNextFlexRect(ui_t *ui)
+internal v4 UI_GetNextFlexRect(ui_state_t *ui)
 {
     Assert(ui->flexStackCount > 0);
 
@@ -41,7 +41,7 @@ internal v4 UI_GetNextFlexRect(ui_t *ui)
 
     v4 rect;
     rect.xy = node->position;
-    rect.wh = node->size;
+    rect.zw = node->size;
 
     if (node->direction == UI_FLEX_ROW)
     {
@@ -61,7 +61,7 @@ internal v4 UI_GetNextFlexRect(ui_t *ui)
     return rect;
 }
 
-internal void UI_PushFlex(ui_t *ui, v2 position, v2 size, ui_flex_direction_t direction)
+internal void UI_PushFlex(ui_state_t *ui, v2 position, v2 size, ui_flex_direction_t direction)
 {
     Assert(ui->flexStackCount < UI_MAX_FLEX_GROUP);
 
@@ -72,13 +72,13 @@ internal void UI_PushFlex(ui_t *ui, v2 position, v2 size, ui_flex_direction_t di
     node->progress = 0.0f;
 }
 
-internal void UI_PopFlex(ui_t *ui)
+internal void UI_PopFlex(ui_state_t *ui)
 {
     Assert(ui->flexStackCount > 0);
     ui->flexStackCount--;
 }
 
-internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
+internal f32 UI_SliderExt(ui_state_t *ui, ui_id_t id, f32 value, v4 rect)
 {
     Assert(ui->widgetCount < UI_MAX_WIDGETS);
 
@@ -120,13 +120,13 @@ internal f32 UI_SliderExt(ui_t *ui, ui_id_t id, f32 value, v4 rect)
     return widget->slider.value;
 }
 
-internal f32 UI_Slider(ui_t *ui, ui_id_t id, f32 value)
+internal f32 UI_Slider(ui_state_t *ui, ui_id_t id, f32 value)
 {
     v4 rect = UI_GetNextFlexRect(ui);
     return UI_SliderExt(ui, id, value, rect);
 }
 
-internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
+internal b32 UI_ButtonExt(ui_state_t *ui, ui_id_t id, char *text, v4 rect)
 {
     Assert(ui->widgetCount < UI_MAX_WIDGETS);
 
@@ -163,25 +163,25 @@ internal b32 UI_ButtonExt(ui_t *ui, ui_id_t id, char *text, v4 rect)
     return triggered;
 }
 
-internal b32 UI_Button(ui_t *ui, ui_id_t id, char *text)
+internal b32 UI_Button(ui_state_t *ui, ui_id_t id, char *text)
 {
     v4 rect = UI_GetNextFlexRect(ui);
     return UI_ButtonExt(ui, id, text, rect);
 }
 
-internal void UI_Init(ui_t *ui)
+internal void UI_Init(ui_state_t *ui)
 {
     ui->hot = UI_IDNull();
     ui->active = UI_IDNull();
 }
 
-internal void UI_BeginFrame(ui_t *ui)
+internal void UI_BeginFrame(ui_state_t *ui)
 {
     ui->widgetCount = 0;
     ui->flexStackCount = 0;
 }
 
-internal void UI_EndFrame(ui_t *ui)
+internal void UI_EndFrame(ui_state_t *ui)
 {
     for (u32 i = 0; i < ui->widgetCount; i++)
     {
@@ -195,12 +195,12 @@ internal void UI_EndFrame(ui_t *ui)
         {
         case UI_WIDGET_BUTTON: {
             f32 col = 0.6f + widget->tHot * 0.4f - widget->tActive * 0.5f;
-            Render_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.wh);
+            Render_DrawRect(v4(col, col, col, 1), widget->box.xy, widget->box.zw);
             Render_DrawText(&app->resources.fntFont, widget->box.xy, widget->button.text);
             break;
         }
         case UI_WIDGET_SLIDER:
-            Render_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), widget->box.xy, widget->box.wh);
+            Render_DrawRect(v4(0.6f, 0.6f, 0.6f, 1), widget->box.xy, widget->box.zw);
             Render_DrawRect(v4(1, 1, 1, 1), widget->box.xy,
                             v2(widget->box.width * widget->slider.value, widget->box.height));
             break;

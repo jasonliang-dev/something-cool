@@ -19,7 +19,7 @@ struct app_state_t
     b8 mouseDown[OS_MouseButton_Max];
     b8 mousePress[OS_MouseButton_Max];
 
-    ui_t ui;
+    ui_state_t ui;
     audio_t audio;
 
     app_resources_t resources;

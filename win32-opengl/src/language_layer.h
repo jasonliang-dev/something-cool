@@ -1,10 +1,10 @@
 #define MemoryCopy memcpy
 #define MemoryMove memmove
 #define MemorySet memset
-#define CStringLength (u32) strlen
+#define StringLen (u32) strlen
 #define FMod fmodf
-#define AbsoluteValue fabsf
-#define SquareRoot sqrtf
+#define Abs fabsf
+#define Sqrt sqrtf
 #define Sin sinf
 #define Cos cosf
 #define Tan tanf

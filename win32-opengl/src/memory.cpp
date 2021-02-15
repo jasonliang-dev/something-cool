@@ -1,6 +1,6 @@
 #define MEMORY_ARENA_COMMIT_SIZE Kilobytes(4)
 
-internal memory_arena_t Memory_ArenaInitialize(u64 cap)
+internal memory_arena_t Memory_ArenaInit(u64 cap)
 {
     memory_arena_t arena = {0};
     arena.max = cap;
