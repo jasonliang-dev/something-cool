@@ -1,12 +1,19 @@
 ## Building for Windows
 
-1. [Download SDL2 development library for Visual
-   C++](https://www.libsdl.org/download-2.0.php).
+Download development libraries:
 
-2. Create a directory called `sdl2/`, extract the contents of the
-   downloaded zip into `sdl2`. `sdl2/include` and `sdl2/lib/x64` are
-   required to compile this project.
+- [SDL2](https://www.libsdl.org/download-2.0.php)
+- [SDL_image](https://www.libsdl.org/projects/SDL_image/)
 
-3. Make `build/` directory. Move `sdl2/lib/x64/SDL2.dll` to `build/`.
+For each development library
 
-4. Run `build_win.bat`.
+1. Extract each download to a folder:
+
+   - SDL2 -> ./sdl2
+   - SDL2_image -> ./sdl2_image
+
+   Each folder should have an `include` and `lib` directory
+
+1. Make `build/` directory. Move `.dll`s in `lib` directory to `build/`.
+
+1. Run `build_win.bat`.
