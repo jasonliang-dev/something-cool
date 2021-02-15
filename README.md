@@ -16,4 +16,10 @@ For each development library
 
 1. Make `build/` directory. Move `.dll`s in `lib` directory to `build/`.
 
-1. Run `build_win.bat`.
+1. Run `build_win.bat` in this directory.
+
+## Building for Linux
+
+1. Download `sdl2` and `sdl2_image` from your package manager.
+
+2. Run `build_linux.sh` in this directory.
