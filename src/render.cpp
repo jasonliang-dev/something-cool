@@ -22,8 +22,8 @@ internal Texture Texture_Load(const char *imagePath)
 
 internal inline void Texture_Draw(Texture *s, i32 x, i32 y)
 {
-    SDL_Rect rect = {x - (i32)app->camera.x, y - (i32)app->camera.y, s->width * app->scale,
-                     s->height * app->scale};
+    SDL_Rect rect = {x - static_cast<i32>(app->camera.x), y - static_cast<i32>(app->camera.y),
+                     s->width * app->scale, s->height * app->scale};
     SDL_RenderCopy(app->renderer, s->texture, NULL, &rect);
 }
 
@@ -39,7 +39,7 @@ internal void Tilemap_Load(Tilemap *map, const char *imagePath, const char *tile
     map->height = layer->height;
     map->tileSize = tiledMap->tilewidth;
 
-    map->tiles = (i32 *)malloc(sizeof(i32) * layer->data_count);
+    map->tiles = static_cast<i32 *>(malloc(sizeof(i32) * layer->data_count));
     assert(map->tiles);
     memcpy(map->tiles, layer->data, sizeof(i32) * layer->data_count);
 
@@ -62,8 +62,9 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
     {
         for (i32 x = 0; x < map->width; x++)
         {
-            dest = {x * translate + xOffset - (i32)app->camera.x,
-                    y * translate + yOffset - (i32)app->camera.y, translate, translate};
+            dest = {x * translate + xOffset - static_cast<i32>(app->camera.x),
+                    y * translate + yOffset - static_cast<i32>(app->camera.y), translate,
+                    translate};
 
             if (dest.y > SCREEN_HEIGHT)
             {
@@ -95,7 +96,7 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
             else if (tile & 0x20000000)
             {
                 // diagonal
-                flip = (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL);
+                flip = static_cast<SDL_RendererFlip>(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL);
             }
             else
             {

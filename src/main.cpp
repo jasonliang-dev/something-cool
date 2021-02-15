@@ -1,6 +1,18 @@
 #define SDL_MAIN_HANDLED
+
+#ifdef _MSC_VER
+
+// windows
+#include <SDL.h>
+#include <SDL_image.h>
+
+#else
+
+// linux
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+
+#endif
 
 #include <stdio.h>
 #include <stdint.h>
@@ -26,7 +38,7 @@ global AppState *app = NULL;
 internal inline v2 V2Normalize(v2 v)
 {
     v2 result;
-    f32 length = (f32)sqrt(v.x * v.x + v.y * v.y);
+    f32 length = static_cast<f32>(sqrt(v.x * v.x + v.y * v.y));
 
     // normalizing the 0 vector???
     if (length <= FLT_EPSILON)
@@ -57,7 +69,7 @@ i32 main(void)
 {
     {
         // init app
-        app = (AppState *)malloc(sizeof(AppState));
+        app = static_cast<AppState *>(malloc(sizeof *app));
         assert(app);
         app->running = true;
         app->scale = 5;
@@ -71,8 +83,7 @@ i32 main(void)
                              SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
         assert(app->window);
 
-        app->renderer = SDL_CreateRenderer(app->window, -1,
-                                           SDL_RENDERER_ACCELERATED);
+        app->renderer = SDL_CreateRenderer(app->window, -1, SDL_RENDERER_ACCELERATED);
         assert(app->renderer);
 
         SDL_SetRenderDrawColor(app->renderer, 0x00, 0x00, 0x00, 0x00);
@@ -84,7 +95,7 @@ i32 main(void)
 
         // keyboard state
         app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-        app->keyDownPrev = (u8 *)malloc(app->keyCount);
+        app->keyDownPrev = static_cast<u8 *>(malloc(app->keyCount));
         assert(app->keyDownPrev);
 
         // load resources
@@ -100,7 +111,8 @@ i32 main(void)
     while (app->running)
     {
         counterNew = SDL_GetPerformanceCounter();
-        app->deltaTime = (counterNew - counterCurrent) / (f32)SDL_GetPerformanceFrequency();
+        app->deltaTime =
+            (counterNew - counterCurrent) / static_cast<f32>(SDL_GetPerformanceFrequency());
         counterCurrent = counterNew;
 
         printf("delta: %f, FPS: %f\n", app->deltaTime, 1.0f / app->deltaTime);
@@ -156,7 +168,7 @@ i32 main(void)
         // render
         SDL_RenderClear(app->renderer);
         Tilemap_Draw(&app->map, 0, 0);
-        Texture_Draw(&app->texDog, (i32)player.x, (i32)player.y);
+        Texture_Draw(&app->texDog, static_cast<i32>(player.x), static_cast<i32>(player.y));
         SDL_RenderPresent(app->renderer);
     }
 
