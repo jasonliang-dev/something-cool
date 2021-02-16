@@ -1,4 +1,31 @@
-internal Texture Texture_Load(const char *imagePath)
+internal inline Texture Texture_Load(SDL_Surface *surface)
+{
+    SDL_Texture *imageTexture = SDL_CreateTextureFromSurface(app->renderer, surface);
+    assert(imageTexture);
+
+    Texture tex;
+    tex.texture = imageTexture;
+    tex.width = surface->w;
+    tex.height = surface->h;
+
+    SDL_FreeSurface(surface);
+
+    return tex;
+}
+
+internal inline Texture Texture_LoadFromFontSolid(TTF_Font *font, const char *text)
+{
+    SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, {0xFF, 0xFF, 0xFF, 0xFF});
+    if (!textSurface)
+    {
+        fprintf(stderr, "TTF: %s\n", TTF_GetError());
+        *(int *)0 = 0;
+    }
+
+    return Texture_Load(textSurface);
+}
+
+internal inline Texture Texture_LoadFromImage(const char *imagePath)
 {
     SDL_Surface *imageSurface = IMG_Load(imagePath);
     if (!imageSurface)
@@ -7,24 +34,33 @@ internal Texture Texture_Load(const char *imagePath)
         *(int *)0 = 0;
     }
 
-    SDL_Texture *imageTexture = SDL_CreateTextureFromSurface(app->renderer, imageSurface);
-    assert(imageTexture);
-
-    Texture sprite;
-    sprite.texture = imageTexture;
-    sprite.width = imageSurface->w;
-    sprite.height = imageSurface->h;
-
-    SDL_FreeSurface(imageSurface);
-
-    return sprite;
+    return Texture_Load(imageSurface);
 }
 
-internal inline void Texture_Draw(Texture *s, i32 x, i32 y)
+internal inline void Texture_DrawWorld(Texture *tex, i32 x, i32 y)
 {
     SDL_Rect rect = {x - static_cast<i32>(app->camera.x), y - static_cast<i32>(app->camera.y),
-                     s->width * app->scale, s->height * app->scale};
-    SDL_RenderCopy(app->renderer, s->texture, NULL, &rect);
+                     tex->width * app->scale, tex->height * app->scale};
+    SDL_RenderCopy(app->renderer, tex->texture, NULL, &rect);
+}
+
+internal inline void Texture_DrawScreen(Texture *tex, i32 x, i32 y)
+{
+    SDL_Rect rect = {x, y, tex->width, tex->height};
+    SDL_RenderCopy(app->renderer, tex->texture, NULL, &rect);
+}
+
+internal inline void Font_RenderText(TTF_Font *font, i32 x, i32 y, const char *formatString, ...)
+{
+    char buff[2048];
+    va_list args;
+    va_start(args, formatString);
+    vsnprintf(buff, 2048, formatString, args);
+    va_end(args);
+
+    Texture t = Texture_LoadFromFontSolid(font, buff);
+    Texture_DrawScreen(&t, x, y);
+    SDL_DestroyTexture(t.texture);
 }
 
 internal inline v2 Texture_ToV2(Texture *texture)
@@ -32,63 +68,10 @@ internal inline v2 Texture_ToV2(Texture *texture)
     return {static_cast<f32>(texture->width), static_cast<f32>(texture->height)};
 }
 
-internal void Tilemap_Load(Tilemap *map, const char *imagePath, const char *tileMapPath)
-{
-    map->atlas = Texture_Load(imagePath);
-
-    cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(tileMapPath, 0);
-
-    cute_tiled_layer_t *layer = tiledMap->layers;
-    assert(!layer->next);
-
-    map->width = layer->width;
-    map->height = layer->height;
-    map->tileSize = tiledMap->tilewidth;
-    assert(layer->data_count == map->width * map->height);
-
-    map->indices = static_cast<i32 *>(malloc(sizeof(i32) * layer->data_count));
-    assert(map->indices);
-    memcpy(map->indices, layer->data, sizeof(i32) * layer->data_count);
-
-    {
-        cute_tiled_tileset_t *tileset = tiledMap->tilesets;
-        assert(!tileset->next);
-
-        u8 *collisionAtlas = static_cast<u8 *>(malloc(sizeof(u8) * tileset->tilecount));
-        assert(collisionAtlas);
-        for (cute_tiled_tile_descriptor_t *t = tileset->tiles; t != nullptr; t = t->next)
-        {
-            collisionAtlas[t->tile_index] = !!t->properties->data.boolean;
-        }
-
-        map->collision = static_cast<u8 *>(malloc(sizeof(u8) * layer->data_count));
-        assert(map->collision);
-        for (i32 y = 0; y < map->height; ++y)
-        {
-            for (i32 x = 0; x < map->width; ++x)
-            {
-                i32 tile = (map->indices[(y * map->width) + x] & 0xFFFFFFF) - 1;
-                map->collision[(y * map->width) + x] = collisionAtlas[tile];
-            }
-        }
-
-        free(collisionAtlas);
-    }
-
-    cute_tiled_free_map(tiledMap);
-}
-
-internal void Tilemap_Free(Tilemap *map)
-{
-    SDL_DestroyTexture(map->atlas.texture);
-    free(map->collision);
-    free(map->indices);
-}
-
 internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
 {
-    const i32 translate = map->tileSize * app->scale;
-    const i32 tileColumns = map->atlas.width / map->tileSize;
+    const i32 translate = map->tileWidth * app->scale;
+    const i32 tileColumns = map->atlas.width / map->tileWidth;
 
     if (app->debug)
     {
@@ -119,7 +102,7 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
             }
 
             i32 index = map->indices[(y * map->width) + x];
-            // indexd export increments by 1 so we minus 1
+            // tiled export increments by 1 so we minus 1
             i32 tile = (index & 0xFFFFFFF) - 1;
 
             SDL_RendererFlip flip;
@@ -141,8 +124,8 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
                 flip = SDL_FLIP_NONE;
             }
 
-            SDL_Rect src = {(tile % tileColumns) * map->tileSize,
-                            (tile / tileColumns) * map->tileSize, map->tileSize, map->tileSize};
+            SDL_Rect src = {(tile % tileColumns) * map->tileWidth,
+                            (tile / tileColumns) * map->tileWidth, map->tileWidth, map->tileWidth};
 
             SDL_RenderCopyEx(app->renderer, map->atlas.texture, &src, &dest, 0, NULL, flip);
 

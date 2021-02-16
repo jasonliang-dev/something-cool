@@ -8,11 +8,19 @@ struct Texture
 struct Tilemap
 {
     Texture atlas;
-    i32 tileSize; // width and height in pixels
-    i32 width;    // tile width and height of map
+    i32 tileWidth; // in pixels. width == height
+    i32 width;
     i32 height;
     i32 *indices;
     u8 *collision;
+};
+
+struct Entity
+{
+    v2 position;
+    v2 velocity;
+    v2 acceleration;
+    Texture image;
 };
 
 struct AppState
@@ -31,6 +39,7 @@ struct AppState
     i32 scale;
 
     v2 camera;
-    Texture texDog;
+    TTF_Font *fntSans;
+    Entity player;
     Tilemap map;
 };

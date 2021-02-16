@@ -5,12 +5,14 @@
 // windows
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #else
 
 // linux
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 
 #endif
 
@@ -19,6 +21,7 @@
 #include <assert.h>
 #include <math.h>
 #include <float.h>
+#include <stdarg.h>
 
 #define CUTE_TILED_IMPLEMENTATION
 #include "cute_tiled.h"
@@ -35,6 +38,8 @@ global AppState *app = NULL;
 
 #include "maths.cpp"
 #include "render.cpp"
+#include "tilemap.cpp"
+#include "entity.cpp"
 
 internal inline bool KeyPress(SDL_Scancode scancode)
 {
@@ -68,7 +73,8 @@ i32 main(i32 argc, char *argv[])
                              SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
         assert(app->window);
 
-        app->renderer = SDL_CreateRenderer(app->window, -1, SDL_RENDERER_ACCELERATED);
+        app->renderer = SDL_CreateRenderer(app->window, -1,
+                                           SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
         assert(app->renderer);
 
         // init sdl_image
@@ -76,18 +82,25 @@ i32 main(i32 argc, char *argv[])
         i32 imgInit = IMG_Init(imgFlags);
         assert((imgInit & imgFlags) == imgFlags);
 
+        // init sdl_ttf
+        assert(TTF_Init() != -1);
+
         // keyboard state
         app->keyDown = SDL_GetKeyboardState(&app->keyCount);
         app->keyDownPrev = static_cast<u8 *>(malloc(app->keyCount));
         assert(app->keyDownPrev);
 
         // load resources
-        app->texDog = Texture_Load("data/dog.png");
+        app->fntSans = TTF_OpenFont("data/SourceSansPro-Regular.ttf", 28);
+        assert(app->fntSans);
+        app->player.image = Texture_LoadFromImage("data/dog.png");
         Tilemap_Load(&app->map, "data/atlas.png", "data/test.json");
+
+        // init entities
+        Entity_ZeroMovement(&app->player);
     }
 
     SDL_Event e;
-    v2 player = {0, 0};
 
     u64 counterCurrent = SDL_GetPerformanceCounter();
     u64 counterNew;
@@ -98,13 +111,10 @@ i32 main(i32 argc, char *argv[])
             (counterNew - counterCurrent) / static_cast<f32>(SDL_GetPerformanceFrequency());
         counterCurrent = counterNew;
 
-        // printf("delta: %f, FPS: %f\n", app->deltaTime, 1.0f / app->deltaTime);
-
         // app->keyDown updates after event loop.
         // must update keyDownPrev before the loop.
         memcpy(const_cast<u8 *>(app->keyDownPrev), app->keyDown, app->keyCount);
 
-        // event loop
         while (SDL_PollEvent(&e) != 0)
         {
             if (e.type == SDL_QUIT)
@@ -119,39 +129,63 @@ i32 main(i32 argc, char *argv[])
             app->debug = !app->debug;
         }
 
-        if (KeyPress(SDL_SCANCODE_SPACE) || KeyRelease(SDL_SCANCODE_RETURN))
+        if (KeyPress(SDL_SCANCODE_RETURN))
         {
-            player = {0, 0};
+            app->player.position = {0, 0};
         }
 
-        v2 playerVel = {
-            static_cast<f32>(app->keyDown[SDL_SCANCODE_D] - app->keyDown[SDL_SCANCODE_A]),
-            static_cast<f32>(app->keyDown[SDL_SCANCODE_S] - app->keyDown[SDL_SCANCODE_W])};
-        playerVel = V2Normalize(playerVel);
+        f32 gravity = 40.0f * app->deltaTime;
+        app->player.velocity.y += gravity;
+        app->player.velocity.x -= app->player.velocity.x * app->deltaTime * 12.0f;
 
-        player += playerVel * 400 * app->deltaTime;
+        f32 maxMove = 500.0f * app->deltaTime;
+        f32 moveX = static_cast<f32>(app->keyDown[SDL_SCANCODE_D] - app->keyDown[SDL_SCANCODE_A]) *
+                    80.0f * app->deltaTime;
 
-        v2 cameraOffset = {SCREEN_WIDTH, SCREEN_HEIGHT};
-        cameraOffset -= Texture_ToV2(&app->texDog) * static_cast<f32>(app->scale);
+        if (Signf(app->player.velocity.x + moveX) * (app->player.velocity.x + moveX) < maxMove)
+        {
+            app->player.velocity.x += moveX;
+        }
+
+        if (KeyPress(SDL_SCANCODE_SPACE))
+        {
+            app->player.velocity.y = -800.0f * app->deltaTime;
+        }
+
+        Entity_Move(&app->map, &app->player);
+
+        v2 screenBox = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        v2 cameraOffset =
+            screenBox - Texture_ToV2(&app->player.image) * static_cast<f32>(app->scale);
         cameraOffset /= 2;
 
-        app->camera += (player - app->camera - cameraOffset) * app->deltaTime * 6.0f;
+        app->camera += (app->player.position - app->camera - cameraOffset) * app->deltaTime * 6.0f;
+        app->camera = V2Clamp(app->camera, {0, 0}, Tilemap_BoundingBox(&app->map) - screenBox);
 
         // render
         SDL_SetRenderDrawColor(app->renderer, 0x00, 0x00, 0x00, 0xFF);
         SDL_RenderClear(app->renderer);
         Tilemap_Draw(&app->map, 0, 0);
-        Texture_Draw(&app->texDog, static_cast<i32>(player.x), static_cast<i32>(player.y));
+        Texture_DrawWorld(&app->player.image, static_cast<i32>(app->player.position.x),
+                          static_cast<i32>(app->player.position.y));
+
+        if (app->debug)
+        {
+            Font_RenderText(app->fntSans, 0, 0, "FPS: %d", static_cast<i32>(1.0f / app->deltaTime));
+        }
+
         SDL_RenderPresent(app->renderer);
     }
 
     // free all resources
     {
+        TTF_CloseFont(app->fntSans);
         Tilemap_Free(&app->map);
-        SDL_DestroyTexture(app->texDog.texture);
+        SDL_DestroyTexture(app->player.image.texture);
         SDL_DestroyRenderer(app->renderer);
         SDL_DestroyWindow(app->window);
 
+        TTF_Quit();
         IMG_Quit();
         SDL_Quit();
 
