@@ -33,27 +33,8 @@ global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = NULL;
 
+#include "maths.cpp"
 #include "render.cpp"
-
-internal inline v2 V2Normalize(v2 v)
-{
-    v2 result;
-    f32 length = static_cast<f32>(sqrt(v.x * v.x + v.y * v.y));
-
-    // normalizing the 0 vector???
-    if (length <= FLT_EPSILON)
-    {
-        result.x = 0.0f;
-        result.y = 0.0f;
-    }
-    else
-    {
-        result.x = v.x / length;
-        result.y = v.y / length;
-    }
-
-    return result;
-}
 
 internal inline bool KeyPress(SDL_Scancode scancode)
 {
@@ -65,14 +46,18 @@ internal inline bool KeyRelease(SDL_Scancode scancode)
     return app->keyDownPrev[scancode] && !app->keyDown[scancode];
 }
 
-i32 main(void)
+i32 main(i32 argc, char *argv[])
 {
+    (void)argc;
+    (void)argv;
+
     {
         // init app
         app = static_cast<AppState *>(malloc(sizeof *app));
         assert(app);
+        app->debug = false;
         app->running = true;
-        app->scale = 5;
+        app->scale = 4;
         app->camera = {0, 0};
 
         // init sdl
@@ -85,8 +70,6 @@ i32 main(void)
 
         app->renderer = SDL_CreateRenderer(app->window, -1, SDL_RENDERER_ACCELERATED);
         assert(app->renderer);
-
-        SDL_SetRenderDrawColor(app->renderer, 0x00, 0x00, 0x00, 0x00);
 
         // init sdl_image
         i32 imgFlags = IMG_INIT_PNG;
@@ -115,12 +98,13 @@ i32 main(void)
             (counterNew - counterCurrent) / static_cast<f32>(SDL_GetPerformanceFrequency());
         counterCurrent = counterNew;
 
-        printf("delta: %f, FPS: %f\n", app->deltaTime, 1.0f / app->deltaTime);
+        // printf("delta: %f, FPS: %f\n", app->deltaTime, 1.0f / app->deltaTime);
 
         // app->keyDown updates after event loop.
         // must update keyDownPrev before the loop.
-        memcpy(app->keyDownPrev, app->keyDown, app->keyCount);
-        // event
+        memcpy(const_cast<u8 *>(app->keyDownPrev), app->keyDown, app->keyCount);
+
+        // event loop
         while (SDL_PollEvent(&e) != 0)
         {
             if (e.type == SDL_QUIT)
@@ -130,42 +114,31 @@ i32 main(void)
         }
 
         // update
+        if (KeyPress(SDL_SCANCODE_F3))
+        {
+            app->debug = !app->debug;
+        }
+
         if (KeyPress(SDL_SCANCODE_SPACE) || KeyRelease(SDL_SCANCODE_RETURN))
         {
             player = {0, 0};
         }
 
-        v2 playerVel = {0, 0};
-
-        if (app->keyDown[SDL_SCANCODE_W])
-        {
-            playerVel.y -= 1;
-        }
-        if (app->keyDown[SDL_SCANCODE_A])
-        {
-            playerVel.x -= 1;
-        }
-        if (app->keyDown[SDL_SCANCODE_S])
-        {
-            playerVel.y += 1;
-        }
-        if (app->keyDown[SDL_SCANCODE_D])
-        {
-            playerVel.x += 1;
-        }
-
+        v2 playerVel = {
+            static_cast<f32>(app->keyDown[SDL_SCANCODE_D] - app->keyDown[SDL_SCANCODE_A]),
+            static_cast<f32>(app->keyDown[SDL_SCANCODE_S] - app->keyDown[SDL_SCANCODE_W])};
         playerVel = V2Normalize(playerVel);
-        player.x += playerVel.x * 400 * app->deltaTime;
-        player.y += playerVel.y * 400 * app->deltaTime;
 
-        app->camera.x +=
-            (player.x - app->camera.x - ((SCREEN_WIDTH - (app->texDog.width * app->scale)) / 2)) *
-            app->deltaTime * 6.0f;
-        app->camera.y +=
-            (player.y - app->camera.y - ((SCREEN_HEIGHT - (app->texDog.height * app->scale)) / 2)) *
-            app->deltaTime * 6.0f;
+        player += playerVel * 400 * app->deltaTime;
+
+        v2 cameraOffset = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        cameraOffset -= Texture_ToV2(&app->texDog) * static_cast<f32>(app->scale);
+        cameraOffset /= 2;
+
+        app->camera += (player - app->camera - cameraOffset) * app->deltaTime * 6.0f;
 
         // render
+        SDL_SetRenderDrawColor(app->renderer, 0x00, 0x00, 0x00, 0xFF);
         SDL_RenderClear(app->renderer);
         Tilemap_Draw(&app->map, 0, 0);
         Texture_Draw(&app->texDog, static_cast<i32>(player.x), static_cast<i32>(player.y));
@@ -174,8 +147,8 @@ i32 main(void)
 
     // free all resources
     {
+        Tilemap_Free(&app->map);
         SDL_DestroyTexture(app->texDog.texture);
-        SDL_DestroyTexture(app->map.atlas.texture);
         SDL_DestroyRenderer(app->renderer);
         SDL_DestroyWindow(app->window);
 
