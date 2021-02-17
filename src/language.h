@@ -95,7 +95,6 @@ union v4
     {
         f32 ignore0;
         v2 yz;
-        f32 ignore1;
     };
 
     struct

@@ -8,6 +8,7 @@ set INCLUDE_DIRS=^
     /I ../sdl2_ttf/include
 
 set LIBRARY_LINK=^
+    shell32.lib^
     SDL2.lib^
     SDL2main.lib^
     SDL2_image.lib^
@@ -18,7 +19,7 @@ set LIBRARY_PATHS=^
     /LIBPATH:../sdl2_image/lib/x64^
     /LIBPATH:../sdl2_ttf/lib/x64
 
-set LINK_FLAGS= -opt:ref -incremental:no -Debug:fastlink
+set LINK_FLAGS= /SUBSYSTEM:WINDOWS -opt:ref -incremental:no -Debug:fastlink
 
 if not exist build mkdir build
 pushd build

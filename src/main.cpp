@@ -1,5 +1,3 @@
-#define SDL_MAIN_HANDLED
-
 #ifdef _MSC_VER
 
 // windows
@@ -134,9 +132,9 @@ i32 main(i32 argc, char *argv[])
             app->player.position = {0, 0};
         }
 
-        f32 gravity = 40.0f * app->deltaTime;
+        f32 gravity = 30.0f * app->deltaTime;
         app->player.velocity.y += gravity;
-        app->player.velocity.x -= app->player.velocity.x * app->deltaTime * 12.0f;
+        app->player.velocity.x -= app->player.velocity.x * app->deltaTime * 16.0f;
 
         f32 maxMove = 500.0f * app->deltaTime;
         f32 moveX = static_cast<f32>(app->keyDown[SDL_SCANCODE_D] - app->keyDown[SDL_SCANCODE_A]) *
@@ -149,14 +147,14 @@ i32 main(i32 argc, char *argv[])
 
         if (KeyPress(SDL_SCANCODE_SPACE))
         {
-            app->player.velocity.y = -800.0f * app->deltaTime;
+            app->player.velocity.y = -600.0f * app->deltaTime;
         }
 
         Entity_Move(&app->map, &app->player);
 
         v2 screenBox = {SCREEN_WIDTH, SCREEN_HEIGHT};
         v2 cameraOffset =
-            screenBox - Texture_ToV2(&app->player.image) * static_cast<f32>(app->scale);
+            screenBox - Entity_BoundingBox(&app->player);
         cameraOffset /= 2;
 
         app->camera += (app->player.position - app->camera - cameraOffset) * app->deltaTime * 6.0f;

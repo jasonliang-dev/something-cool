@@ -18,7 +18,8 @@ internal inline Texture Texture_LoadFromFontSolid(TTF_Font *font, const char *te
     SDL_Surface *textSurface = TTF_RenderText_Solid(font, text, {0xFF, 0xFF, 0xFF, 0xFF});
     if (!textSurface)
     {
-        fprintf(stderr, "TTF: %s\n", TTF_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "TTF_RenderText_Solid", TTF_GetError(),
+                                 NULL);
         *(int *)0 = 0;
     }
 
@@ -30,7 +31,7 @@ internal inline Texture Texture_LoadFromImage(const char *imagePath)
     SDL_Surface *imageSurface = IMG_Load(imagePath);
     if (!imageSurface)
     {
-        fprintf(stderr, "IMG_Load: %s\n", IMG_GetError());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "IMG_Load", IMG_GetError(), NULL);
         *(int *)0 = 0;
     }
 
