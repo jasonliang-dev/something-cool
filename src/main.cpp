@@ -40,8 +40,6 @@ global AppState *app = NULL;
 #include "imgui_draw.cpp"
 #include "imgui_tables.cpp"
 #include "imgui_widgets.cpp"
-
-// optional
 #include "imgui_demo.cpp"
 
 #include "maths.cpp"
