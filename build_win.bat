@@ -6,7 +6,7 @@ REM 4459: declaration of app shadows global (imgui_demo)
 
 set INCLUDE_DIRS=^
     /I ../src^
-    /I ../third/sdl2/include
+    /I ../sdl2/include
 
 set LIBRARY_LINK=^
     shell32.lib^
@@ -15,14 +15,14 @@ set LIBRARY_LINK=^
     SDL2main.lib
 
 set LIBRARY_PATHS=^
-    /LIBPATH:../third/sdl2/lib/x64
+    /LIBPATH:../sdl2/lib/x64
 
 set LINK_FLAGS= /SUBSYSTEM:WINDOWS -opt:ref -incremental:no -Debug:fastlink
 
 if not exist build mkdir build
 pushd build
 
-cl %COMPILE_FLAGS% %INCLUDE_DIRS% ../src/main.cpp^
+cl %COMPILE_FLAGS% %INCLUDE_DIRS% ../src/app.cpp^
     /link %LIBRARY_LINK% %LIBRARY_PATHS% %LINK_FLAGS% /out:app.exe
 
 popd
