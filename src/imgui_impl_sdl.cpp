@@ -47,9 +47,14 @@
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
 
-// SDL
-#include <SDL.h>
-#include <SDL_syswm.h>
+// NOTE: SDL INCLUDES USED TO BE HERE
+
+//    #include <SDL.h>
+//    #include <SDL_syswm.h>
+
+// THEY HAVE BEEN MOVED TO main.cpp
+// because linux wants SDL2/ prefix in its includes <SDL2/*.h>
+
 #if defined(__APPLE__)
 #include "TargetConditionals.h"
 #endif
