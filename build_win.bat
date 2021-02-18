@@ -1,6 +1,8 @@
 @echo off
 
-set COMPILE_FLAGS= -D_CRT_SECURE_NO_WARNINGS -nologo -W4 -wd4201 -wd4459 -Z7
+set BUILD_OPTS= -DWIN32_LEAN_AND_MEAN=1 -D_CRT_SECURE_NO_WARNINGS
+
+set COMPILE_FLAGS= -nologo -W4 -wd4201 -wd4459 -Z7
 REM 4201: unnamed struct/union (definition of v2, v3, v4)
 REM 4459: declaration of `foo` hides global (thanks imgui)
 
@@ -26,7 +28,7 @@ pushd build
 
 if not exist SDL2.dll copy ..\third\sdl2\lib\x64\SDL2.dll
 
-cl %COMPILE_FLAGS% %INCLUDE_DIRS% ../src/app.cpp^
+cl %BUILD_OPTS% %COMPILE_FLAGS% %INCLUDE_DIRS% ../src/app.cpp^
     /link %LIBRARY_LINK% %LIBRARY_PATHS% %LINK_FLAGS% /out:app.exe
 
 popd
