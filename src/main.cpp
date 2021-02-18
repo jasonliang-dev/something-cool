@@ -7,8 +7,10 @@
 
 #ifdef _MSC_VER
 #include <SDL.h> // windows
+#include <SDL_syswm.h>
 #else
 #include <SDL2/SDL.h> // linux
+#include <SDL2/SDL_syswm.h>
 #endif
 
 #include "GL/gl3w.h"
@@ -46,16 +48,6 @@ global AppState *app = NULL;
 // #include "render.cpp"
 // #include "tilemap.cpp"
 // #include "entity.cpp"
-
-internal inline bool KeyPress(SDL_Scancode scancode)
-{
-    return !app->keyDownPrev[scancode] && app->keyDown[scancode];
-}
-
-internal inline bool KeyRelease(SDL_Scancode scancode)
-{
-    return app->keyDownPrev[scancode] && !app->keyDown[scancode];
-}
 
 i32 main(i32 argc, char *argv[])
 {
