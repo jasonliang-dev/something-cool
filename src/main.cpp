@@ -1,19 +1,3 @@
-#ifdef _MSC_VER
-
-// windows
-#include <SDL.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-
-#else
-
-// linux
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-
-#endif
-
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
@@ -21,8 +5,20 @@
 #include <float.h>
 #include <stdarg.h>
 
+#ifdef _MSC_VER
+#include <SDL.h> // windows
+#else
+#include <SDL2/SDL.h> // linux
+#endif
+
+#include "GL/gl3w.h"
+
 #define CUTE_TILED_IMPLEMENTATION
 #include "cute_tiled.h"
+
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 
 #include "language.h"
 #include "app.h"
@@ -30,14 +26,28 @@
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
 
+global const i32 DRAW_SCALE = 4;
+
 global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = NULL;
 
+#include "gl3w.c"
+
+#include "imgui.cpp"
+#include "imgui_impl_sdl.cpp"
+#include "imgui_impl_opengl3.cpp"
+#include "imgui_draw.cpp"
+#include "imgui_tables.cpp"
+#include "imgui_widgets.cpp"
+
+// optional
+#include "imgui_demo.cpp"
+
 #include "maths.cpp"
-#include "render.cpp"
-#include "tilemap.cpp"
-#include "entity.cpp"
+// #include "render.cpp"
+// #include "tilemap.cpp"
+// #include "entity.cpp"
 
 internal inline bool KeyPress(SDL_Scancode scancode)
 {
@@ -56,135 +66,179 @@ i32 main(i32 argc, char *argv[])
 
     {
         // init app
-        app = static_cast<AppState *>(malloc(sizeof *app));
+        app = (AppState *)malloc(sizeof(AppState));
         assert(app);
         app->debug = false;
         app->running = true;
-        app->scale = 4;
-        app->camera = {0, 0};
 
         // init sdl
         assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 
-        app->window =
-            SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                             SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+#ifdef __APPLE__
+        // GL 3.2 Core + GLSL 150
+        const char *glsl_version = "#version 150";
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
+                            SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+#else
+        // GL 3.0 + GLSL 130
+        const char *glsl_version = "#version 130";
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
+
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        app->window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED,
+                                       SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
+                                       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI |
+                                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
         assert(app->window);
+        app->glContext = SDL_GL_CreateContext(app->window);
+        SDL_GL_MakeCurrent(app->window, app->glContext);
+        SDL_GL_SetSwapInterval(1); // enable vsync
 
-        app->renderer = SDL_CreateRenderer(app->window, -1,
-                                           SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
-        assert(app->renderer);
+        // load opengl procs
+        assert(gl3wInit() == 0);
 
-        // init sdl_image
-        i32 imgFlags = IMG_INIT_PNG;
-        i32 imgInit = IMG_Init(imgFlags);
-        assert((imgInit & imgFlags) == imgFlags);
+        // init imgui
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        app->imguiIO = &ImGui::GetIO();
+        app->imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-        // init sdl_ttf
-        assert(TTF_Init() != -1);
+        // style
+        ImGui::StyleColorsDark();
+
+        // backend
+        ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
+        ImGui_ImplOpenGL3_Init(glsl_version);
 
         // keyboard state
         app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-        app->keyDownPrev = static_cast<u8 *>(malloc(app->keyCount));
+        app->keyDownPrev = (u8 *)malloc(app->keyCount);
         assert(app->keyDownPrev);
-
-        // load resources
-        app->fntSans = TTF_OpenFont("data/SourceSansPro-Regular.ttf", 28);
-        assert(app->fntSans);
-        app->player.image = Texture_LoadFromImage("data/dog.png");
-        Tilemap_Load(&app->map, "data/atlas.png", "data/test.json");
-
-        // init entities
-        Entity_ZeroMovement(&app->player);
     }
 
-    SDL_Event e;
+    bool show_demo_window = true;
+    bool show_another_window = false;
+
+    v4 clear_color = {0.45f, 0.55f, 0.60f, 1.00f};
+
+    SDL_Event event;
 
     u64 counterCurrent = SDL_GetPerformanceCounter();
     u64 counterNew;
     while (app->running)
     {
         counterNew = SDL_GetPerformanceCounter();
-        app->deltaTime =
-            (counterNew - counterCurrent) / static_cast<f32>(SDL_GetPerformanceFrequency());
+        app->deltaTime = (counterNew - counterCurrent) / (f32)SDL_GetPerformanceFrequency();
         counterCurrent = counterNew;
 
         // app->keyDown updates after event loop.
         // must update keyDownPrev before the loop.
-        memcpy(const_cast<u8 *>(app->keyDownPrev), app->keyDown, app->keyCount);
+        // (void *) discarding const
+        memcpy((void *)app->keyDownPrev, app->keyDown, app->keyCount);
 
-        while (SDL_PollEvent(&e) != 0)
+        while (SDL_PollEvent(&event) != 0)
         {
-            if (e.type == SDL_QUIT)
+            ImGui_ImplSDL2_ProcessEvent(&event);
+            if (event.type == SDL_QUIT)
+            {
+                app->running = false;
+            }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                     event.window.windowID == SDL_GetWindowID(app->window))
             {
                 app->running = false;
             }
         }
 
-        // update
-        if (KeyPress(SDL_SCANCODE_F3))
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame(app->window);
+        ImGui::NewFrame();
+
+        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You
+        // can browse its code to learn more about Dear ImGui!).
+        if (show_demo_window)
         {
-            app->debug = !app->debug;
+            ImGui::ShowDemoWindow(&show_demo_window);
         }
 
-        if (KeyPress(SDL_SCANCODE_RETURN))
+        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a
+        // named window.
         {
-            app->player.position = {0, 0};
+            static float f = 0.0f;
+            static int counter = 0;
+
+            ImGui::Begin(
+                "Hello, world!"); // Create a window called "Hello, world!" and append into it.
+
+            ImGui::Text("This is some useful text."); // Display some text (you can use a format
+                                                      // strings too)
+            ImGui::Checkbox("Demo Window",
+                            &show_demo_window); // Edit bools storing our window open/close state
+            ImGui::Checkbox("Another Window", &show_another_window);
+
+            ImGui::SliderFloat("float", &f, 0.0f,
+                               1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::ColorEdit3("clear color",
+                              (float *)&clear_color); // Edit 3 floats representing a color
+
+            // Buttons return true when clicked (most widgets return
+            // true when edited/activated)
+            if (ImGui::Button("Button"))
+            {
+                counter++;
+            }
+
+            ImGui::SameLine();
+            ImGui::Text("counter = %d", counter);
+
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                        1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::End();
         }
 
-        f32 gravity = 30.0f * app->deltaTime;
-        app->player.velocity.y += gravity;
-        app->player.velocity.x -= app->player.velocity.x * app->deltaTime * 16.0f;
-
-        f32 maxMove = 500.0f * app->deltaTime;
-        f32 moveX = static_cast<f32>(app->keyDown[SDL_SCANCODE_D] - app->keyDown[SDL_SCANCODE_A]) *
-                    80.0f * app->deltaTime;
-
-        if (Signf(app->player.velocity.x + moveX) * (app->player.velocity.x + moveX) < maxMove)
+        // 3. Show another simple window.
+        if (show_another_window)
         {
-            app->player.velocity.x += moveX;
+            // Pass a pointer to our bool variable (the window will have
+            // a closing button that will clear the bool when clicked)
+            ImGui::Begin("Another Window", &show_another_window);
+            ImGui::Text("Hello from another window!");
+            if (ImGui::Button("Close Me"))
+            {
+                show_another_window = false;
+            }
+            ImGui::End();
         }
 
-        if (KeyPress(SDL_SCANCODE_SPACE))
-        {
-            app->player.velocity.y = -600.0f * app->deltaTime;
-        }
+        // Rendering
+        ImGui::Render();
+        glViewport(0, 0, (int)app->imguiIO->DisplaySize.x, (int)app->imguiIO->DisplaySize.y);
 
-        Entity_Move(&app->map, &app->player);
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-        v2 screenBox = {SCREEN_WIDTH, SCREEN_HEIGHT};
-        v2 cameraOffset =
-            screenBox - Entity_BoundingBox(&app->player);
-        cameraOffset /= 2;
-
-        app->camera += (app->player.position - app->camera - cameraOffset) * app->deltaTime * 6.0f;
-        app->camera = V2Clamp(app->camera, {0, 0}, Tilemap_BoundingBox(&app->map) - screenBox);
-
-        // render
-        SDL_SetRenderDrawColor(app->renderer, 0x00, 0x00, 0x00, 0xFF);
-        SDL_RenderClear(app->renderer);
-        Tilemap_Draw(&app->map, 0, 0);
-        Texture_DrawWorld(&app->player.image, static_cast<i32>(app->player.position.x),
-                          static_cast<i32>(app->player.position.y));
-
-        if (app->debug)
-        {
-            Font_RenderText(app->fntSans, 0, 0, "FPS: %d", static_cast<i32>(1.0f / app->deltaTime));
-        }
-
-        SDL_RenderPresent(app->renderer);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        SDL_GL_SwapWindow(app->window);
     }
 
     // free all resources
     {
-        TTF_CloseFont(app->fntSans);
-        Tilemap_Free(&app->map);
-        SDL_DestroyTexture(app->player.image.texture);
-        SDL_DestroyRenderer(app->renderer);
-        SDL_DestroyWindow(app->window);
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
 
-        TTF_Quit();
-        IMG_Quit();
+        SDL_GL_DeleteContext(app->glContext);
+        SDL_DestroyWindow(app->window);
         SDL_Quit();
 
         free(app);

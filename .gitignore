@@ -3,6 +3,4 @@ build/*
 !build/data/*
 .vs
 
-sdl2
-sdl2_image
-sdl2_ttf
+third

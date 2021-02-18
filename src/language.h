@@ -71,7 +71,6 @@ union v4
                 f32 z;
             };
         };
-
         f32 w;
     };
 
@@ -87,14 +86,17 @@ union v4
                 f32 b;
             };
         };
-
         f32 a;
     };
 
     struct
     {
         f32 ignore0;
-        v2 yz;
+        union
+        {
+            v2 yz;
+            v3 yzw;
+        };
     };
 
     struct

@@ -12,7 +12,7 @@ internal void Tilemap_Load(Tilemap *map, const char *imagePath, const char *tile
     map->tileWidth = tiledMap->tilewidth;
     assert(layer->data_count == map->width * map->height);
 
-    map->indices = static_cast<i32 *>(malloc(sizeof(i32) * layer->data_count));
+    map->indices = (i32 *)malloc(sizeof(i32) * layer->data_count);
     assert(map->indices);
     memcpy(map->indices, layer->data, sizeof(i32) * layer->data_count);
 
@@ -20,14 +20,14 @@ internal void Tilemap_Load(Tilemap *map, const char *imagePath, const char *tile
         cute_tiled_tileset_t *tileset = tiledMap->tilesets;
         assert(!tileset->next);
 
-        u8 *collisionAtlas = static_cast<u8 *>(malloc(sizeof(u8) * tileset->tilecount));
+        u8 *collisionAtlas = (u8 *)malloc(sizeof(u8) * tileset->tilecount);
         assert(collisionAtlas);
         for (cute_tiled_tile_descriptor_t *t = tileset->tiles; t != nullptr; t = t->next)
         {
             collisionAtlas[t->tile_index] = !!t->properties->data.boolean;
         }
 
-        map->collision = static_cast<u8 *>(malloc(sizeof(u8) * layer->data_count));
+        map->collision = (u8 *)malloc(sizeof(u8) * layer->data_count);
         assert(map->collision);
         for (i32 y = 0; y < map->height; ++y)
         {
@@ -61,18 +61,18 @@ internal inline void Tilemap_Free(Tilemap *map)
 
 internal inline v2 Tilemap_BoundingBox(Tilemap *map)
 {
-    return {static_cast<f32>(map->width * map->tileWidth * app->scale),
-            static_cast<f32>(map->height * map->tileWidth * app->scale)};
+    return {(f32)map->width * map->tileWidth * DRAW_SCALE,
+            (f32)map->height * map->tileWidth * DRAW_SCALE};
 }
 
 internal bool Tilemap_DetectCollision(Tilemap *map, Entity *e)
 {
-    i32 left = static_cast<i32>(e->position.x / static_cast<f32>(map->tileWidth * app->scale));
-    i32 right = static_cast<i32>((e->position.x + (e->image.width * app->scale)) /
-                                 static_cast<f32>(map->tileWidth * app->scale));
-    i32 top = static_cast<i32>(e->position.y / static_cast<f32>(map->tileWidth * app->scale));
-    i32 bottom = static_cast<i32>((e->position.y + (e->image.height * app->scale)) /
-                                  static_cast<f32>(map->tileWidth * app->scale));
+    i32 left = (i32)(e->position.x / (1.0f * map->tileWidth * DRAW_SCALE));
+    i32 right = (i32)((e->position.x + (e->image.width * DRAW_SCALE)) /
+                      (1.0f * map->tileWidth * DRAW_SCALE));
+    i32 top = (i32)(e->position.y / (1.0f * map->tileWidth * DRAW_SCALE));
+    i32 bottom = (i32)((e->position.y + (e->image.height * DRAW_SCALE)) /
+                       (1.0f * map->tileWidth * DRAW_SCALE));
 
     if (left < 0)
     {

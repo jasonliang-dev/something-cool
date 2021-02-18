@@ -7,8 +7,7 @@ internal inline void Entity_ZeroMovement(Entity *e)
 
 internal inline v2 Entity_BoundingBox(Entity *e)
 {
-    return {static_cast<f32>(e->image.width * app->scale),
-            static_cast<f32>(e->image.height * app->scale)};
+    return {(f32)e->image.width * DRAW_SCALE, (f32)e->image.height * DRAW_SCALE};
 }
 
 internal void Entity_Move(Tilemap *map, Entity *e)
@@ -36,7 +35,5 @@ internal void Entity_Move(Tilemap *map, Entity *e)
         }
     }
 
-    e->position = V2Clamp(e->position, {0, 0},
-                          Tilemap_BoundingBox(map) -
-                          Entity_BoundingBox(e));
+    e->position = V2Clamp(e->position, {0, 0}, Tilemap_BoundingBox(map) - Entity_BoundingBox(e));
 }

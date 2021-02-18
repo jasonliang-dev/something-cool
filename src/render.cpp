@@ -40,8 +40,8 @@ internal inline Texture Texture_LoadFromImage(const char *imagePath)
 
 internal inline void Texture_DrawWorld(Texture *tex, i32 x, i32 y)
 {
-    SDL_Rect rect = {x - static_cast<i32>(app->camera.x), y - static_cast<i32>(app->camera.y),
-                     tex->width * app->scale, tex->height * app->scale};
+    SDL_Rect rect = {x - (i32)app->camera.x, y - (i32)app->camera.y, tex->width * DRAW_SCALE,
+                     tex->height * DRAW_SCALE};
     SDL_RenderCopy(app->renderer, tex->texture, NULL, &rect);
 }
 
@@ -66,12 +66,12 @@ internal inline void Font_RenderText(TTF_Font *font, i32 x, i32 y, const char *f
 
 internal inline v2 Texture_ToV2(Texture *texture)
 {
-    return {static_cast<f32>(texture->width), static_cast<f32>(texture->height)};
+    return {(f32)texture->width, (f32)texture->height};
 }
 
 internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
 {
-    const i32 translate = map->tileWidth * app->scale;
+    const i32 translate = map->tileWidth * DRAW_SCALE;
     const i32 tileColumns = map->atlas.width / map->tileWidth;
 
     if (app->debug)
@@ -83,9 +83,8 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
     {
         for (i32 x = 0; x < map->width; ++x)
         {
-            SDL_Rect dest = {x * translate + xOffset - static_cast<i32>(app->camera.x),
-                             y * translate + yOffset - static_cast<i32>(app->camera.y), translate,
-                             translate};
+            SDL_Rect dest = {x * translate + xOffset - (i32)app->camera.x,
+                             y * translate + yOffset - (i32)app->camera.y, translate, translate};
 
             if (dest.y > SCREEN_HEIGHT)
             {
@@ -118,7 +117,7 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
             else if (index & 0x20000000)
             {
                 // diagonal
-                flip = static_cast<SDL_RendererFlip>(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL);
+                flip = (SDL_RendererFlip)(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL);
             }
             else
             {

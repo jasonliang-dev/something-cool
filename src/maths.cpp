@@ -1,3 +1,14 @@
+internal inline f32 Signf(f32 f)
+{
+    return (f32)((f > 0) - (f < 0));
+}
+
+internal inline f32 Clampf(f32 f, f32 min, f32 max)
+{
+    f = f < min ? min : f;
+    return f > max ? max : f;
+}
+
 internal inline v2 V2Normalize(v2 v)
 {
     v2 result;
@@ -15,17 +26,6 @@ internal inline v2 V2Normalize(v2 v)
     }
 
     return result;
-}
-
-internal inline f32 Signf(f32 f)
-{
-    return static_cast<f32>((f > 0) - (f < 0));
-}
-
-internal inline f32 Clampf(f32 f, f32 min, f32 max)
-{
-    f = f < min ? min : f;
-    return f > max ? max : f;
 }
 
 internal inline v2 V2Clamp(v2 v, v2 min, v2 max)
