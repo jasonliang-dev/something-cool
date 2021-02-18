@@ -32,7 +32,7 @@ global const i32 DRAW_SCALE = 4;
 
 global const char *WINDOW_TITLE = "This is a title";
 
-global AppState *app = NULL;
+global AppState *app = nullptr;
 
 #include "gl3w.c"
 
