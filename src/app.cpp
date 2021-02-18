@@ -13,14 +13,14 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include "GL/gl3w.h"
+#include <GL/gl3w.h>
 
 #define CUTE_TILED_IMPLEMENTATION
-#include "cute_tiled.h"
+#include <cute_tiled.h>
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
+#include <imgui.h>
+#include <imgui_impl_sdl.h>
+#include <imgui_impl_opengl3.h>
 
 #include "language.h"
 #include "app.h"
@@ -34,15 +34,18 @@ global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = nullptr;
 
-#include "gl3w.c"
+extern "C"
+{
+#include <gl3w.c>
+}
 
-#include "imgui.cpp"
-#include "imgui_impl_sdl.cpp"
-#include "imgui_impl_opengl3.cpp"
-#include "imgui_draw.cpp"
-#include "imgui_tables.cpp"
-#include "imgui_widgets.cpp"
-#include "imgui_demo.cpp"
+#include <imgui.cpp>
+#include <imgui_impl_sdl.cpp>
+#include <imgui_impl_opengl3.cpp>
+#include <imgui_draw.cpp>
+#include <imgui_tables.cpp>
+#include <imgui_widgets.cpp>
+#include <imgui_demo.cpp>
 
 #include "maths.cpp"
 // #include "render.cpp"

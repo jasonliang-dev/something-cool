@@ -2,5 +2,3 @@ build/*
 !build/data/
 !build/data/*
 .vs
-
-third
