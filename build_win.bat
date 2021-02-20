@@ -28,6 +28,9 @@ pushd build
 
 if not exist SDL2.dll copy ..\third\sdl2\lib\x64\SDL2.dll
 
+cl %COMPILE_FLAGS% -D_CRT_SECURE_NO_WARNINGS ../src/shadergen.cpp
+shadergen.exe
+
 cl %BUILD_OPTS% %COMPILE_FLAGS% %INCLUDE_DIRS% ../src/app.cpp^
     /link %LIBRARY_LINK% %LIBRARY_PATHS% %LINK_FLAGS% /out:app.exe
 

@@ -2,7 +2,6 @@ struct AppState
 {
     SDL_Window *window;
     SDL_GLContext glContext;
-    ImGuiIO *imguiIO;
 
     // should this be volatile?
     bool running;

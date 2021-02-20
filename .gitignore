@@ -2,3 +2,5 @@ build/*
 !build/data/
 !build/data/*
 .vs
+
+src/shaders.gen.h

@@ -15,15 +15,26 @@
 
 #include <GL/gl3w.h>
 
-#define CUTE_TILED_IMPLEMENTATION
-#include <cute_tiled.h>
-
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
 #include <imgui_impl_opengl3.h>
 
+#define CUTE_TILED_IMPLEMENTATION
+#include <cute_tiled.h>
+
+#include <gl3w.c>
+
+#include <imgui.cpp>
+#include <imgui_impl_sdl.cpp>
+#include <imgui_impl_opengl3.cpp>
+#include <imgui_draw.cpp>
+#include <imgui_tables.cpp>
+#include <imgui_widgets.cpp>
+#include <imgui_demo.cpp>
+
 #include "language.h"
 #include "app.h"
+#include "shaders.gen.h"
 
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
@@ -34,25 +45,9 @@ global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = nullptr;
 
-extern "C"
-{
-#include <gl3w.c>
-}
-
-#include <imgui.cpp>
-#include <imgui_impl_sdl.cpp>
-#include <imgui_impl_opengl3.cpp>
-#include <imgui_draw.cpp>
-#include <imgui_tables.cpp>
-#include <imgui_widgets.cpp>
-#include <imgui_demo.cpp>
-
 #include "maths.cpp"
-// #include "render.cpp"
-// #include "tilemap.cpp"
-// #include "entity.cpp"
 
-i32 main(i32 argc, char *argv[])
+int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
@@ -94,27 +89,29 @@ i32 main(i32 argc, char *argv[])
         assert(app->window);
         app->glContext = SDL_GL_CreateContext(app->window);
         SDL_GL_MakeCurrent(app->window, app->glContext);
-        SDL_GL_SetSwapInterval(1); // enable vsync
+        SDL_GL_SetSwapInterval(0); // vsync
 
         // load opengl procs
         assert(gl3wInit() == 0);
 
         // init imgui
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        app->imguiIO = &ImGui::GetIO();
-        app->imguiIO->ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        {
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+            ImGuiIO &io = ImGui::GetIO();
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
-        // style
-        ImGui::StyleColorsDark();
+            // style
+            ImGui::StyleColorsDark();
 
-        // backend
-        ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
-        ImGui_ImplOpenGL3_Init(glsl_version);
+            // backend
+            ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
+            ImGui_ImplOpenGL3_Init(glsl_version);
+        }
 
         // keyboard state
         app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-        app->keyDownPrev = (u8 *)malloc(app->keyCount);
+        app->keyDownPrev = (const u8 *)malloc(app->keyCount);
         assert(app->keyDownPrev);
     }
 
@@ -215,7 +212,8 @@ i32 main(i32 argc, char *argv[])
 
         // Rendering
         ImGui::Render();
-        glViewport(0, 0, (int)app->imguiIO->DisplaySize.x, (int)app->imguiIO->DisplaySize.y);
+        ImGuiIO &io = ImGui::GetIO();
+        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
