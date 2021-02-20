@@ -15,6 +15,17 @@ typedef double f64;
 
 union v2
 {
+    v2()
+    {
+        x = y = 0;
+    }
+
+    v2(f32 xx, f32 yy)
+    {
+        x = xx;
+        y = yy;
+    }
+
     struct
     {
         f32 x;
@@ -32,6 +43,18 @@ union v2
 
 union v3
 {
+    v3()
+    {
+        x = y = z = 0;
+    }
+
+    v3(f32 xx, f32 yy, f32 zz)
+    {
+        x = xx;
+        y = yy;
+        z = zz;
+    }
+
     struct
     {
         f32 x;
@@ -59,6 +82,19 @@ union v3
 
 union v4
 {
+    v4()
+    {
+        x = y = z = w = 0;
+    }
+
+    v4(f32 xx, f32 yy, f32 zz, f32 ww)
+    {
+        x = xx;
+        y = yy;
+        z = zz;
+        w = ww;
+    }
+
     struct
     {
         union

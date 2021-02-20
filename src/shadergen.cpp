@@ -7,9 +7,9 @@
 
 global FILE *output;
 
-void make_shader(const char *in, const char *globalVar)
+internal void make_shader(const char *in, const char *globalVar)
 {
-    fprintf(output, "global char *%s =\n", globalVar);
+    fprintf(output, "global char %s[] = \"\\\n", globalVar);
 
     FILE *f = fopen(in, "r");
 
@@ -17,19 +17,16 @@ void make_shader(const char *in, const char *globalVar)
     while (fgets(line, 4096, f))
     {
         line[strcspn(line, "\n")] = 0;
-        fprintf(output, "\"%s\\n\"\n", line);
+        fprintf(output, "%s\\n\\\n", line);
     }
 
     fclose(f);
 
-    fputs(";\n", output);
+    fputs("\";\n", output);
 }
 
-int main(int argc, char *argv[])
+int main(void)
 {
-    (void)argc;
-    (void)argv;
-
     output = fopen("../src/shaders.gen.h", "w");
 
     make_shader("../src/quad.vert", "g_quad_vert");

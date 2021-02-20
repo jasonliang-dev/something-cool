@@ -39,7 +39,7 @@
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
 
-global const i32 DRAW_SCALE = 4;
+// global const i32 DRAW_SCALE = 4;
 
 global const char *WINDOW_TITLE = "This is a title";
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     bool show_demo_window = true;
     bool show_another_window = false;
 
-    v4 clear_color = {0.45f, 0.55f, 0.60f, 1.00f};
+    v4 clear_color = v4(0.45f, 0.55f, 0.60f, 1.00f);
 
     SDL_Event event;
 
