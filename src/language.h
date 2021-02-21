@@ -2,6 +2,19 @@
 #define internal static
 #define persistent static
 
+#define PI 3.1415926535897f
+
+#define Bytes(n) (n)
+#define Kilobytes(n) ((n) << 10)
+#define Megabytes(n) ((n) << 20)
+#define Gigabytes(n) (((u64)(n)) << 30)
+#define Terabytes(n) (((u64)(n)) << 40)
+
+#define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
+
+#define Min(x, y) (((x) < (y)) ? (x) : (y))
+#define Max(x, y) (((x) > (y)) ? (x) : (y))
+
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -38,7 +51,7 @@ union v2
         f32 height;
     };
 
-    float elements[2];
+    f32 elements[2];
 };
 
 union v3
@@ -66,7 +79,7 @@ union v3
 
     struct
     {
-        f32 ignore1;
+        f32 ignore0;
         v2 yz;
     };
 
@@ -151,4 +164,10 @@ union v4
     };
 
     f32 elements[4];
+};
+
+union m4
+{
+    f32 elements[4][4];
+    f32 flatten[16];
 };

@@ -5,7 +5,7 @@
 #include <float.h>
 #include <stdarg.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <SDL.h> // windows
 #include <SDL_syswm.h>
 #else
@@ -22,6 +22,10 @@
 #define CUTE_TILED_IMPLEMENTATION
 #include <cute_tiled.h>
 
+#define STBI_ONLY_PNG
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #include <gl3w.c>
 
 #include <imgui.cpp>
@@ -33,8 +37,9 @@
 #include <imgui_demo.cpp>
 
 #include "language.h"
-#include "app.h"
+#include "render.h"
 #include "shaders.gen.h"
+#include "app.h"
 
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
@@ -46,6 +51,7 @@ global const char *WINDOW_TITLE = "This is a title";
 global AppState *app = nullptr;
 
 #include "maths.cpp"
+#include "render.cpp"
 
 int main(int argc, char *argv[])
 {
@@ -94,6 +100,9 @@ int main(int argc, char *argv[])
         // load opengl procs
         assert(gl3wInit() == 0);
 
+        SetupRenderer(&app->renderer);
+        app->dog = CreateTexture("data/dog.png");
+
         // init imgui
         {
             IMGUI_CHECKVERSION();
@@ -137,7 +146,7 @@ int main(int argc, char *argv[])
 
         while (SDL_PollEvent(&event) != 0)
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
+            // ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
             {
                 app->running = false;
@@ -217,6 +226,8 @@ int main(int argc, char *argv[])
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        DrawSpriteExt(app->dog, v2(100, 100), 0, v2(4, 4), v2(0, 0));
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);

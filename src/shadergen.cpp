@@ -7,14 +7,14 @@
 
 global FILE *output;
 
-internal void make_shader(const char *in, const char *globalVar)
+internal void MakeShader(const char *in, const char *globalVar)
 {
-    fprintf(output, "global char %s[] = \"\\\n", globalVar);
+    fprintf(output, "global const char *%s = \"\\\n", globalVar);
 
     FILE *f = fopen(in, "r");
 
     char line[4096];
-    while (fgets(line, 4096, f))
+    while (fgets(line, ArrayCount(line), f))
     {
         line[strcspn(line, "\n")] = 0;
         fprintf(output, "%s\\n\\\n", line);
@@ -29,8 +29,9 @@ int main(void)
 {
     output = fopen("../src/shaders.gen.h", "w");
 
-    make_shader("../src/quad.vert", "g_quad_vert");
-    make_shader("../src/quad.frag", "g_quad_frag");
+    MakeShader("../src/quad.vert", "QUAD_VERT");
+    MakeShader("../src/quad.frag", "QUAD_FRAG");
+    MakeShader("../src/sprite.frag", "SPRITE_FRAG");
 
     fclose(output);
 }

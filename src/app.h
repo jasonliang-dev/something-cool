@@ -3,6 +3,9 @@ struct AppState
     SDL_Window *window;
     SDL_GLContext glContext;
 
+    Renderer renderer;
+    Texture dog;
+
     // should this be volatile?
     bool running;
 

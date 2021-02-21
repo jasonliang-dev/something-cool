@@ -1,3 +1,142 @@
+internal u32 CompileGLSL(u32 type, const char *source)
+{
+    u32 shader = glCreateShader(type);
+    glShaderSource(shader, 1, &source, NULL);
+    glCompileShader(shader);
+
+    i32 result;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+
+    if (!result)
+    {
+        i32 length;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+        char message[512];
+        length = Max((u32)length, sizeof(message));
+        glGetShaderInfoLog(shader, length, NULL, message);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Cannot compile shader", message, NULL);
+        *(int *)0 = 0;
+    }
+
+    return shader;
+}
+
+internal GLuint CreateShader(const char *vert, const char *frag)
+{
+    u32 shader = glCreateProgram();
+    u32 vertexShader = CompileGLSL(GL_VERTEX_SHADER, vert);
+    u32 fragmentShader = CompileGLSL(GL_FRAGMENT_SHADER, frag);
+
+    glAttachShader(shader, vertexShader);
+    glAttachShader(shader, fragmentShader);
+    glLinkProgram(shader);
+    glValidateProgram(shader);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shader;
+}
+internal void SetupRenderer(Renderer *renderer)
+{
+    f32 vertices[] = {
+        // xy       tex
+        0.0f, 1.0f, 0.0f, 1.0f, //
+        1.0f, 0.0f, 1.0f, 0.0f, //
+        0.0f, 0.0f, 0.0f, 0.0f, //
+
+        0.0f, 1.0f, 0.0f, 1.0f, //
+        1.0f, 1.0f, 1.0f, 1.0f, //
+        1.0f, 0.0f, 1.0f, 0.0f  //
+    };
+
+    u32 vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &renderer->quadVAO);
+    glBindVertexArray(renderer->quadVAO);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, 0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    {
+        renderer->spriteShader = CreateShader(QUAD_VERT, SPRITE_FRAG);
+        glUseProgram(renderer->spriteShader);
+        glUniform1i(glGetUniformLocation(renderer->spriteShader, "image"), 1);
+
+        m4 projection = M4Orthographic(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
+        glUniformMatrix4fv(glGetUniformLocation(renderer->spriteShader, "projection"), 1, 0,
+                           projection.flatten);
+    }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glUseProgram(0);
+}
+
+internal Texture CreateTexture(char *imagePath)
+{
+    Texture result;
+
+    i32 channels;
+    u8 *imageData = stbi_load(imagePath, &result.width, &result.height, &channels, 0);
+    assert(imageData);
+
+    glGenTextures(1, &result.id);
+    glBindTexture(GL_TEXTURE_2D, result.id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, result.width, result.height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, imageData);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(imageData);
+
+    return result;
+}
+
+internal void DrawSpriteExt(Texture sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+{
+    u32 shader = app->renderer.spriteShader;
+    glUseProgram(shader);
+
+    v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
+    v2 translate = position - (origin * area);
+    m4 model = M4Identity();
+    model *= M4Translate(v3(translate.x, translate.y, 0.0f));
+
+    model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));
+    model *= M4RotateZ(rotation);
+    model *= M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f));
+
+    model *= M4Scale(v3(area.x, area.y, 1.0f));
+
+    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, sprite.id);
+
+    glBindVertexArray(app->renderer.quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+internal void DrawSprite(Texture sprite, v2 position, f32 rotation)
+{
+    DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0, 0));
+}
+
+#if 0
 internal inline Texture Texture_Load(SDL_Surface *surface)
 {
     SDL_Texture *imageTexture = SDL_CreateTextureFromSurface(app->renderer, surface);
@@ -136,3 +275,4 @@ internal void Tilemap_Draw(Tilemap *map, i32 xOffset, i32 yOffset)
         }
     }
 }
+#endif
