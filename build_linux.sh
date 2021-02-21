@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 IGNORED="-Wno-nested-anon-types -Wno-gnu-anonymous-struct"
 FLAGS="-Werror -Wall -Wextra -pedantic-errors $IGNORED"
