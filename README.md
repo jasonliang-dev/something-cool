@@ -1,3 +1,5 @@
+[![build](https://github.com/jasonliang-dev/something-cool/actions/workflows/build.yml/badge.svg)](https://github.com/jasonliang-dev/something-cool/actions/workflows/build.yml)
+
 ## Building for Windows
 
 1. Run `build_win.bat` in this directory
