@@ -57,7 +57,7 @@ global AppState *app = nullptr;
 #include "maths.cpp"
 #include "render.cpp"
 
-f32 main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
