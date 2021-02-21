@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 IGNORED="-Wno-nested-anon-types -Wno-gnu-anonymous-struct"
 FLAGS="-Werror -Wall -Wextra -pedantic-errors $IGNORED"
 
