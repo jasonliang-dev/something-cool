@@ -1,9 +1,11 @@
-#include <stdio.h>
-#include <stdint.h>
 #include <assert.h>
-#include <math.h>
 #include <float.h>
+#include <math.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef _WIN32
 #include <SDL.h> // windows
@@ -29,12 +31,14 @@
 #include <gl3w.c>
 
 #include <imgui.cpp>
-#include <imgui_impl_sdl.cpp>
-#include <imgui_impl_opengl3.cpp>
 #include <imgui_draw.cpp>
 #include <imgui_tables.cpp>
 #include <imgui_widgets.cpp>
 #include <imgui_demo.cpp>
+
+#define IMGUI_IMPL_OPENGL_LOADER_GL3W
+#include <imgui_impl_opengl3.cpp>
+#include <imgui_impl_sdl.cpp>
 
 #include "language.h"
 #include "render.h"
@@ -70,25 +74,19 @@ int main(int argc, char *argv[])
         assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 
 #ifdef __APPLE__
-        // GL 3.2 Core + GLSL 150
-        const char *glsl_version = "#version 150";
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
                             SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
-        // GL 3.0 + GLSL 130
-        const char *glsl_version = "#version 130";
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
         app->window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED,
                                        SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
                                        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI |
@@ -116,7 +114,7 @@ int main(int argc, char *argv[])
 
             // backend
             ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
-            ImGui_ImplOpenGL3_Init(glsl_version);
+            ImGui_ImplOpenGL3_Init("#version 330 core");
         }
 
         // keyboard state
@@ -140,8 +138,7 @@ int main(int argc, char *argv[])
 
         // app->keyDown updates after event loop.
         // must update keyDownPrev before the loop.
-        // (void *) discarding const
-        memcpy((void *)app->keyDownPrev, app->keyDown, app->keyCount);
+        memcpy(const_cast<u8 *>(app->keyDownPrev), app->keyDown, app->keyCount);
 
         while (SDL_PollEvent(&event) != 0)
         {
@@ -204,6 +201,7 @@ int main(int argc, char *argv[])
         SDL_DestroyWindow(app->window);
         SDL_Quit();
 
+        free(const_cast<u8 *>(app->keyDownPrev));
         free(app);
     }
 

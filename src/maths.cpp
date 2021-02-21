@@ -86,9 +86,9 @@ internal inline v2 &operator/=(v2 &left, v2 right)
 internal inline m4 M4Identity()
 {
     m4 m = {{
-        {1.0f},
-        {0.0f, 1.0f},
-        {0.0f, 0.0f, 1.0f},
+        {1.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f, 0.0f},
         {0.0f, 0.0f, 0.0f, 1.0f},
     }};
     return m;
@@ -156,22 +156,28 @@ internal inline m4 M4RotateZ(f32 angle)
 
 internal inline m4 M4Rotate(f32 angle, v3 axis)
 {
-    m4 result = {0};
+    m4 result;
     f32 c = cosf(angle);
     f32 s = sinf(angle);
 
     result.elements[0][0] = c + (axis.x * axis.x) * (1 - c);
     result.elements[0][1] = (axis.x * axis.y) * (1 - c) - (axis.z * s);
     result.elements[0][2] = (axis.x * axis.z) * (1 - c) + (axis.y * s);
+    result.elements[0][3] = 0;
 
     result.elements[1][0] = (axis.y * axis.x) * (1 - c) + (axis.z * s);
     result.elements[1][1] = c + (axis.y * axis.y) * (1 - c);
     result.elements[1][2] = (axis.y * axis.z) * (1 - c) - (axis.x * s);
+    result.elements[1][3] = 0;
 
     result.elements[2][0] = (axis.z * axis.x) * (1 - c) - (axis.y * s);
     result.elements[2][1] = (axis.z * axis.y) * (1 - c) + (axis.x * s);
     result.elements[2][2] = c + (axis.z * axis.z) * (1 - c);
+    result.elements[2][3] = 0;
 
+    result.elements[3][0] = 0;
+    result.elements[3][1] = 0;
+    result.elements[3][2] = 0;
     result.elements[3][3] = 1;
 
     return result;
@@ -179,7 +185,8 @@ internal inline m4 M4Rotate(f32 angle, v3 axis)
 
 internal inline m4 M4Orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
 {
-    m4 result = {0};
+    m4 result;
+    memset(&result, 0, sizeof(m4));
 
     f32 rl = 1.0f / (right - left);
     f32 tb = 1.0f / (top - bottom);
@@ -198,7 +205,7 @@ internal inline m4 M4Orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 
 
 internal inline m4 operator*(m4 a, m4 b)
 {
-    m4 m = {0};
+    m4 m;
 
     for (int y = 0; y < 4; y++)
     {

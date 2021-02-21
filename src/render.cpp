@@ -14,8 +14,9 @@ internal u32 CompileGLSL(u32 type, const char *source)
         char message[512];
         length = Max((u32)length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Cannot compile shader", message, NULL);
-        *(int *)0 = 0;
+        fprintf(stderr, "Cannot compile shader: %s\n", message);
+        fprintf(stderr, "%s\n", source);
+        assert(0);
     }
 
     return shader;
@@ -37,6 +38,7 @@ internal GLuint CreateShader(const char *vert, const char *frag)
 
     return shader;
 }
+
 internal void SetupRenderer(Renderer *renderer)
 {
     f32 vertices[] = {
@@ -79,7 +81,7 @@ internal void SetupRenderer(Renderer *renderer)
     glUseProgram(0);
 }
 
-internal Texture CreateTexture(char *imagePath)
+internal Texture CreateTexture(const char *imagePath)
 {
     Texture result;
 
@@ -131,10 +133,11 @@ internal void DrawSpriteExt(Texture sprite, v2 position, f32 rotation, v2 scale,
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+/*
 internal void DrawSprite(Texture sprite, v2 position, f32 rotation)
 {
     DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0, 0));
-}
+}*/
 
 #if 0
 internal inline Texture Texture_Load(SDL_Surface *surface)
