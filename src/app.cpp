@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
         assert(app);
         app->debug = false;
         app->running = true;
+        app->showImguiDemoWindow = false;
 
         // init sdl
         assert(SDL_Init(SDL_INIT_VIDEO) == 0);
@@ -124,10 +125,8 @@ int main(int argc, char *argv[])
         assert(app->keyDownPrev);
     }
 
-    bool show_demo_window = true;
-    bool show_another_window = false;
-
-    v4 clear_color = v4(0.45f, 0.55f, 0.60f, 1.00f);
+    v2 dogPosition = v2(100, 100);
+    v4 clearColor = v4(0.45f, 0.55f, 0.60f, 1.00f);
 
     SDL_Event event;
 
@@ -158,76 +157,38 @@ int main(int argc, char *argv[])
             }
         }
 
-        // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame(app->window);
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You
-        // can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
+        if (app->showImguiDemoWindow)
         {
-            ImGui::ShowDemoWindow(&show_demo_window);
+            ImGui::ShowDemoWindow(&app->showImguiDemoWindow);
         }
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a
-        // named window.
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            ImGui::Begin("Hello, world!");
 
-            ImGui::Begin(
-                "Hello, world!"); // Create a window called "Hello, world!" and append into it.
+            ImGui::Checkbox("Demo Window", &app->showImguiDemoWindow);
 
-            ImGui::Text("This is some useful text."); // Display some text (you can use a format
-                                                      // strings too)
-            ImGui::Checkbox("Demo Window",
-                            &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::SliderFloat("dog x", &dogPosition.x, 0.0f, SCREEN_WIDTH);
+            ImGui::SliderFloat("dog y", &dogPosition.y, 0.0f, SCREEN_HEIGHT);
 
-            ImGui::SliderFloat("float", &f, 0.0f,
-                               1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color",
-                              (float *)&clear_color); // Edit 3 floats representing a color
-
-            // Buttons return true when clicked (most widgets return
-            // true when edited/activated)
-            if (ImGui::Button("Button"))
-            {
-                counter++;
-            }
-
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::ColorEdit3("clear color", (float *)&clearColor);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            // Pass a pointer to our bool variable (the window will have
-            // a closing button that will clear the bool when clicked)
-            ImGui::Begin("Another Window", &show_another_window);
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-            {
-                show_another_window = false;
-            }
-            ImGui::End();
-        }
-
-        // Rendering
         ImGui::Render();
         ImGuiIO &io = ImGui::GetIO();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        DrawSpriteExt(app->dog, v2(100, 100), 0, v2(4, 4), v2(0, 0));
+        DrawSpriteExt(app->dog, dogPosition, 0, v2(4, 4), v2(0, 0));
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);
