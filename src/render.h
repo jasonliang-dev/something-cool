@@ -12,4 +12,5 @@ struct Renderer
     GLuint ibo;
     GLuint vao;
     GLuint program;
+    GLint u_model;
 };

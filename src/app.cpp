@@ -48,8 +48,6 @@
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
 
-// global const i32 DRAW_SCALE = 4;
-
 global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = nullptr;
@@ -57,6 +55,7 @@ global AppState *app = nullptr;
 #include "utils.cpp"
 #include "maths.cpp"
 #include "render.cpp"
+#include "imgui_style.cpp"
 
 int main(int argc, char *argv[])
 {
@@ -112,7 +111,7 @@ int main(int argc, char *argv[])
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
             // style
-            ImGui::StyleColorsDark();
+            ImGuiCustomDark();
 
             // backend
             ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
@@ -172,13 +171,13 @@ int main(int argc, char *argv[])
 
         if (app->showImguiDemoWindow)
         {
-            ImGui::ShowDemoWindow(&app->showImguiDemoWindow);
+            ImGui::ShowDemoWindow((bool *)&app->showImguiDemoWindow);
         }
 
         {
             ImGui::Begin("Hello, world!");
 
-            ImGui::Checkbox("Demo Window", &app->showImguiDemoWindow);
+            ImGui::Checkbox("Demo Window", (bool *)&app->showImguiDemoWindow);
 
             ImGui::SliderFloat("dog x", &dogPosition.x, 0.0f, (f32)app->windowWidth);
             ImGui::SliderFloat("dog y", &dogPosition.y, 0.0f, (f32)app->windowHeight);

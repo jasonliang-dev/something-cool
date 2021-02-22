@@ -83,7 +83,7 @@ internal inline v2 &operator/=(v2 &left, v2 right)
     return (left = left / right);
 }
 
-internal inline m4 M4Identity()
+internal constexpr m4 M4Identity()
 {
     m4 m = {{
         {1.0f, 0.0f, 0.0f, 0.0f},

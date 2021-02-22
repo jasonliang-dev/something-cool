@@ -5,7 +5,7 @@ internal void GL_CheckForErrorsReal(const char *file, u32 line)
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR)
     {
-        char *error = NULL;
+        const char *error = NULL;
 
         switch (errorCode)
         {
@@ -129,6 +129,8 @@ internal void SetupRenderer(Renderer *renderer)
         glUseProgram(renderer->program);
         glUniform1i(glGetUniformLocation(renderer->program, "image"), 1);
 
+        renderer->u_model = glGetUniformLocation(renderer->program, "model");
+
         UpdateProjections(renderer);
     }
 
@@ -192,7 +194,7 @@ internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v
 
     model *= M4Scale(v3(area.x, area.y, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, 0, model.flatten);
+    glUniformMatrix4fv(app->renderer.u_model, 1, 0, model.flatten);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, sprite.id);
