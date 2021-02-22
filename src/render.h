@@ -5,6 +5,12 @@ struct Texture
     i32 height;
 };
 
+struct TextureVertex
+{
+    v2 position;
+    v2 texCoord;
+};
+
 struct Renderer
 {
     i32 maxTextureUnits;

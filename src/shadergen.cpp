@@ -32,6 +32,8 @@ int main(void)
     MakeShader("../src/quad.vert", "QUAD_VERT");
     MakeShader("../src/quad.frag", "QUAD_FRAG");
     MakeShader("../src/sprite.frag", "SPRITE_FRAG");
+    MakeShader("../src/texture.vert", "TEXTURE_VERT");
+    MakeShader("../src/texture.frag", "TEXTURE_FRAG");
 
     fclose(output);
 }

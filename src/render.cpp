@@ -85,7 +85,7 @@ internal void UpdateProjections(Renderer *renderer)
 {
     m4 projection =
         M4Orthographic(0.0f, (f32)app->windowWidth, (f32)app->windowHeight, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(renderer->program, "projection"), 1, 0,
+    glUniformMatrix4fv(glGetUniformLocation(renderer->program, "u_Projection"), 1, 0,
                        projection.flatten);
 }
 
@@ -96,17 +96,22 @@ internal void SetupRenderer(Renderer *renderer)
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    f32 vertices[] = {
-        // xy       tex
-        0.0f, 1.0f, 0.0f, 1.0f, //
-        1.0f, 0.0f, 1.0f, 0.0f, //
-        0.0f, 0.0f, 0.0f, 0.0f, //
-        1.0f, 1.0f, 1.0f, 1.0f, //
+    TextureVertex vertices[] = {
+        {v2(0, 1), v2(0, 1)},
+        {v2(1, 0), v2(1, 0)},
+        {v2(0, 0), v2(0, 0)},
+        {v2(1, 1), v2(1, 1)},
     };
 
     glGenBuffers(1, &renderer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0); // a_Position
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), 0);
+    glEnableVertexAttribArray(1); // a_TexCoord
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, texCoord));
 
     u32 indices[] = {
         0, 1, 2, // top left triangle
@@ -117,19 +122,15 @@ internal void SetupRenderer(Renderer *renderer)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // vertex data layout
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, 0);
-
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
     {
         renderer->program = CreateShaderProgram(QUAD_VERT, SPRITE_FRAG);
         glUseProgram(renderer->program);
-        glUniform1i(glGetUniformLocation(renderer->program, "image"), 1);
+        glUniform1i(glGetUniformLocation(renderer->program, "u_Image"), 1);
 
-        renderer->u_model = glGetUniformLocation(renderer->program, "model");
+        renderer->u_model = glGetUniformLocation(renderer->program, "u_Model");
 
         UpdateProjections(renderer);
     }
@@ -173,8 +174,6 @@ internal Texture CreateTexture(const char *imagePath)
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(imageData);
 
-    GL_CheckForErrors();
-
     return result;
 }
 
@@ -201,7 +200,6 @@ internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v
 
     glBindVertexArray(app->renderer.vao);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    GL_CheckForErrors();
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }

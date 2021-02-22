@@ -202,6 +202,8 @@ int main(int argc, char *argv[])
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);
+
+        GL_CheckForErrors();
     }
 
     // free all resources
