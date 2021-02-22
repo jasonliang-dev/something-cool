@@ -6,10 +6,12 @@ struct AppState
     Renderer renderer;
     Texture dog;
 
-    // should this be volatile?
-    bool running;
+    i32 windowWidth;
+    i32 windowHeight;
 
-    bool debug;
+    // should this be volatile?
+    b32 running;
+
     i32 keyCount;
     const u8 *keyDown;
     const u8 *keyDownPrev;

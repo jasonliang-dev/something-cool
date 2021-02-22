@@ -54,6 +54,7 @@ global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = nullptr;
 
+#include "utils.cpp"
 #include "maths.cpp"
 #include "render.cpp"
 
@@ -66,7 +67,6 @@ int main(int argc, char *argv[])
         // init app
         app = (AppState *)malloc(sizeof(AppState));
         assert(app);
-        app->debug = false;
         app->running = true;
         app->showImguiDemoWindow = false;
 
@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+        app->windowWidth = SCREEN_WIDTH;
+        app->windowHeight = SCREEN_HEIGHT;
         app->window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED,
                                        SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
                                        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI |
@@ -124,6 +126,7 @@ int main(int argc, char *argv[])
     }
 
     v2 dogPosition = v2(100, 100);
+    f32 rotation = 0.0f;
     v4 clearColor = v4(0.45f, 0.55f, 0.60f, 1.00f);
 
     SDL_Event event;
@@ -138,19 +141,28 @@ int main(int argc, char *argv[])
 
         // app->keyDown updates after event loop.
         // must update keyDownPrev before the loop.
-        memcpy(const_cast<u8 *>(app->keyDownPrev), app->keyDown, app->keyCount);
+        memcpy((void *)app->keyDownPrev, app->keyDown, app->keyCount);
 
         while (SDL_PollEvent(&event) != 0)
         {
-            // ImGui_ImplSDL2_ProcessEvent(&event);
+            ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
             {
                 app->running = false;
             }
-            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-                     event.window.windowID == SDL_GetWindowID(app->window))
+            else if (event.type == SDL_WINDOWEVENT)
             {
-                app->running = false;
+                if (event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                    event.window.windowID == SDL_GetWindowID(app->window))
+                {
+                    app->running = false;
+                }
+                else if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    app->windowWidth = event.window.data1;
+                    app->windowHeight = event.window.data2;
+                    UpdateProjections(&app->renderer);
+                }
             }
         }
 
@@ -168,8 +180,10 @@ int main(int argc, char *argv[])
 
             ImGui::Checkbox("Demo Window", &app->showImguiDemoWindow);
 
-            ImGui::SliderFloat("dog x", &dogPosition.x, 0.0f, SCREEN_WIDTH);
-            ImGui::SliderFloat("dog y", &dogPosition.y, 0.0f, SCREEN_HEIGHT);
+            ImGui::SliderFloat("dog x", &dogPosition.x, 0.0f, (f32)app->windowWidth);
+            ImGui::SliderFloat("dog y", &dogPosition.y, 0.0f, (f32)app->windowHeight);
+
+            ImGui::SliderFloat("dog rot", &rotation, 0.0f, PI * 2);
 
             ImGui::ColorEdit3("clear color", (float *)&clearColor);
 
@@ -185,7 +199,7 @@ int main(int argc, char *argv[])
         glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        DrawSpriteExt(app->dog, dogPosition, 0, v2(4, 4), v2(0, 0));
+        DrawTexture(app->dog, dogPosition, rotation, v2(4, 4), v2(0, 0));
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);
@@ -197,11 +211,13 @@ int main(int argc, char *argv[])
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
 
+        DestroyRenderer(&app->renderer);
+
         SDL_GL_DeleteContext(app->glContext);
         SDL_DestroyWindow(app->window);
         SDL_Quit();
 
-        free(const_cast<u8 *>(app->keyDownPrev));
+        free((void *)app->keyDownPrev);
         free(app);
     }
 

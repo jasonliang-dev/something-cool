@@ -1,6 +1,47 @@
-internal u32 CompileGLSL(u32 type, const char *source)
+#define GL_CheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
+
+internal void GL_CheckForErrorsReal(const char *file, u32 line)
 {
-    u32 shader = glCreateShader(type);
+    GLenum errorCode;
+    while ((errorCode = glGetError()) != GL_NO_ERROR)
+    {
+        char *error = NULL;
+
+        switch (errorCode)
+        {
+        case GL_INVALID_ENUM:
+            error = "INVALID_ENUM";
+            break;
+        case GL_INVALID_VALUE:
+            error = "INVALID_VALUE";
+            break;
+        case GL_INVALID_OPERATION:
+            error = "INVALID_OPERATION";
+            break;
+        case GL_STACK_OVERFLOW:
+            error = "STACK_OVERFLOW";
+            break;
+        case GL_STACK_UNDERFLOW:
+            error = "STACK_UNDERFLOW";
+            break;
+        case GL_OUT_OF_MEMORY:
+            error = "OUT_OF_MEMORY";
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            error = "INVALID_FRAMEBUFFER_OPERATION";
+            break;
+        }
+
+        if (error)
+        {
+            DisplayError("%s: %s line %d\n", error, file, line);
+        }
+    }
+}
+
+internal GLuint CompileGLSL(u32 type, const char *source)
+{
+    GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
 
@@ -14,7 +55,8 @@ internal u32 CompileGLSL(u32 type, const char *source)
         char message[512];
         length = Max((u32)length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
-        fprintf(stderr, "Cannot compile shader: %s\n", message);
+
+        DisplayError("Cannot compile shader: %s\n", message);
         fprintf(stderr, "%s\n", source);
         assert(0);
     }
@@ -22,43 +64,60 @@ internal u32 CompileGLSL(u32 type, const char *source)
     return shader;
 }
 
-internal GLuint CreateShader(const char *vert, const char *frag)
+internal GLuint CreateShaderProgram(const char *vert, const char *frag)
 {
-    u32 shader = glCreateProgram();
-    u32 vertexShader = CompileGLSL(GL_VERTEX_SHADER, vert);
-    u32 fragmentShader = CompileGLSL(GL_FRAGMENT_SHADER, frag);
+    GLuint program = glCreateProgram();
+    GLuint vertexShader = CompileGLSL(GL_VERTEX_SHADER, vert);
+    GLuint fragmentShader = CompileGLSL(GL_FRAGMENT_SHADER, frag);
 
-    glAttachShader(shader, vertexShader);
-    glAttachShader(shader, fragmentShader);
-    glLinkProgram(shader);
-    glValidateProgram(shader);
+    glAttachShader(program, vertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+    glValidateProgram(program);
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
-    return shader;
+    return program;
+}
+
+internal void UpdateProjections(Renderer *renderer)
+{
+    m4 projection =
+        M4Orthographic(0.0f, (f32)app->windowWidth, (f32)app->windowHeight, 0.0f, -1.0f, 1.0f);
+    glUniformMatrix4fv(glGetUniformLocation(renderer->program, "projection"), 1, 0,
+                       projection.flatten);
 }
 
 internal void SetupRenderer(Renderer *renderer)
 {
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
+
+    glGenVertexArrays(1, &renderer->vao);
+    glBindVertexArray(renderer->vao);
+
     f32 vertices[] = {
         // xy       tex
         0.0f, 1.0f, 0.0f, 1.0f, //
         1.0f, 0.0f, 1.0f, 0.0f, //
         0.0f, 0.0f, 0.0f, 0.0f, //
-
-        0.0f, 1.0f, 0.0f, 1.0f, //
         1.0f, 1.0f, 1.0f, 1.0f, //
-        1.0f, 0.0f, 1.0f, 0.0f  //
     };
 
-    u32 vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glGenBuffers(1, &renderer->vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &renderer->quadVAO);
-    glBindVertexArray(renderer->quadVAO);
+    u32 indices[] = {
+        0, 1, 2, // top left triangle
+        0, 3, 1  // bottom right triangle
+    };
+
+    glGenBuffers(1, &renderer->ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // vertex data layout
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(f32) * 4, 0);
 
@@ -66,19 +125,28 @@ internal void SetupRenderer(Renderer *renderer)
     glBindVertexArray(0);
 
     {
-        renderer->spriteShader = CreateShader(QUAD_VERT, SPRITE_FRAG);
-        glUseProgram(renderer->spriteShader);
-        glUniform1i(glGetUniformLocation(renderer->spriteShader, "image"), 1);
+        renderer->program = CreateShaderProgram(QUAD_VERT, SPRITE_FRAG);
+        glUseProgram(renderer->program);
+        glUniform1i(glGetUniformLocation(renderer->program, "image"), 1);
 
-        m4 projection = M4Orthographic(0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, -1.0f, 1.0f);
-        glUniformMatrix4fv(glGetUniformLocation(renderer->spriteShader, "projection"), 1, 0,
-                           projection.flatten);
+        UpdateProjections(renderer);
     }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(0);
+
+    GL_CheckForErrors();
+}
+
+internal void DestroyRenderer(Renderer *renderer)
+{
+    glDeleteProgram(renderer->program);
+
+    glDeleteBuffers(1, &renderer->vbo);
+    glDeleteBuffers(1, &renderer->ibo);
+    glDeleteVertexArrays(1, &renderer->vao);
 }
 
 internal Texture CreateTexture(const char *imagePath)
@@ -103,13 +171,15 @@ internal Texture CreateTexture(const char *imagePath)
     glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(imageData);
 
+    GL_CheckForErrors();
+
     return result;
 }
 
-internal void DrawSpriteExt(Texture sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
-    u32 shader = app->renderer.spriteShader;
-    glUseProgram(shader);
+    GLuint program = app->renderer.program;
+    glUseProgram(program);
 
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     v2 translate = position - (origin * area);
@@ -122,22 +192,17 @@ internal void DrawSpriteExt(Texture sprite, v2 position, f32 rotation, v2 scale,
 
     model *= M4Scale(v3(area.x, area.y, 1.0f));
 
-    glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, 0, model.flatten);
+    glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, 0, model.flatten);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, sprite.id);
 
-    glBindVertexArray(app->renderer.quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(app->renderer.vao);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+    GL_CheckForErrors();
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
-
-/*
-internal void DrawSprite(Texture sprite, v2 position, f32 rotation)
-{
-    DrawSpriteExt(sprite, position, rotation, v2(1, 1), v2(0, 0));
-}*/
 
 #if 0
 internal inline Texture Texture_Load(SDL_Surface *surface)

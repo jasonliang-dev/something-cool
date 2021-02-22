@@ -7,6 +7,9 @@ struct Texture
 
 struct Renderer
 {
-    GLuint quadVAO;
-    GLuint spriteShader;
+    i32 maxTextureUnits;
+    GLuint vbo;
+    GLuint ibo;
+    GLuint vao;
+    GLuint program;
 };
