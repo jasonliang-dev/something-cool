@@ -54,6 +54,7 @@ global AppState *app = nullptr;
 
 #include "utils.cpp"
 #include "maths.cpp"
+#include "gl.cpp"
 #include "render.cpp"
 #include "imgui_style.cpp"
 
@@ -72,13 +73,17 @@ int main(int argc, char *argv[])
         // init sdl
         assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 
+        i32 glContextFlags = 0;
 #ifdef __APPLE__
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,
-                            SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
-#else
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
+        // Always required on Mac
+        glContextFlags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
 #endif
 
+#ifdef DEBUG
+        glContextFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
+#endif
+
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, glContextFlags);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -99,6 +104,22 @@ int main(int argc, char *argv[])
 
         // load opengl procs
         assert(gl3wInit() == 0);
+
+#ifdef DEBUG
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+        if (glDebugMessageCallback)
+        {
+            glDebugMessageCallback(GL_MessageCallback, 0);
+        }
+
+        if (glDebugMessageControl)
+        {
+            glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0,
+                                  NULL, GL_FALSE);
+        }
+#endif
 
         SetupRenderer(&app->renderer);
         app->dog = CreateTexture("data/dog.png");

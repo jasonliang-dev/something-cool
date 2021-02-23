@@ -1,44 +1,3 @@
-#define GL_CheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
-
-internal void GL_CheckForErrorsReal(const char *file, u32 line)
-{
-    GLenum errorCode;
-    while ((errorCode = glGetError()) != GL_NO_ERROR)
-    {
-        const char *error = NULL;
-
-        switch (errorCode)
-        {
-        case GL_INVALID_ENUM:
-            error = "INVALID_ENUM";
-            break;
-        case GL_INVALID_VALUE:
-            error = "INVALID_VALUE";
-            break;
-        case GL_INVALID_OPERATION:
-            error = "INVALID_OPERATION";
-            break;
-        case GL_STACK_OVERFLOW:
-            error = "STACK_OVERFLOW";
-            break;
-        case GL_STACK_UNDERFLOW:
-            error = "STACK_UNDERFLOW";
-            break;
-        case GL_OUT_OF_MEMORY:
-            error = "OUT_OF_MEMORY";
-            break;
-        case GL_INVALID_FRAMEBUFFER_OPERATION:
-            error = "INVALID_FRAMEBUFFER_OPERATION";
-            break;
-        }
-
-        if (error)
-        {
-            DisplayError("%s: %s line %d\n", error, file, line);
-        }
-    }
-}
-
 internal GLuint CompileGLSL(u32 type, const char *source)
 {
     GLuint shader = glCreateShader(type);
@@ -83,10 +42,12 @@ internal GLuint CreateShaderProgram(const char *vert, const char *frag)
 
 internal void UpdateProjections(Renderer *renderer)
 {
+    glUseProgram(renderer->program);
+
     m4 projection =
         M4Orthographic(0.0f, (f32)app->windowWidth, (f32)app->windowHeight, 0.0f, -1.0f, 1.0f);
-    glUniformMatrix4fv(glGetUniformLocation(renderer->program, "u_Projection"), 1, 0,
-                       projection.flatten);
+    GLint u_Projection = glGetUniformLocation(renderer->program, "u_Projection");
+    glUniformMatrix4fv(u_Projection, 1, 0, projection.flatten);
 }
 
 internal void SetupRenderer(Renderer *renderer)

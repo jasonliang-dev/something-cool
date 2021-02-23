@@ -1,6 +1,6 @@
 @echo off
 
-set BUILD_OPTS= -DWIN32_LEAN_AND_MEAN=1 -D_CRT_SECURE_NO_WARNINGS
+set BUILD_OPTS= -DDEBUG -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS
 
 set COMPILE_FLAGS= -nologo -W4 -wd4201 -wd4459 -Z7
 REM 4201: unnamed struct/union (definition of v2, v3, v4)

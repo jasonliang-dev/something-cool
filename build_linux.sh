@@ -3,7 +3,7 @@
 set -e
 
 IGNORED="-Wno-nested-anon-types -Wno-gnu-anonymous-struct"
-FLAGS="-Werror -Wall -Wextra -pedantic-errors $IGNORED"
+FLAGS="-DDEBUG -Werror -Wall -Wextra -pedantic-errors $IGNORED"
 
 cd build
 
