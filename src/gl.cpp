@@ -1,4 +1,8 @@
+#ifdef DEBUG
 #define GL_CheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
+#else
+#define GL_CheckForErrors()
+#endif
 
 internal void GL_CheckForErrorsReal(const char *file, u32 line)
 {
@@ -41,14 +45,64 @@ internal void GL_CheckForErrorsReal(const char *file, u32 line)
 void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
                                  GLsizei length, const GLchar *message, const void *userParam)
 {
-    (void)source;
-    (void)type;
     (void)id;
     (void)length;
     (void)userParam;
 
-    const char *severityString = nullptr;
+    const char *sourceString;
+    switch (source)
+    {
+    case GL_DEBUG_SOURCE_API:
+        sourceString = "API";
+        break;
 
+    case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+        sourceString = "WINDOW SYSTEM";
+        break;
+
+    case GL_DEBUG_SOURCE_SHADER_COMPILER:
+        sourceString = "SHADER COMPILER";
+        break;
+
+    case GL_DEBUG_SOURCE_THIRD_PARTY:
+        sourceString = "THIRD PARTY";
+        break;
+
+    case GL_DEBUG_SOURCE_APPLICATION:
+        sourceString = "APPLICATION";
+        break;
+
+    case GL_DEBUG_SOURCE_OTHER:
+    default:
+        sourceString = "UNKNOWN";
+        break;
+    }
+
+    const char *typeString;
+    switch (type)
+    {
+    case GL_DEBUG_TYPE_ERROR:
+        typeString = "ERROR";
+        break;
+    case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+        typeString = "DEPRECATED_BEHAVIOR";
+        break;
+    case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+        typeString = "UNDEFINED_BEHAVIOR";
+        break;
+    case GL_DEBUG_TYPE_PORTABILITY:
+        typeString = "PORTABILITY";
+        break;
+    case GL_DEBUG_TYPE_PERFORMANCE:
+        typeString = "PERFORMANCE";
+        break;
+    case GL_DEBUG_TYPE_OTHER:
+    default:
+        typeString = "OTHER";
+        break;
+    }
+
+    const char *severityString;
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_HIGH:
@@ -61,11 +115,12 @@ void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum s
         severityString = "LOW";
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
+    default:
         severityString = "NOTIFICATION";
         break;
     }
 
-    assert(severityString);
-    fprintf(stderr, "OpenGL (%s): %s\n", severityString, message);
+    fprintf(stderr, "OpenGL: %s\nfrom: %s, type: %s, severity: %s\n", message, sourceString,
+            typeString, severityString);
 }
 #endif

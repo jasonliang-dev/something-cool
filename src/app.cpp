@@ -103,22 +103,13 @@ int main(int argc, char *argv[])
 
         // load opengl procs
         assert(gladLoadGLLoader(SDL_GL_GetProcAddress));
-        printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
 
 #ifdef DEBUG
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-
-        if (glDebugMessageCallback)
-        {
-            glDebugMessageCallback(GL_MessageCallback, 0);
-        }
-
-        if (glDebugMessageControl)
-        {
-            glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0,
-                                  NULL, GL_FALSE);
-        }
+        glDebugMessageCallback(GL_MessageCallback, 0);
+        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
+                              GL_FALSE);
 #endif
 
         SetupRenderer(&app->renderer);
@@ -200,10 +191,8 @@ int main(int argc, char *argv[])
 
             ImGui::Checkbox("Demo Window", (bool *)&app->showImguiDemoWindow);
 
-            ImGui::SliderFloat("dog x", &dogPosition.x, 0.0f, (f32)app->windowWidth);
-            ImGui::SliderFloat("dog y", &dogPosition.y, 0.0f, (f32)app->windowHeight);
-
-            ImGui::SliderFloat("dog rot", &rotation, 0.0f, PI * 2);
+            ImGui::DragFloat2("dog pos", (f32 *)&dogPosition);
+            ImGui::DragFloat("dog rot", &rotation, 0.01f);
 
             ImGui::ColorEdit3("clear color", (float *)&clearColor);
 

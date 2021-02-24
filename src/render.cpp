@@ -146,7 +146,7 @@ internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v
 
     v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
     v2 translate = position - (origin * area);
-    m4 model = M4Identity();
+    m4 model = m4(1);
     model *= M4Translate(v3(translate.x, translate.y, 0.0f));
 
     model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));

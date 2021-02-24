@@ -2,13 +2,14 @@
 
 set -e
 
-IGNORED="-Wno-nested-anon-types -Wno-gnu-anonymous-struct"
-FLAGS="-DDEBUG -Werror -Wall -Wextra -pedantic-errors $IGNORED"
+FLAGS="-DDEBUG -std=c++11 \
+    -Werror -Wall -Wextra -pedantic-errors \
+    -Wno-nested-anon-types -Wno-gnu-anonymous-struct \
+"
 
 cd build
 
 clang++ ../src/shadergen.cpp -o shadergen $FLAGS
-
 ./shadergen
 
 clang++ -I../third -I../third/glad -I../third/imgui \

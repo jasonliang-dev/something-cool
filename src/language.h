@@ -32,12 +32,7 @@ typedef double f64;
 
 union v2
 {
-    v2()
-    {
-        x = y = 0;
-    }
-
-    v2(f32 xx, f32 yy)
+    v2(f32 xx = 0.0f, f32 yy = 0.0f)
     {
         x = xx;
         y = yy;
@@ -60,12 +55,7 @@ union v2
 
 union v3
 {
-    v3()
-    {
-        x = y = z = 0;
-    }
-
-    v3(f32 xx, f32 yy, f32 zz)
+    v3(f32 xx = 0.0f, f32 yy = 0.0f, f32 zz = 0.0f)
     {
         x = xx;
         y = yy;
@@ -99,12 +89,7 @@ union v3
 
 union v4
 {
-    v4()
-    {
-        x = y = z = w = 0;
-    }
-
-    v4(f32 xx, f32 yy, f32 zz, f32 ww)
+    v4(f32 xx = 0.0f, f32 yy = 0.0f, f32 zz = 0.0f, f32 ww = 0.0f)
     {
         x = xx;
         y = yy;
@@ -172,6 +157,29 @@ union v4
 
 union m4
 {
+    m4(f32 diagonal = 0.0f)
+    {
+        elements[0][0] = diagonal;
+        elements[0][1] = 0.0f;
+        elements[0][2] = 0.0f;
+        elements[0][3] = 0.0f;
+
+        elements[1][0] = 0.0f;
+        elements[1][1] = diagonal;
+        elements[1][2] = 0.0f;
+        elements[1][3] = 0.0f;
+
+        elements[2][0] = 0.0f;
+        elements[2][1] = 0.0f;
+        elements[2][2] = diagonal;
+        elements[2][3] = 0.0f;
+
+        elements[3][0] = 0.0f;
+        elements[3][1] = 0.0f;
+        elements[3][2] = 0.0f;
+        elements[3][3] = diagonal;
+    }
+
     f32 elements[4][4];
     f32 flatten[16];
 };
