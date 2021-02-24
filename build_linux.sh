@@ -11,5 +11,5 @@ clang++ ../src/shadergen.cpp -o shadergen $FLAGS
 
 ./shadergen
 
-clang++ -I../third -I../third/gl3w -I../third/imgui \
+clang++ -I../third -I../third/glad -I../third/imgui \
     ../src/app.cpp -lSDL2 -lGL -ldl -o app $FLAGS

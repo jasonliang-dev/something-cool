@@ -8,7 +8,7 @@ REM 4459: declaration of `foo` hides global (thanks imgui)
 
 set INCLUDE_DIRS=^
     /I ../third^
-    /I ../third/gl3w^
+    /I ../third/glad^
     /I ../third/imgui^
     /I ../third/sdl2/include
 
@@ -21,7 +21,7 @@ set LIBRARY_LINK=^
 set LIBRARY_PATHS=^
     /LIBPATH:../third/sdl2/lib/x64
 
-set LINK_FLAGS= /SUBSYSTEM:WINDOWS -opt:ref -incremental:no -Debug:fastlink
+set LINK_FLAGS= /SUBSYSTEM:CONSOLE -opt:ref -incremental:no -Debug:fastlink
 
 if not exist build mkdir build
 pushd build

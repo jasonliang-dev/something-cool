@@ -15,7 +15,7 @@
 #include <SDL2/SDL_syswm.h>
 #endif
 
-#include <GL/gl3w.h>
+#include <glad/glad.h>
 
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
@@ -28,7 +28,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#include <gl3w.c>
+#include <glad.c>
 
 #include <imgui.cpp>
 #include <imgui_draw.cpp>
@@ -36,7 +36,6 @@
 #include <imgui_widgets.cpp>
 #include <imgui_demo.cpp>
 
-#define IMGUI_IMPL_OPENGL_LOADER_GL3W
 #include <imgui_impl_opengl3.cpp>
 #include <imgui_impl_sdl.cpp>
 
@@ -103,7 +102,8 @@ int main(int argc, char *argv[])
         SDL_GL_SetSwapInterval(0); // vsync
 
         // load opengl procs
-        assert(gl3wInit() == 0);
+        assert(gladLoadGLLoader(SDL_GL_GetProcAddress));
+        printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
 
 #ifdef DEBUG
         glEnable(GL_DEBUG_OUTPUT);

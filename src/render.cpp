@@ -53,6 +53,7 @@ internal void UpdateProjections(Renderer *renderer)
 internal void SetupRenderer(Renderer *renderer)
 {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
+    assert(renderer->maxTextureUnits == 32);
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
@@ -160,6 +161,7 @@ internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v
     glBindTexture(GL_TEXTURE_2D, sprite.id);
 
     glBindVertexArray(app->renderer.vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->renderer.ibo);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);

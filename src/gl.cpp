@@ -66,6 +66,6 @@ void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum s
     }
 
     assert(severityString);
-    DisplayError("OpenGL (%s): %s\n", severityString, message);
+    fprintf(stderr, "OpenGL (%s): %s\n", severityString, message);
 }
 #endif
