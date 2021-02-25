@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
                               GL_FALSE);
 #endif
 
-        SetupRenderer(&app->renderer);
+        Render_Create(&app->renderer);
         app->dog = CreateTexture("data/dog.png");
 
         // init imgui
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
                 {
                     app->windowWidth = event.window.data1;
                     app->windowHeight = event.window.data2;
-                    UpdateProjections(&app->renderer);
+                    UpdateProjection(&app->renderer);
                 }
             }
         }
@@ -208,7 +208,9 @@ int main(int argc, char *argv[])
         glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        DrawTexture(app->dog, dogPosition, rotation, v2(4, 4), v2(0, 0));
+        Render_Begin(&app->renderer, v2(0, 0));
+        DrawTexture(app->dog, dogPosition, rotation);
+        Render_Flush(&app->renderer);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);
@@ -222,7 +224,7 @@ int main(int argc, char *argv[])
         ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
 
-        DestroyRenderer(&app->renderer);
+        Render_Destroy(&app->renderer);
 
         SDL_GL_DeleteContext(app->glContext);
         SDL_DestroyWindow(app->window);

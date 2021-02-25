@@ -40,7 +40,7 @@ internal GLuint CreateShaderProgram(const char *vert, const char *frag)
     return program;
 }
 
-internal void UpdateProjections(Renderer *renderer)
+internal void UpdateProjection(Renderer *renderer)
 {
     glUseProgram(renderer->program);
 
@@ -50,68 +50,205 @@ internal void UpdateProjections(Renderer *renderer)
     glUniformMatrix4fv(u_Projection, 1, 0, projection.flatten);
 }
 
-internal void SetupRenderer(Renderer *renderer)
+internal void Render_Create(Renderer *renderer)
 {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
+    // idk how to change the fragment shader to accommodate for this number
     assert(renderer->maxTextureUnits == 32);
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    TextureVertex vertices[] = {
-        {v2(0, 1), v2(0, 1)},
-        {v2(1, 0), v2(1, 0)},
-        {v2(0, 0), v2(0, 0)},
-        {v2(1, 1), v2(1, 1)},
-    };
-
     glGenBuffers(1, &renderer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVertex) * MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0); // a_Position
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), 0);
-    glEnableVertexAttribArray(1); // a_TexCoord
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, position));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texCoord));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, texIndex));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, tilingFactor));
 
-    u32 indices[] = {
-        0, 1, 2, // top left triangle
-        0, 3, 1  // bottom right triangle
-    };
+    u32 *indices = (u32 *)malloc(sizeof(u32) * MAX_INDICES);
+    for (i32 i = 0, vStride = 0; i < MAX_INDICES; i += 6, vStride += 4)
+    {
+        indices[i + 0] = vStride;
+        indices[i + 1] = vStride + 1;
+        indices[i + 2] = vStride + 2;
+
+        indices[i + 3] = vStride + 0;
+        indices[i + 4] = vStride + 3;
+        indices[i + 5] = vStride + 1;
+    }
 
     glGenBuffers(1, &renderer->ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    free(indices);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    renderer->program = CreateShaderProgram(TEXTURE_VERT, TEXTURE_FRAG);
+    glUseProgram(renderer->program);
+
+    i32 *samplers = (i32 *)malloc(sizeof(i32) * renderer->maxTextureUnits);
+    for (i32 i = 0; i < renderer->maxTextureUnits; ++i)
     {
-        renderer->program = CreateShaderProgram(QUAD_VERT, SPRITE_FRAG);
-        glUseProgram(renderer->program);
-        glUniform1i(glGetUniformLocation(renderer->program, "u_Image"), 1);
-
-        renderer->u_model = glGetUniformLocation(renderer->program, "u_Model");
-
-        UpdateProjections(renderer);
+        samplers[i] = i;
     }
+    glUniform1iv(glGetUniformLocation(renderer->program, "u_Textures"), renderer->maxTextureUnits,
+                 samplers);
+    free(samplers);
+
+    renderer->u_View = glGetUniformLocation(renderer->program, "u_View");
+
+    UpdateProjection(renderer);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(0);
 
+    renderer->vertexPositions[0] = v4(-0.5f, -0.5f, 0.0f, 1.0f);
+    renderer->vertexPositions[1] = v4(0.5f, -0.5f, 0.0f, 1.0f);
+    renderer->vertexPositions[2] = v4(0.5f, 0.5f, 0.0f, 1.0f);
+    renderer->vertexPositions[3] = v4(-0.5f, 0.5f, 0.0f, 1.0f);
+
+    renderer->texCoords[0] = v2(0.0f, 0.0f);
+    renderer->texCoords[1] = v2(1.0f, 0.0f);
+    renderer->texCoords[2] = v2(1.0f, 1.0f);
+    renderer->texCoords[3] = v2(0.0f, 1.0f);
+
+    renderer->textureIDs = (GLuint *)malloc(sizeof(GLuint) * renderer->maxTextureUnits);
+    renderer->vertices = (TextureVertex *)malloc(sizeof(TextureVertex) * MAX_VERTICES);
+
     GL_CheckForErrors();
 }
 
-internal void DestroyRenderer(Renderer *renderer)
+internal void Render_Destroy(Renderer *renderer)
 {
     glDeleteProgram(renderer->program);
 
     glDeleteBuffers(1, &renderer->vbo);
     glDeleteBuffers(1, &renderer->ibo);
     glDeleteVertexArrays(1, &renderer->vao);
+
+    free(renderer->textureIDs);
+    free(renderer->vertices);
+
+    GL_CheckForErrors();
+}
+
+internal void Render_Begin(Renderer *renderer, v2 camera)
+{
+    glUseProgram(renderer->program);
+    glUniformMatrix4fv(app->renderer.u_View, 1, 0, M4Translate(v3(camera, 0.0f)).flatten);
+
+    renderer->currentVertex = renderer->vertices;
+    renderer->textureCount = 1;
+
+    GL_CheckForErrors();
+}
+
+internal void Render_Flush(Renderer *renderer)
+{
+    if (renderer->currentVertex == renderer->vertices)
+    {
+        return;
+    }
+
+    i32 bufferSize = (i32)((u8 *)renderer->currentVertex - (u8 *)renderer->vertices);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
+    GL_CheckForErrors();
+    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, renderer->vertices);
+    GL_CheckForErrors();
+
+    for (i32 i = 0; i < renderer->textureCount; ++i)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        GL_CheckForErrors();
+        glBindTexture(GL_TEXTURE_2D, renderer->textureIDs[i]);
+        GL_CheckForErrors();
+    }
+
+    glBindVertexArray(app->renderer.vao);
+    GL_CheckForErrors();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->renderer.ibo);
+    GL_CheckForErrors();
+    glDrawElements(GL_TRIANGLES, bufferSize * 6, GL_UNSIGNED_INT, nullptr);
+    GL_CheckForErrors();
+}
+
+internal void Render_DrawTexture(Renderer *renderer, Texture texture, m4 transform,
+                                 float tilingFactor, v4 tintColor)
+{
+    ptrdiff_t delta = renderer->currentVertex - renderer->vertices;
+    if (delta == MAX_VERTICES)
+    {
+        Render_Flush(renderer);
+        renderer->currentVertex = renderer->vertices;
+        renderer->textureCount = 1;
+    }
+
+    i32 texIndex = 0;
+
+    for (i32 i = 1; i < renderer->maxTextureUnits; ++i)
+    {
+        if (renderer->textureIDs[i] == texture.id)
+        {
+            texIndex = i;
+            break;
+        }
+    }
+
+    if (texIndex == 0)
+    {
+        if (renderer->textureCount == renderer->maxTextureUnits)
+        {
+            Render_Flush(renderer);
+            renderer->currentVertex = renderer->vertices;
+            renderer->textureCount = 1;
+        }
+
+        texIndex = renderer->textureCount++;
+        renderer->textureIDs[texIndex] = texture.id;
+    }
+
+    for (i32 i = 0; i < 4; ++i)
+    {
+        renderer->currentVertex->position = (renderer->vertexPositions[i] * transform).xyz;
+        renderer->currentVertex->color = tintColor;
+        renderer->currentVertex->texCoord = renderer->texCoords[i];
+        renderer->currentVertex->texIndex = (f32)texIndex;
+        renderer->currentVertex->tilingFactor = tilingFactor;
+        renderer->currentVertex++;
+    }
+}
+
+internal void DrawTexture(Texture texture, v2 position, f32 rotation)
+{
+    v2 area = v2((f32)texture.width, (f32)texture.height);
+    m4 model = m4(1);
+    model *= M4Translate(v3(position.x, position.y, 0.0f));
+
+    model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));
+    model *= M4RotateZ(rotation);
+    model *= M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f));
+
+    model *= M4Scale(v3(area.x, area.y, 1.0f));
+
+    Render_DrawTexture(&app->renderer, texture, model, 1.0f, v4(1.0f, 1.0f, 1.0f, 1.0f));
 }
 
 internal Texture CreateTexture(const char *imagePath)
@@ -139,6 +276,7 @@ internal Texture CreateTexture(const char *imagePath)
     return result;
 }
 
+#if 0
 internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v2 origin)
 {
     GLuint program = app->renderer.program;
@@ -166,6 +304,7 @@ internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+#endif
 
 #if 0
 internal inline Texture Texture_Load(SDL_Surface *surface)
