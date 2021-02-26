@@ -13,11 +13,15 @@ struct TextureVertex
 {
     v2 position;
     v2 texCoord;
+    f32 texIndex;
 };
 
 struct Renderer
 {
     i32 maxTextureUnits;
+
+    i32 textureCount;
+    GLuint *textureIDs;
 
     i32 quadCount;
     TextureVertex *vertices;

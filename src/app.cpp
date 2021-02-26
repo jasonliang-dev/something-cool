@@ -47,6 +47,8 @@
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
 
+global const i32 PIXEL_ART_SCALE = 4;
+
 global const char *WINDOW_TITLE = "This is a title";
 
 global AppState *app = nullptr;
@@ -208,9 +210,16 @@ int main(int argc, char *argv[])
         glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        BeginDraw(&app->renderer, app->dog);
-        DrawTexture(&app->renderer);
-        FlushDraw(&app->renderer);
+        BeginDraw(&app->renderer);
+        for (i32 y = 0; y < 20; ++y)
+        {
+            for (i32 x = 0; x < 20; ++x)
+            {
+                DrawTexture(&app->renderer, app->dog, dogPosition * v2((f32)x, (f32)y) / 100.0f,
+                            rotation * (y * x * 0.01f));
+            }
+        }
+        FlushRenderer(&app->renderer);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);

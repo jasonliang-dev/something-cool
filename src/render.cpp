@@ -62,39 +62,61 @@ internal void SetupRenderer(Renderer *renderer)
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVertex) * MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
 
-    glEnableVertexAttribArray(0); // a_Position
+    glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, position));
-    glEnableVertexAttribArray(1); // a_TexCoord
+    glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texCoord));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, texIndex));
 
-    u32 indices[] = {
-        0, 1, 2, // top left triangle
-        0, 3, 1  // bottom right triangle
-    };
+    u32 *indices = (u32 *)malloc(sizeof(u32) * MAX_INDICES);
+    assert(indices);
+    for (i32 i = 0, stride = 0; i < MAX_INDICES; i += 6, stride += 4)
+    {
+        indices[i + 0] = stride + 0;
+        indices[i + 1] = stride + 1;
+        indices[i + 2] = stride + 2;
+
+        indices[i + 3] = stride + 0;
+        indices[i + 4] = stride + 3;
+        indices[i + 5] = stride + 1;
+    }
 
     glGenBuffers(1, &renderer->ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(u32) * MAX_INDICES, indices, GL_STATIC_DRAW);
+    free(indices);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    renderer->program = CreateShaderProgram(TEXTURE_VERT, TEXTURE_FRAG);
+    glUseProgram(renderer->program);
+
+    i32 *samplers = (i32 *)malloc(sizeof(i32) * renderer->maxTextureUnits);
+    assert(samplers);
+    for (i32 i = 0; i < renderer->maxTextureUnits; ++i)
     {
-        renderer->program = CreateShaderProgram(QUAD_VERT, SPRITE_FRAG);
-        glUseProgram(renderer->program);
-        glUniform1i(glGetUniformLocation(renderer->program, "u_Image"), 1);
-
-        renderer->u_View = glGetUniformLocation(renderer->program, "u_View");
-
-        UpdateProjections(renderer);
+        samplers[i] = i;
     }
+    glUniform1iv(glGetUniformLocation(renderer->program, "u_Textures"), renderer->maxTextureUnits,
+                 samplers);
+    free(samplers);
+
+    renderer->u_View = glGetUniformLocation(renderer->program, "u_View");
+
+    UpdateProjections(renderer);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(0);
+
+    renderer->textureIDs = (GLuint *)malloc(sizeof(GLuint) * renderer->maxTextureUnits);
+    assert(renderer->textureIDs);
 
     renderer->vertices = (TextureVertex *)malloc(sizeof(TextureVertex) * MAX_VERTICES);
     assert(renderer->vertices);
@@ -109,6 +131,8 @@ internal void DestroyRenderer(Renderer *renderer)
     glDeleteBuffers(1, &renderer->vbo);
     glDeleteBuffers(1, &renderer->ibo);
     glDeleteVertexArrays(1, &renderer->vao);
+
+    free(renderer->vertices);
 }
 
 internal Texture CreateTexture(const char *imagePath)
@@ -136,37 +160,28 @@ internal Texture CreateTexture(const char *imagePath)
     return result;
 }
 
-internal void DrawTexture(Renderer *renderer)
-{
-    TextureVertex vertices[] = {
-        {v2(0, 1), v2(0, 1)},
-        {v2(1, 0), v2(1, 0)},
-        {v2(0, 0), v2(0, 0)},
-        {v2(1, 1), v2(1, 1)},
-    };
-
-    memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
-    renderer->quadCount++;
-}
-
-internal void BeginDraw(Renderer *renderer, Texture sprite)
+internal void BeginDraw(Renderer *renderer)
 {
     glUseProgram(renderer->program);
 
-    m4 view = M4Scale(v3(100.0f, 100.0f, 0.0f));
+    m4 view = m4(1);
     glUniformMatrix4fv(renderer->u_View, 1, 0, view.flatten);
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, sprite.id);
-
     renderer->quadCount = 0;
+    renderer->textureCount = 0;
 }
 
-internal void FlushDraw(Renderer *renderer)
+internal void FlushRenderer(Renderer *renderer)
 {
     if (renderer->quadCount == 0)
     {
         return;
+    }
+
+    for (i32 i = 0; i < renderer->textureCount; ++i)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, renderer->textureIDs[i]);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, app->renderer.vbo);
@@ -178,6 +193,60 @@ internal void FlushDraw(Renderer *renderer)
     glDrawElements(GL_TRIANGLES, renderer->quadCount * 6, GL_UNSIGNED_INT, nullptr);
 
     renderer->quadCount = 0;
+    renderer->textureCount = 0;
+}
+
+internal void DrawTextureMat(Renderer *renderer, Texture sprite, m4 transform)
+{
+    if (renderer->quadCount == MAX_QUADS)
+    {
+        FlushRenderer(renderer);
+    }
+
+    i32 texIndex = -1;
+    for (i32 i = 0; i < renderer->textureCount; ++i)
+    {
+        if (renderer->textureIDs[i] == sprite.id)
+        {
+            texIndex = i;
+            break;
+        }
+    }
+
+    if (texIndex == -1)
+    {
+        if (renderer->textureCount == renderer->maxTextureUnits)
+        {
+            FlushRenderer(renderer);
+        }
+
+        texIndex = renderer->textureCount++;
+        renderer->textureIDs[texIndex] = sprite.id;
+    }
+
+    TextureVertex vertices[] = {
+        {(v4(0, 1, 0, 1) * transform).xy, v2(0, 1), (f32)texIndex},
+        {(v4(1, 0, 0, 1) * transform).xy, v2(1, 0), (f32)texIndex},
+        {(v4(0, 0, 0, 1) * transform).xy, v2(0, 0), (f32)texIndex},
+        {(v4(1, 1, 0, 1) * transform).xy, v2(1, 1), (f32)texIndex},
+    };
+
+    memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
+    renderer->quadCount++;
+}
+
+internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 rotation)
+{
+    // best to avoid matrix multiplication.
+    // am lazy to change. oh well.
+    v2 area = v2((f32)texture.width * PIXEL_ART_SCALE, (f32)texture.height * PIXEL_ART_SCALE);
+    m4 transform = M4Translate(v3(position, 0.0f));
+    transform *= M4Translate(v3(area * 0.5f, 0.0f));
+    transform *= M4RotateZ(rotation);
+    transform *= M4Translate(v3(area * -0.5f, 0.0f));
+    transform *= M4Scale(v3(area, 1.0f));
+
+    DrawTextureMat(renderer, texture, transform);
 }
 
 #if 0
