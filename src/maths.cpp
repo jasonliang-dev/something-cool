@@ -206,16 +206,3 @@ internal inline m4 operator*=(m4 &a, m4 b)
 {
     return a = a * b;
 }
-
-internal inline v4 operator*(v4 v, m4 m)
-{
-    v4 result;
-
-    for (i32 i = 0; i < 4; ++i)
-    {
-        result.elements[i] = (v.x * m.elements[0][i] + v.y * m.elements[1][i] +
-                              v.z * m.elements[2][i] + v.w * m.elements[3][i]);
-    }
-
-    return result;
-}

@@ -62,13 +62,6 @@ union v3
         z = zz;
     }
 
-    v3(v2 xy, f32 zz)
-    {
-        x = xy.x;
-        y = xy.y;
-        z = zz;
-    }
-
     struct
     {
         f32 x;
@@ -101,22 +94,6 @@ union v4
         x = xx;
         y = yy;
         z = zz;
-        w = ww;
-    }
-
-    v4(v2 xy, v2 zw)
-    {
-        x = xy.x;
-        y = xy.y;
-        z = zw.x;
-        w = zw.y;
-    }
-
-    v4(v3 xyz, f32 ww)
-    {
-        x = xyz.x;
-        y = xyz.y;
-        z = xyz.z;
         w = ww;
     }
 
