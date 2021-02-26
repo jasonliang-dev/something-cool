@@ -189,9 +189,9 @@ internal inline m4 operator*(m4 a, m4 b)
 {
     m4 result = m4(0);
 
-    for (int y = 0; y < 4; y++)
+    for (int y = 0; y < 4; ++y)
     {
-        for (int x = 0; x < 4; x++)
+        for (int x = 0; x < 4; ++x)
         {
             result.elements[x][y] =
                 (a.elements[0][y] * b.elements[x][0] + a.elements[1][y] * b.elements[x][1] +

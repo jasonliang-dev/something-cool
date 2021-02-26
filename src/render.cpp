@@ -53,7 +53,7 @@ internal void UpdateProjections(Renderer *renderer)
 internal void CreateRenderer(Renderer *renderer)
 {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
-    assert(renderer->maxTextureUnits == 32);
+    assert(renderer->maxTextureUnits == 16);
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
@@ -196,7 +196,7 @@ internal void FlushRenderer(Renderer *renderer)
     renderer->textureCount = 0;
 }
 
-internal void DrawTextureMat(Renderer *renderer, Texture sprite, m4 transform)
+internal void DrawTextureMat(Renderer *renderer, Texture texture, m4 transform)
 {
     if (renderer->quadCount == MAX_QUADS)
     {
@@ -206,7 +206,7 @@ internal void DrawTextureMat(Renderer *renderer, Texture sprite, m4 transform)
     i32 texIndex = -1;
     for (i32 i = 0; i < renderer->textureCount; ++i)
     {
-        if (renderer->textureIDs[i] == sprite.id)
+        if (renderer->textureIDs[i] == texture.id)
         {
             texIndex = i;
             break;
@@ -221,7 +221,7 @@ internal void DrawTextureMat(Renderer *renderer, Texture sprite, m4 transform)
         }
 
         texIndex = renderer->textureCount++;
-        renderer->textureIDs[texIndex] = sprite.id;
+        renderer->textureIDs[texIndex] = texture.id;
     }
 
     TextureVertex vertices[] = {
