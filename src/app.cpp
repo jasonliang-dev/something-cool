@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
                               GL_FALSE);
 #endif
 
-        SetupRenderer(&app->renderer);
+        CreateRenderer(&app->renderer);
         app->dog = CreateTexture("data/dog.png");
 
         // init imgui
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
         {
             for (i32 x = 0; x < 20; ++x)
             {
-                DrawTexture(&app->renderer, app->dog, dogPosition * v2((f32)x, (f32)y) / 100.0f,
+                DrawTexture(&app->renderer, app->dog, dogPosition * v2((f32)x, (f32)y) / 20.0f,
                             rotation * (y * x * 0.01f));
             }
         }

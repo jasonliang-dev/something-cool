@@ -50,7 +50,7 @@ internal void UpdateProjections(Renderer *renderer)
     glUniformMatrix4fv(u_Projection, 1, 0, projection.flatten);
 }
 
-internal void SetupRenderer(Renderer *renderer)
+internal void CreateRenderer(Renderer *renderer)
 {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
     assert(renderer->maxTextureUnits == 32);
@@ -241,9 +241,12 @@ internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 
     // am lazy to change. oh well.
     v2 area = v2((f32)texture.width * PIXEL_ART_SCALE, (f32)texture.height * PIXEL_ART_SCALE);
     m4 transform = M4Translate(v3(position, 0.0f));
-    transform *= M4Translate(v3(area * 0.5f, 0.0f));
-    transform *= M4RotateZ(rotation);
-    transform *= M4Translate(v3(area * -0.5f, 0.0f));
+    if (rotation != 0.0f)
+    {
+        transform *= M4Translate(v3(area * 0.5f, 0.0f));
+        transform *= M4RotateZ(rotation);
+        transform *= M4Translate(v3(area * -0.5f, 0.0f));
+    }
     transform *= M4Scale(v3(area, 1.0f));
 
     DrawTextureMat(renderer, texture, transform);
