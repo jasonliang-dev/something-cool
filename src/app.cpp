@@ -208,7 +208,9 @@ int main(int argc, char *argv[])
         glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        DrawTexture(app->dog, dogPosition, rotation, v2(4, 4), v2(0, 0));
+        BeginDraw(&app->renderer, app->dog);
+        DrawTexture(&app->renderer);
+        FlushDraw(&app->renderer);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(app->window);

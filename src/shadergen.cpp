@@ -6,12 +6,19 @@
 #include "language.h"
 
 global FILE *output;
+global i32 count = 0;
 
 internal void MakeShader(const char *in, const char *globalVar)
 {
     fprintf(output, "global const char *%s = \"\\\n", globalVar);
 
     FILE *f = fopen(in, "r");
+    if (!f)
+    {
+        fprintf(stderr, "Can't open %s\n", in);
+        fclose(output);
+        exit(1);
+    }
 
     char line[4096];
     while (fgets(line, ArrayCount(line), f))
@@ -23,6 +30,8 @@ internal void MakeShader(const char *in, const char *globalVar)
     fclose(f);
 
     fputs("\";\n", output);
+
+    count++;
 }
 
 int main(void)
@@ -36,4 +45,6 @@ int main(void)
     MakeShader("../src/texture.frag", "TEXTURE_FRAG");
 
     fclose(output);
+
+    printf("Generated %d shaders\n", count);
 }

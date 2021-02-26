@@ -58,19 +58,13 @@ internal void SetupRenderer(Renderer *renderer)
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
 
-    TextureVertex vertices[] = {
-        {v2(0, 1), v2(0, 1)},
-        {v2(1, 0), v2(1, 0)},
-        {v2(0, 0), v2(0, 0)},
-        {v2(1, 1), v2(1, 1)},
-    };
-
     glGenBuffers(1, &renderer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVertex) * MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0); // a_Position
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex), 0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, position));
     glEnableVertexAttribArray(1); // a_TexCoord
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texCoord));
@@ -92,7 +86,7 @@ internal void SetupRenderer(Renderer *renderer)
         glUseProgram(renderer->program);
         glUniform1i(glGetUniformLocation(renderer->program, "u_Image"), 1);
 
-        renderer->u_model = glGetUniformLocation(renderer->program, "u_Model");
+        renderer->u_View = glGetUniformLocation(renderer->program, "u_View");
 
         UpdateProjections(renderer);
     }
@@ -101,6 +95,9 @@ internal void SetupRenderer(Renderer *renderer)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glUseProgram(0);
+
+    renderer->vertices = (TextureVertex *)malloc(sizeof(TextureVertex) * MAX_VERTICES);
+    assert(renderer->vertices);
 
     GL_CheckForErrors();
 }
@@ -139,32 +136,48 @@ internal Texture CreateTexture(const char *imagePath)
     return result;
 }
 
-internal void DrawTexture(Texture sprite, v2 position, f32 rotation, v2 scale, v2 origin)
+internal void DrawTexture(Renderer *renderer)
 {
-    GLuint program = app->renderer.program;
-    glUseProgram(program);
+    TextureVertex vertices[] = {
+        {v2(0, 1), v2(0, 1)},
+        {v2(1, 0), v2(1, 0)},
+        {v2(0, 0), v2(0, 0)},
+        {v2(1, 1), v2(1, 1)},
+    };
 
-    v2 area = v2(sprite.width * scale.x, sprite.height * scale.y);
-    v2 translate = position - (origin * area);
-    m4 model = m4(1);
-    model *= M4Translate(v3(translate.x, translate.y, 0.0f));
+    memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
+    renderer->quadCount++;
+}
 
-    model *= M4Translate(v3(0.5f * area.x, 0.5f * area.y, 0.0f));
-    model *= M4RotateZ(rotation);
-    model *= M4Translate(v3(-0.5f * area.x, -0.5f * area.y, 0.0f));
+internal void BeginDraw(Renderer *renderer, Texture sprite)
+{
+    glUseProgram(renderer->program);
 
-    model *= M4Scale(v3(area.x, area.y, 1.0f));
-
-    glUniformMatrix4fv(app->renderer.u_model, 1, 0, model.flatten);
+    m4 view = M4Scale(v3(100.0f, 100.0f, 0.0f));
+    glUniformMatrix4fv(renderer->u_View, 1, 0, view.flatten);
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, sprite.id);
 
+    renderer->quadCount = 0;
+}
+
+internal void FlushDraw(Renderer *renderer)
+{
+    if (renderer->quadCount == 0)
+    {
+        return;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, app->renderer.vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, renderer->quadCount * 4 * sizeof(TextureVertex),
+                    renderer->vertices);
+
     glBindVertexArray(app->renderer.vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->renderer.ibo);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glDrawElements(GL_TRIANGLES, renderer->quadCount * 6, GL_UNSIGNED_INT, nullptr);
+
+    renderer->quadCount = 0;
 }
 
 #if 0
