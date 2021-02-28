@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
 
         CreateRenderer(&app->renderer);
         app->dog = CreateTexture("data/dog.png");
+        CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
 
         // init imgui
         {
@@ -212,14 +213,8 @@ int main(int argc, char *argv[])
         glClear(GL_COLOR_BUFFER_BIT);
 
         BeginDraw(&app->renderer);
-        for (i32 y = 0; y < 20; ++y)
-        {
-            for (i32 x = 0; x < 20; ++x)
-            {
-                DrawTexture(&app->renderer, app->dog, dogPosition * v2((f32)x, (f32)y) / 20.0f,
-                            rotation * (y * x * 0.01f));
-            }
-        }
+        DrawTilemap(&app->renderer, &app->map);
+        DrawTexture(&app->renderer, app->dog, dogPosition, rotation);
         FlushRenderer(&app->renderer);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -239,6 +234,8 @@ int main(int argc, char *argv[])
         SDL_GL_DeleteContext(app->glContext);
         SDL_DestroyWindow(app->window);
         SDL_Quit();
+
+        DestroyTilemap(&app->map);
 
         free((void *)app->keyDownPrev);
         free(app);

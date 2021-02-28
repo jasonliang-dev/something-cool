@@ -16,6 +16,16 @@ struct TextureVertex
     f32 texIndex;
 };
 
+struct Tilemap
+{
+    Texture atlas;
+    i32 tileWidth; // height is the same
+    i32 width;
+    i32 height;
+    v2 *vertexPositions;
+    v2 *texCoords;
+};
+
 struct Renderer
 {
     i32 maxTextureUnits;
