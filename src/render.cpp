@@ -160,15 +160,16 @@ internal Texture CreateTexture(const char *imagePath)
     return result;
 }
 
-internal void BeginDraw(Renderer *renderer)
+internal void BeginDraw(Renderer *renderer, v2 camera)
 {
     glUseProgram(renderer->program);
 
-    m4 view = m4(1);
+    m4 view = M4Translate(v3(camera * -1.0f, 0.0f));
     glUniformMatrix4fv(renderer->u_View, 1, 0, view.flatten);
 
     renderer->quadCount = 0;
     renderer->textureCount = 0;
+    renderer->camera = camera;
 }
 
 internal void FlushRenderer(Renderer *renderer)
@@ -340,20 +341,41 @@ internal void DestroyTilemap(Tilemap *map)
 internal void DrawTilemap(Renderer *renderer, Tilemap *map)
 {
     f32 texIndex = FindOrCreateTextureIndex(renderer, map->atlas.id);
+    i32 realTileWidth = map->tileWidth * PIXEL_ART_SCALE;
 
-    i32 tileCount = map->width * map->height * 4;
-    for (i32 i = 0; i < tileCount; i += 4)
+    for (i32 y = 0; y < map->height; ++y)
     {
-        if (renderer->quadCount == MAX_QUADS)
+        for (i32 x = 0; x < map->width; ++x)
         {
-            FlushRenderer(renderer);
-        }
+            if (y * realTileWidth > app->windowHeight + renderer->camera.y)
+            {
+                return;
+            }
 
-        for (i32 q = 0; q < 4; q++)
-        {
-            renderer->vertices[renderer->quadCount * 4 + q] = {map->vertexPositions[i + q],
-                                                               map->texCoords[i + q], texIndex};
+            if (x * realTileWidth > app->windowWidth + renderer->camera.x ||
+                (y + 1) * realTileWidth <= renderer->camera.y)
+            {
+                break;
+            }
+
+            if ((x + 1) * realTileWidth <= renderer->camera.x)
+            {
+                continue;
+            }
+
+            if (renderer->quadCount == MAX_QUADS)
+            {
+                FlushRenderer(renderer);
+            }
+
+            for (i32 q = 0; q < 4; ++q)
+            {
+                renderer->vertices[renderer->quadCount * 4 + q] = {
+                    map->vertexPositions[(y * map->width + x) * 4 + q],
+                    map->texCoords[(y * map->width + x) * 4 + q], texIndex};
+            }
+
+            renderer->quadCount++;
         }
-        renderer->quadCount++;
     }
 }

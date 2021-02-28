@@ -41,4 +41,5 @@ struct Renderer
     GLuint vao;
     GLuint program;
     GLint u_View;
+    v2 camera;
 };

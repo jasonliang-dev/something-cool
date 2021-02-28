@@ -140,6 +140,7 @@ int main(int argc, char *argv[])
         assert(app->keyDownPrev);
     }
 
+    v2 cameraPos = v2(0, 0);
     v2 dogPosition = v2(100, 100);
     f32 rotation = 0.0f;
     v4 clearColor = v4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -191,10 +192,11 @@ int main(int argc, char *argv[])
         }
 
         {
-            ImGui::Begin("Hello, world!");
+            ImGui::Begin("Goodbye, world!");
 
             ImGui::Checkbox("Demo Window", (bool *)&app->showImguiDemoWindow);
 
+            ImGui::DragFloat2("camera pos", (f32 *)&cameraPos);
             ImGui::DragFloat2("dog pos", (f32 *)&dogPosition);
             ImGui::DragFloat("dog rot", &rotation, 0.01f);
 
@@ -212,7 +214,7 @@ int main(int argc, char *argv[])
         glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        BeginDraw(&app->renderer);
+        BeginDraw(&app->renderer, cameraPos);
         DrawTilemap(&app->renderer, &app->map);
         DrawTexture(&app->renderer, app->dog, dogPosition, rotation);
         FlushRenderer(&app->renderer);
