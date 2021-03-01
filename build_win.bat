@@ -10,7 +10,7 @@ shadergen.exe || exit /b
 
 REM 4201: unnamed struct/union (definition of v2, v3, v4)
 set COMPILE_FLAGS=^
-    -O2 -DDEBUG -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS^
+    -DDEBUG -DWIN32_LEAN_AND_MEAN -D_CRT_SECURE_NO_WARNINGS^
     -nologo -W4 -wd4201 -Z7^
     /I ../third^
     /I ../third/glad^
@@ -20,7 +20,7 @@ set COMPILE_FLAGS=^
 set LINK_FLAGS=^
     /link shell32.lib opengl32.lib SDL2.lib SDL2main.lib^
     /LIBPATH:../third/sdl2/lib/x64^
-    /SUBSYSTEM:WINDOWS -opt:ref -incremental:no -Debug:fastlink
+    /SUBSYSTEM:CONSOLE -opt:ref -incremental:no -Debug:fastlink
 
 cl %COMPILE_FLAGS% ../src/app.c %LINK_FLAGS% /out:app.exe || exit /b
 

@@ -20,5 +20,5 @@ struct AppState
     const u8 *keyDownPrev;
     f32 deltaTime;
 
-    b32 showImguiDemoWindow;
+    b32 showOverview;
 };

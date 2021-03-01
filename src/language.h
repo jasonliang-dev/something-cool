@@ -3,8 +3,9 @@
 #define persistent static
 
 #define PI 3.1415926535897f
-#define F32_EPSILON 0.00001f
-#define F64_EPSILON 0.000000001f
+#define F32_EPSILON ((f32)FLT_EPSILON)
+#define F32_MIN ((f32)FLT_MIN)
+#define F32_MAX ((f32)FLT_MAX)
 
 #define Bytes(n) (n)
 #define Kilobytes(n) ((n) << 10)

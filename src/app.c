@@ -6,12 +6,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#ifdef _WIN32
-#include <SDL.h> // windows
-#else
-#include <SDL2/SDL.h> // linux
-#endif
+#include <SDL2/SDL.h>
 
 #include <glad/glad.h>
 
@@ -47,18 +44,22 @@
 #include "shaders.gen.h"
 #include "app.h"
 
-global const i32 NK_MAX_VERTEX_MEMORY = 512 * 1024;
-global const i32 NK_MAX_ELEMENT_MEMORY = 128 * 1024;
+#define NK_MAX_VERTEX_MEMORY (512 * 1024)
+#define NK_MAX_ELEMENT_MEMORY (128 * 1024)
 
-global const i32 SCREEN_WIDTH = 1366;
-global const i32 SCREEN_HEIGHT = 768;
+#define SCREEN_WIDTH 1366
+#define SCREEN_HEIGHT 768
 
-global const i32 PIXEL_ART_SCALE = 4;
+#define PIXEL_ART_SCALE 4
 
-global const char *WINDOW_TITLE = "This is a title";
+#define WINDOW_TITLE "This is a title"
 
 global AppState *app = NULL;
 
+#pragma warning(push)
+#pragma warning(disable : 4477)
+#include "overview.c"
+#pragma warning(pop)
 #include "utils.c"
 #include "maths.c"
 #include "gl.c"
@@ -73,6 +74,7 @@ int main(int argc, char *argv[])
     app = (AppState *)malloc(sizeof(AppState));
     assert(app);
     app->running = true;
+    app->showOverview = false;
 
     // init sdl
     assert(SDL_Init(SDL_INIT_VIDEO) == 0);
@@ -134,7 +136,7 @@ int main(int argc, char *argv[])
     v2 dogPosition = v2(100, 100);
     f32 rotation = 0.0f;
     struct nk_colorf bg;
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
+    bg.r = 0.10f, bg.g = 0.10f, bg.b = 0.10f, bg.a = 1.0f;
 
     SDL_Event event;
 
@@ -175,20 +177,27 @@ int main(int argc, char *argv[])
         }
         nk_input_end(app->nkContext);
 
-        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 230, 250),
+        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 300, 250),
                      NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                          NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
         {
             persistent int property = 20;
 
-            nk_layout_row_static(app->nkContext, 30, 80, 1);
-            if (nk_button_label(app->nkContext, "button"))
-            {
-                printf("button pressed!\n");
-            }
-            nk_layout_row_dynamic(app->nkContext, 30, 2);
-            nk_layout_row_dynamic(app->nkContext, 22, 1);
-            nk_property_int(app->nkContext, "Compression:", 0, &property, 100, 10, 1);
+            nk_layout_row_dynamic(app->nkContext, 25, 1);
+            nk_checkbox_label(app->nkContext, "show overview", &app->showOverview);
+            nk_layout_row_dynamic(app->nkContext, 25, 2);
+            nk_property_float(app->nkContext, "camera x:", -F32_MAX, &cameraPos.x, F32_MAX, 1.0f,
+                              3.0f);
+            nk_property_float(app->nkContext, "camera y:", -F32_MAX, &cameraPos.y, F32_MAX, 1.0f,
+                              3.0f);
+            nk_layout_row_dynamic(app->nkContext, 25, 2);
+            nk_property_float(app->nkContext, "player x:", -F32_MAX, &dogPosition.x, F32_MAX, 1.0f,
+                              1.0f);
+            nk_property_float(app->nkContext, "player y:", -F32_MAX, &dogPosition.y, F32_MAX, 1.0f,
+                              1.0f);
+            nk_layout_row_dynamic(app->nkContext, 25, 1);
+            nk_property_float(app->nkContext, "player rot:", -F32_MAX, &rotation, F32_MAX, 0.1f,
+                              0.01f);
 
             nk_layout_row_dynamic(app->nkContext, 20, 1);
             nk_label(app->nkContext, "background:", NK_TEXT_LEFT);
@@ -208,6 +217,11 @@ int main(int argc, char *argv[])
             }
         }
         nk_end(app->nkContext);
+
+        if (app->showOverview)
+        {
+            overview(app->nkContext);
+        }
 
         glViewport(0, 0, (int)app->windowWidth, (int)app->windowHeight);
         glEnable(GL_BLEND);
