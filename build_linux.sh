@@ -9,8 +9,8 @@ FLAGS="-DDEBUG -std=c++11 \
 
 cd build
 
-clang++ ../src/shadergen.cpp -o shadergen $FLAGS
+clang ../src/shadergen.c -o shadergen $FLAGS
 ./shadergen
 
-clang++ -I../third -I../third/glad -I../third/nuklear \
-    ../src/app.cpp -lSDL2 -lGL -ldl -o app $FLAGS
+clang -I../third -I../third/glad -I../third/nuklear \
+    ../src/app.c -lSDL2 -lGL -ldl -o app $FLAGS

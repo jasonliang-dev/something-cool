@@ -60,7 +60,7 @@ internal void CreateRenderer(Renderer *renderer)
 
     glGenBuffers(1, &renderer->vbo);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVertex) * MAX_VERTICES, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(TextureVertex) * MAX_VERTICES, NULL, GL_DYNAMIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
@@ -161,7 +161,7 @@ internal void BeginDraw(Renderer *renderer, v2 camera)
 {
     glUseProgram(renderer->program);
 
-    m4 view = M4Translate(v3(camera * -1.0f, 0.0f));
+    m4 view = M4Translate(v3(-camera.x, -camera.y, 0.0f));
     glUniformMatrix4fv(renderer->u_View, 1, 0, view.flatten);
 
     renderer->quadCount = 0;
@@ -188,7 +188,7 @@ internal void FlushRenderer(Renderer *renderer)
 
     glBindVertexArray(app->renderer.vao);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->renderer.ibo);
-    glDrawElements(GL_TRIANGLES, renderer->quadCount * 6, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, renderer->quadCount * 6, GL_UNSIGNED_INT, NULL);
 
     renderer->quadCount = 0;
     renderer->textureCount = 0;
@@ -230,10 +230,10 @@ internal void DrawTextureMat(Renderer *renderer, Texture texture, m4 transform)
     f32 texIndex = FindOrCreateTextureIndex(renderer, texture.id);
 
     TextureVertex vertices[] = {
-        {(v4(0, 1, 0, 1) * transform).xy, v2(0, 1), texIndex},
-        {(v4(1, 0, 0, 1) * transform).xy, v2(1, 0), texIndex},
-        {(v4(0, 0, 0, 1) * transform).xy, v2(0, 0), texIndex},
-        {(v4(1, 1, 0, 1) * transform).xy, v2(1, 1), texIndex},
+        {V4MultiplyM4(v4(0, 1, 0, 1), transform).xy, v2(0, 1), texIndex},
+        {V4MultiplyM4(v4(1, 0, 0, 1), transform).xy, v2(1, 0), texIndex},
+        {V4MultiplyM4(v4(0, 0, 0, 1), transform).xy, v2(0, 0), texIndex},
+        {V4MultiplyM4(v4(1, 1, 0, 1), transform).xy, v2(1, 1), texIndex},
     };
 
     memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
@@ -245,14 +245,14 @@ internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 
     // best to avoid matrix multiplication.
     // am lazy to change. oh well.
     v2 area = v2((f32)texture.width * PIXEL_ART_SCALE, (f32)texture.height * PIXEL_ART_SCALE);
-    m4 transform = M4Translate(v3(position, 0.0f));
+    m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
     if (rotation != 0.0f)
     {
-        transform *= M4Translate(v3(area * 0.5f, 0.0f));
-        transform *= M4RotateZ(rotation);
-        transform *= M4Translate(v3(area * -0.5f, 0.0f));
+        transform = M4MultiplyM4(transform, M4Translate(v3(area.x * 0.5f, area.y * 0.5f, 0.0f)));
+        transform = M4MultiplyM4(transform, M4RotateZ(rotation));
+        transform = M4MultiplyM4(transform, M4Translate(v3(area.x * -0.5f, area.y * -0.5f, 0.0f)));
     }
-    transform *= M4Scale(v3(area, 1.0f));
+    transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
 
     DrawTextureMat(renderer, texture, transform);
 }
@@ -287,31 +287,34 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
 
             m4 transform = M4Translate(v3((f32)x * realTileWidth, (f32)y * realTileWidth, 0.0f));
 
-            transform *= M4Translate(v3(realTileWidth * 0.5f, realTileWidth * 0.5f, 0.0f));
+            transform = M4MultiplyM4(
+                transform, M4Translate(v3(realTileWidth * 0.5f, realTileWidth * 0.5f, 0.0f)));
             // flip horizontal
             if (index & 0x80000000)
             {
-                transform *= M4Scale(v3(-1.0f, 1.0f, 1.0f));
+                transform = M4MultiplyM4(transform, M4Scale(v3(-1.0f, 1.0f, 1.0f)));
             }
             // flip vertical
             else if (index & 0x40000000)
             {
-                transform *= M4Scale(v3(1.0f, -1.0f, 1.0f));
+                transform = M4MultiplyM4(transform, M4Scale(v3(1.0f, -1.0f, 1.0f)));
             }
             // flip diagonal
             else if (index & 0x20000000)
             {
-                transform *= M4Scale(v3(-1.0f, -1.0f, 1.0f));
+                transform = M4MultiplyM4(transform, M4Scale(v3(-1.0f, -1.0f, 1.0f)));
             }
-            transform *= M4Translate(v3(realTileWidth * -0.5f, realTileWidth * -0.5f, 0.0f));
+            transform = M4MultiplyM4(
+                transform, M4Translate(v3(realTileWidth * -0.5f, realTileWidth * -0.5f, 0.0f)));
 
-            transform *= M4Scale(v3((f32)realTileWidth, (f32)realTileWidth, 1.0f));
+            transform =
+                M4MultiplyM4(transform, M4Scale(v3((f32)realTileWidth, (f32)realTileWidth, 1.0f)));
 
             v2 *quadPositions = &map->vertexPositions[((y * map->width) + x) * 4];
-            quadPositions[0] = (v4(0, 1, 0, 1) * transform).xy;
-            quadPositions[1] = (v4(1, 0, 0, 1) * transform).xy;
-            quadPositions[2] = (v4(0, 0, 0, 1) * transform).xy;
-            quadPositions[3] = (v4(1, 1, 0, 1) * transform).xy;
+            quadPositions[0] = V4MultiplyM4(v4(0, 1, 0, 1), transform).xy;
+            quadPositions[1] = V4MultiplyM4(v4(1, 0, 0, 1), transform).xy;
+            quadPositions[2] = V4MultiplyM4(v4(0, 0, 0, 1), transform).xy;
+            quadPositions[3] = V4MultiplyM4(v4(1, 1, 0, 1), transform).xy;
 
             i32 tile = (index & 0xFFFFFFF) - 1;
             v2 xy = v2((f32)(tile % tileColumns), (f32)(tile / tileColumns));
@@ -367,9 +370,10 @@ internal void DrawTilemap(Renderer *renderer, Tilemap *map)
 
             for (i32 q = 0; q < 4; ++q)
             {
-                renderer->vertices[renderer->quadCount * 4 + q] = {
-                    map->vertexPositions[(y * map->width + x) * 4 + q],
-                    map->texCoords[(y * map->width + x) * 4 + q], texIndex};
+                TextureVertex *vertex = &renderer->vertices[renderer->quadCount * 4 + q];
+                vertex->position = map->vertexPositions[(y * map->width + x) * 4 + q];
+                vertex->texCoord = map->texCoords[(y * map->width + x) * 4 + q];
+                vertex->texIndex = texIndex;
             }
 
             renderer->quadCount++;

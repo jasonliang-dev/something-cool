@@ -1,7 +1,8 @@
-const i32 MAX_QUADS = 20000;
-const i32 MAX_VERTICES = MAX_QUADS * 4;
-const i32 MAX_INDICES = MAX_QUADS * 6;
+#define MAX_QUADS 20000
+#define MAX_VERTICES (MAX_QUADS * 4)
+#define MAX_INDICES (MAX_QUADS * 6)
 
+typedef struct Texture Texture;
 struct Texture
 {
     GLuint id;
@@ -9,6 +10,7 @@ struct Texture
     i32 height;
 };
 
+typedef struct TextureVertex TextureVertex;
 struct TextureVertex
 {
     v2 position;
@@ -16,6 +18,7 @@ struct TextureVertex
     f32 texIndex;
 };
 
+typedef struct Tilemap Tilemap;
 struct Tilemap
 {
     Texture atlas;
@@ -26,6 +29,7 @@ struct Tilemap
     v2 *texCoords;
 };
 
+typedef struct Renderer Renderer;
 struct Renderer
 {
     i32 maxTextureUnits;

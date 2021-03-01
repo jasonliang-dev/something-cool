@@ -9,7 +9,7 @@ internal void GL_CheckForErrorsReal(const char *file, u32 line)
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR)
     {
-        const char *error = nullptr;
+        const char *error = NULL;
 
         switch (errorCode)
         {

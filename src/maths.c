@@ -30,62 +30,26 @@ internal inline v2 V2Normalize(v2 v)
 
 internal inline v2 V2Clamp(v2 v, v2 min, v2 max)
 {
-    return {Clampf(v.x, min.x, max.x), Clampf(v.y, min.y, max.y)};
+    v2 result;
+    result.x = Clampf(v.x, min.x, max.x);
+    result.y = Clampf(v.y, min.y, max.y);
+    return result;
 }
 
-internal inline v2 operator*(v2 left, f32 right)
+internal inline m4 M4Diagonal(f32 diagonal)
 {
-    return {left.x * right, left.y * right};
-}
-
-internal inline v2 operator/(v2 left, f32 right)
-{
-    return {left.x / right, left.y / right};
-}
-
-internal inline v2 &operator/=(v2 &left, f32 right)
-{
-    return (left = left / right);
-}
-
-internal inline v2 operator+(v2 left, v2 right)
-{
-    return {left.x + right.x, left.y + right.y};
-}
-
-internal inline v2 operator-(v2 left, v2 right)
-{
-    return {left.x - right.x, left.y - right.y};
-}
-
-internal inline v2 operator*(v2 left, v2 right)
-{
-    return {left.x * right.x, left.y * right.y};
-}
-
-internal inline v2 operator/(v2 left, v2 right)
-{
-    return {left.x / right.x, left.y / right.y};
-}
-
-internal inline v2 &operator+=(v2 &left, v2 right)
-{
-    return (left = left + right);
-}
-
-internal inline v2 &operator-=(v2 &left, v2 right)
-{
-    return (left = left - right);
-}
-
-internal inline v2 &operator/=(v2 &left, v2 right)
-{
-    return (left = left / right);
+    m4 result = {{
+        {diagonal},
+        {0.0f, diagonal},
+        {0.0f, 0.0f, diagonal},
+        {0.0f, 0.0f, 0.0f, diagonal},
+    }};
+    return result;
 }
 
 internal inline m4 M4Translate(v3 translation)
 {
-    m4 result = m4(1);
+    m4 result = M4Diagonal(1);
     result.elements[3][0] = translation.x;
     result.elements[3][1] = translation.y;
     result.elements[3][2] = translation.z;
@@ -94,7 +58,7 @@ internal inline m4 M4Translate(v3 translation)
 
 internal inline m4 M4Scale(v3 scale)
 {
-    m4 result = m4(1);
+    m4 result = M4Diagonal(1);
     result.elements[0][0] = scale.x;
     result.elements[1][1] = scale.y;
     result.elements[2][2] = scale.z;
@@ -103,7 +67,7 @@ internal inline m4 M4Scale(v3 scale)
 
 internal inline m4 M4RotateX(f32 angle)
 {
-    m4 result = m4(1);
+    m4 result = M4Diagonal(1);
     f32 c = cosf(angle);
     f32 s = sinf(angle);
 
@@ -117,7 +81,7 @@ internal inline m4 M4RotateX(f32 angle)
 
 internal inline m4 M4RotateY(f32 angle)
 {
-    m4 result = m4(1);
+    m4 result = M4Diagonal(1);
     f32 c = cosf(angle);
     f32 s = sinf(angle);
 
@@ -131,7 +95,7 @@ internal inline m4 M4RotateY(f32 angle)
 
 internal inline m4 M4RotateZ(f32 angle)
 {
-    m4 result = m4(1);
+    m4 result = M4Diagonal(1);
     f32 c = cosf(angle);
     f32 s = sinf(angle);
 
@@ -145,7 +109,7 @@ internal inline m4 M4RotateZ(f32 angle)
 
 internal inline m4 M4Rotate(f32 angle, v3 axis)
 {
-    m4 result = m4(0);
+    m4 result = M4Diagonal(0);
     f32 c = cosf(angle);
     f32 s = sinf(angle);
 
@@ -168,7 +132,7 @@ internal inline m4 M4Rotate(f32 angle, v3 axis)
 
 internal inline m4 M4Orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
 {
-    m4 result = m4(0);
+    m4 result = M4Diagonal(0);
 
     f32 rl = 1.0f / (right - left);
     f32 tb = 1.0f / (top - bottom);
@@ -185,9 +149,9 @@ internal inline m4 M4Orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 
     return result;
 }
 
-internal inline m4 operator*(m4 a, m4 b)
+internal inline m4 M4MultiplyM4(m4 a, m4 b)
 {
-    m4 result = m4(0);
+    m4 result = M4Diagonal(0);
 
     for (int y = 0; y < 4; ++y)
     {
@@ -202,14 +166,9 @@ internal inline m4 operator*(m4 a, m4 b)
     return result;
 }
 
-internal inline m4 operator*=(m4 &a, m4 b)
+internal inline v4 V4MultiplyM4(v4 v, m4 m)
 {
-    return a = a * b;
-}
-
-internal inline v4 operator*(v4 v, m4 m)
-{
-    v4 result = {0};
+    v4 result;
 
     for (int i = 0; i < 4; ++i)
     {

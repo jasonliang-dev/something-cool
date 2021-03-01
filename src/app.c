@@ -57,12 +57,12 @@ global const i32 PIXEL_ART_SCALE = 4;
 
 global const char *WINDOW_TITLE = "This is a title";
 
-global AppState *app = nullptr;
+global AppState *app = NULL;
 
-#include "utils.cpp"
-#include "maths.cpp"
-#include "gl.cpp"
-#include "render.cpp"
+#include "utils.c"
+#include "maths.c"
+#include "gl.c"
+#include "render.c"
 
 int main(int argc, char *argv[])
 {
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
                      NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                          NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
         {
-            static int property = 20;
+            persistent int property = 20;
 
             nk_layout_row_static(app->nkContext, 30, 80, 1);
             if (nk_button_label(app->nkContext, "button"))

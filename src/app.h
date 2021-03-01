@@ -1,3 +1,4 @@
+typedef struct AppState AppState;
 struct AppState
 {
     SDL_Window *window;

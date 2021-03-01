@@ -17,6 +17,9 @@
 #define Min(x, y) (((x) < (y)) ? (x) : (y))
 #define Max(x, y) (((x) > (y)) ? (x) : (y))
 
+#define true 1
+#define false 0
+
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -32,14 +35,9 @@ typedef i64 b64;
 typedef float f32;
 typedef double f64;
 
+typedef union v2 v2;
 union v2
 {
-    v2(f32 xx = 0.0f, f32 yy = 0.0f)
-    {
-        x = xx;
-        y = yy;
-    }
-
     struct
     {
         f32 x;
@@ -55,22 +53,9 @@ union v2
     f32 elements[2];
 };
 
+typedef union v3 v3;
 union v3
 {
-    v3(f32 xx = 0.0f, f32 yy = 0.0f, f32 zz = 0.0f)
-    {
-        x = xx;
-        y = yy;
-        z = zz;
-    }
-
-    v3(v2 xy, f32 zz)
-    {
-        x = xy.x;
-        y = xy.y;
-        z = zz;
-    }
-
     struct
     {
         f32 x;
@@ -96,40 +81,9 @@ union v3
     f32 elements[3];
 };
 
+typedef union v4 v4;
 union v4
 {
-    v4(f32 xx = 0.0f, f32 yy = 0.0f, f32 zz = 0.0f, f32 ww = 0.0f)
-    {
-        x = xx;
-        y = yy;
-        z = zz;
-        w = ww;
-    }
-
-    v4(v2 xy, f32 zz, f32 ww)
-    {
-        x = xy.x;
-        y = xy.y;
-        z = zz;
-        w = ww;
-    }
-
-    v4(v2 xy, v2 zw)
-    {
-        x = xy.x;
-        y = xy.y;
-        z = zw.x;
-        w = zw.y;
-    }
-
-    v4(v3 xyz, f32 ww)
-    {
-        x = xyz.x;
-        y = xyz.y;
-        z = xyz.z;
-        w = ww;
-    }
-
     struct
     {
         union
@@ -188,31 +142,25 @@ union v4
     f32 elements[4];
 };
 
+typedef union m4 m4;
 union m4
 {
-    m4(f32 diagonal = 0.0f)
-    {
-        elements[0][0] = diagonal;
-        elements[0][1] = 0.0f;
-        elements[0][2] = 0.0f;
-        elements[0][3] = 0.0f;
-
-        elements[1][0] = 0.0f;
-        elements[1][1] = diagonal;
-        elements[1][2] = 0.0f;
-        elements[1][3] = 0.0f;
-
-        elements[2][0] = 0.0f;
-        elements[2][1] = 0.0f;
-        elements[2][2] = diagonal;
-        elements[2][3] = 0.0f;
-
-        elements[3][0] = 0.0f;
-        elements[3][1] = 0.0f;
-        elements[3][2] = 0.0f;
-        elements[3][3] = diagonal;
-    }
-
     f32 elements[4][4];
     f32 flatten[16];
 };
+
+#define v2(...)                                                                                    \
+    (v2)                                                                                           \
+    {                                                                                              \
+        __VA_ARGS__                                                                                \
+    }
+#define v3(...)                                                                                    \
+    (v3)                                                                                           \
+    {                                                                                              \
+        __VA_ARGS__                                                                                \
+    }
+#define v4(...)                                                                                    \
+    (v4)                                                                                           \
+    {                                                                                              \
+        __VA_ARGS__                                                                                \
+    }
