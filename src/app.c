@@ -215,6 +215,10 @@ int main(int argc, char *argv[])
                 bg.a = nk_propertyf(app->nkContext, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
                 nk_combo_end(app->nkContext);
             }
+
+            nk_layout_row_dynamic(app->nkContext, 25, 1);
+            nk_labelf(app->nkContext, NK_TEXT_LEFT, "deltaTime: %.04f (%.02f FPS)",
+                      app->deltaTime * 1000.0f, 1 / app->deltaTime);
         }
         nk_end(app->nkContext);
 
