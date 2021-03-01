@@ -17,10 +17,18 @@
 
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
+#ifdef _WIN32
+
 #pragma warning(push)
 #pragma warning(disable : 4505)
 #include <stb_image.h>
 #pragma warning(pop)
+
+#else
+
+#include <stb_image.h>
+
+#endif
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -30,10 +38,22 @@
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
+#ifdef _WIN32
+
 #pragma warning(push)
 #pragma warning(disable : 4701 4127 4100)
 #include <nuklear.h>
 #pragma warning(pop)
+
+#else
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <nuklear.h>
+#pragma GCC diagnostic pop
+
+#endif
+
 #define NK_SDL_GL3_IMPLEMENTATION
 #include <nuklear_sdl_gl3.h>
 
@@ -56,10 +76,18 @@
 
 global AppState *app = NULL;
 
+#ifdef _WIN32
+
 #pragma warning(push)
 #pragma warning(disable : 4477)
 #include "overview.c"
 #pragma warning(pop)
+
+#else
+
+#include "overview.c"
+
+#endif
 #include "utils.c"
 #include "maths.c"
 #include "gl.c"
@@ -181,8 +209,6 @@ int main(int argc, char *argv[])
                      NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                          NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
         {
-            persistent int property = 20;
-
             nk_layout_row_dynamic(app->nkContext, 25, 1);
             nk_checkbox_label(app->nkContext, "show overview", &app->showOverview);
             nk_layout_row_dynamic(app->nkContext, 25, 2);

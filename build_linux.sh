@@ -2,9 +2,9 @@
 
 set -e
 
-FLAGS="-DDEBUG -std=c++11 \
+FLAGS="-DDEBUG -std=c11 \
     -Werror -Wall -Wextra -pedantic-errors \
-    -Wno-gnu-anonymous-struct \
+    -Wno-missing-braces -Wno-gnu-anonymous-struct \
 "
 
 cd build
@@ -13,4 +13,4 @@ clang ../src/shadergen.c -o shadergen $FLAGS
 ./shadergen
 
 clang -I../third -I../third/glad -I../third/nuklear \
-    ../src/app.c -lSDL2 -lGL -ldl -o app $FLAGS
+    ../src/app.c -lSDL2 -lGL -ldl -lm -o app $FLAGS
