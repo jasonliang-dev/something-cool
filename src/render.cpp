@@ -110,9 +110,6 @@ internal void CreateRenderer(Renderer *renderer)
 
     UpdateProjections(renderer);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     glUseProgram(0);
 
     renderer->textureIDs = (GLuint *)malloc(sizeof(GLuint) * renderer->maxTextureUnits);

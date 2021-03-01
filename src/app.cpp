@@ -9,41 +9,46 @@
 
 #ifdef _WIN32
 #include <SDL.h> // windows
-#include <SDL_syswm.h>
 #else
 #include <SDL2/SDL.h> // linux
-#include <SDL2/SDL_syswm.h>
 #endif
 
 #include <glad/glad.h>
-
-#define IMGUI_IMPL_OPENGL_LOADER_GLAD
-#include <imgui.h>
-#include <imgui_impl_sdl.h>
-#include <imgui_impl_opengl3.h>
 
 #define CUTE_TILED_IMPLEMENTATION
 #include <cute_tiled.h>
 
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
+#pragma warning(push)
+#pragma warning(disable : 4505)
 #include <stb_image.h>
+#pragma warning(pop)
+
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#pragma warning(push)
+#pragma warning(disable : 4701 4127 4100)
+#include <nuklear.h>
+#pragma warning(pop)
+#define NK_SDL_GL3_IMPLEMENTATION
+#include <nuklear_sdl_gl3.h>
 
 #include <glad.c>
-
-#include <imgui.cpp>
-#include <imgui_draw.cpp>
-#include <imgui_tables.cpp>
-#include <imgui_widgets.cpp>
-#include <imgui_demo.cpp>
-
-#include <imgui_impl_opengl3.cpp>
-#include <imgui_impl_sdl.cpp>
 
 #include "language.h"
 #include "render.h"
 #include "shaders.gen.h"
 #include "app.h"
+
+global const i32 NK_MAX_VERTEX_MEMORY = 512 * 1024;
+global const i32 NK_MAX_ELEMENT_MEMORY = 128 * 1024;
 
 global const i32 SCREEN_WIDTH = 1366;
 global const i32 SCREEN_HEIGHT = 768;
@@ -58,92 +63,78 @@ global AppState *app = nullptr;
 #include "maths.cpp"
 #include "gl.cpp"
 #include "render.cpp"
-#include "imgui_style.cpp"
 
 int main(int argc, char *argv[])
 {
     (void)argc;
     (void)argv;
 
-    {
-        // init app
-        app = (AppState *)malloc(sizeof(AppState));
-        assert(app);
-        app->running = true;
-        app->showImguiDemoWindow = false;
+    // init app
+    app = (AppState *)malloc(sizeof(AppState));
+    assert(app);
+    app->running = true;
 
-        // init sdl
-        assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+    // init sdl
+    assert(SDL_Init(SDL_INIT_VIDEO) == 0);
 
-        i32 glContextFlags = 0;
+    i32 glContextFlags = 0;
 #ifdef __APPLE__
-        // Always required on Mac
-        glContextFlags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+    // Always required on Mac
+    glContextFlags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
 #endif
 
 #ifdef DEBUG
-        glContextFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
+    glContextFlags |= SDL_GL_CONTEXT_DEBUG_FLAG;
 #endif
 
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, glContextFlags);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, glContextFlags);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-        app->windowWidth = SCREEN_WIDTH;
-        app->windowHeight = SCREEN_HEIGHT;
-        app->window = SDL_CreateWindow(WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED,
-                                       SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
-                                       SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI |
-                                           SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
-        assert(app->window);
-        app->glContext = SDL_GL_CreateContext(app->window);
-        SDL_GL_MakeCurrent(app->window, app->glContext);
-        SDL_GL_SetSwapInterval(0); // vsync
+    app->windowWidth = SCREEN_WIDTH;
+    app->windowHeight = SCREEN_HEIGHT;
+    app->window = SDL_CreateWindow(
+        WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+    assert(app->window);
+    app->glContext = SDL_GL_CreateContext(app->window);
+    SDL_GL_MakeCurrent(app->window, app->glContext);
+    SDL_GL_SetSwapInterval(0); // vsync
 
-        // load opengl procs
-        assert(gladLoadGLLoader(SDL_GL_GetProcAddress));
+    // load opengl procs
+    assert(gladLoadGLLoader(SDL_GL_GetProcAddress));
 
 #ifdef DEBUG
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GL_MessageCallback, 0);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
-                              GL_FALSE);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(GL_MessageCallback, 0);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, NULL,
+                          GL_FALSE);
 #endif
 
-        CreateRenderer(&app->renderer);
-        app->dog = CreateTexture("data/dog.png");
-        CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
+    CreateRenderer(&app->renderer);
+    app->dog = CreateTexture("data/dog.png");
+    CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
 
-        // init imgui
-        {
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-            ImGuiIO &io = ImGui::GetIO();
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    // keyboard state
+    app->keyDown = SDL_GetKeyboardState(&app->keyCount);
+    app->keyDownPrev = (const u8 *)malloc(app->keyCount);
+    assert(app->keyDownPrev);
 
-            // style
-            ImGuiCustomDark();
-
-            // backend
-            ImGui_ImplSDL2_InitForOpenGL(app->window, app->glContext);
-            ImGui_ImplOpenGL3_Init("#version 330 core");
-        }
-
-        // keyboard state
-        app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-        app->keyDownPrev = (const u8 *)malloc(app->keyCount);
-        assert(app->keyDownPrev);
-    }
+    app->nkContext = nk_sdl_init(app->window);
+    struct nk_font_atlas *atlas;
+    nk_sdl_font_stash_begin(&atlas);
+    nk_sdl_font_stash_end();
 
     v2 cameraPos = v2(0, 0);
     v2 dogPosition = v2(100, 100);
     f32 rotation = 0.0f;
-    v4 clearColor = v4(0.45f, 0.55f, 0.60f, 1.00f);
+    struct nk_colorf bg;
+    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
 
     SDL_Event event;
 
@@ -159,9 +150,9 @@ int main(int argc, char *argv[])
         // must update keyDownPrev before the loop.
         memcpy((void *)app->keyDownPrev, app->keyDown, app->keyCount);
 
+        nk_input_begin(app->nkContext);
         while (SDL_PollEvent(&event) != 0)
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
             if (event.type == SDL_QUIT)
             {
                 app->running = false;
@@ -180,38 +171,48 @@ int main(int argc, char *argv[])
                     UpdateProjections(&app->renderer);
                 }
             }
+            nk_sdl_handle_event(&event);
         }
+        nk_input_end(app->nkContext);
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame(app->window);
-        ImGui::NewFrame();
-
-        if (app->showImguiDemoWindow)
+        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 230, 250),
+                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
+                         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
         {
-            ImGui::ShowDemoWindow((bool *)&app->showImguiDemoWindow);
+            static int property = 20;
+
+            nk_layout_row_static(app->nkContext, 30, 80, 1);
+            if (nk_button_label(app->nkContext, "button"))
+            {
+                printf("button pressed!\n");
+            }
+            nk_layout_row_dynamic(app->nkContext, 30, 2);
+            nk_layout_row_dynamic(app->nkContext, 22, 1);
+            nk_property_int(app->nkContext, "Compression:", 0, &property, 100, 10, 1);
+
+            nk_layout_row_dynamic(app->nkContext, 20, 1);
+            nk_label(app->nkContext, "background:", NK_TEXT_LEFT);
+            nk_layout_row_dynamic(app->nkContext, 25, 1);
+
+            if (nk_combo_begin_color(app->nkContext, nk_rgb_cf(bg),
+                                     nk_vec2(nk_widget_width(app->nkContext), 400)))
+            {
+                nk_layout_row_dynamic(app->nkContext, 120, 1);
+                bg = nk_color_picker(app->nkContext, bg, NK_RGBA);
+                nk_layout_row_dynamic(app->nkContext, 25, 1);
+                bg.r = nk_propertyf(app->nkContext, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
+                bg.g = nk_propertyf(app->nkContext, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
+                bg.b = nk_propertyf(app->nkContext, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
+                bg.a = nk_propertyf(app->nkContext, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
+                nk_combo_end(app->nkContext);
+            }
         }
+        nk_end(app->nkContext);
 
-        {
-            ImGui::Begin("Goodbye, world!");
-
-            ImGui::Checkbox("Demo Window", (bool *)&app->showImguiDemoWindow);
-
-            ImGui::DragFloat2("camera pos", (f32 *)&cameraPos);
-            ImGui::DragFloat2("dog pos", (f32 *)&dogPosition);
-            ImGui::DragFloat("dog rot", &rotation, 0.01f);
-
-            ImGui::ColorEdit3("clear color", (float *)&clearColor);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                        1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        ImGui::Render();
-        ImGuiIO &io = ImGui::GetIO();
-        glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-
-        glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+        glViewport(0, 0, (int)app->windowWidth, (int)app->windowHeight);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glClearColor(bg.r, bg.g, bg.b, bg.a);
         glClear(GL_COLOR_BUFFER_BIT);
 
         BeginDraw(&app->renderer, cameraPos);
@@ -219,7 +220,8 @@ int main(int argc, char *argv[])
         DrawTexture(&app->renderer, app->dog, dogPosition, rotation);
         FlushRenderer(&app->renderer);
 
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
+
         SDL_GL_SwapWindow(app->window);
 
         GL_CheckForErrors();
@@ -227,10 +229,7 @@ int main(int argc, char *argv[])
 
     // free all resources
     {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplSDL2_Shutdown();
-        ImGui::DestroyContext();
-
+        nk_free(app->nkContext);
         DestroyRenderer(&app->renderer);
 
         SDL_GL_DeleteContext(app->glContext);
