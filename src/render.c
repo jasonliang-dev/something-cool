@@ -72,7 +72,7 @@ internal void CreateRenderer(Renderer *renderer)
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texIndex));
 
-    u32 *indices = (u32 *)malloc(sizeof(u32) * MAX_INDICES);
+    u32 *indices = malloc(sizeof(u32) * MAX_INDICES);
     assert(indices);
     for (i32 i = 0, stride = 0; i < MAX_INDICES; i += 6, stride += 4)
     {
@@ -96,7 +96,7 @@ internal void CreateRenderer(Renderer *renderer)
     renderer->program = CreateShaderProgram(TEXTURE_VERT, TEXTURE_FRAG);
     glUseProgram(renderer->program);
 
-    i32 *samplers = (i32 *)malloc(sizeof(i32) * renderer->maxTextureUnits);
+    i32 *samplers = malloc(sizeof(i32) * renderer->maxTextureUnits);
     assert(samplers);
     for (i32 i = 0; i < renderer->maxTextureUnits; ++i)
     {
@@ -112,10 +112,10 @@ internal void CreateRenderer(Renderer *renderer)
 
     glUseProgram(0);
 
-    renderer->textureIDs = (GLuint *)malloc(sizeof(GLuint) * renderer->maxTextureUnits);
+    renderer->textureIDs = malloc(sizeof(GLuint) * renderer->maxTextureUnits);
     assert(renderer->textureIDs);
 
-    renderer->vertices = (TextureVertex *)malloc(sizeof(TextureVertex) * MAX_VERTICES);
+    renderer->vertices = malloc(sizeof(TextureVertex) * MAX_VERTICES);
     assert(renderer->vertices);
 
     GL_CheckForErrors();
@@ -196,44 +196,38 @@ internal void FlushRenderer(Renderer *renderer)
 
 internal f32 FindOrCreateTextureIndex(Renderer *renderer, GLuint textureID)
 {
-    i32 texIndex = -1;
     for (i32 i = 0; i < renderer->textureCount; ++i)
     {
         if (renderer->textureIDs[i] == textureID)
         {
-            texIndex = i;
-            break;
+            return (f32)i;
         }
     }
 
-    if (texIndex == -1)
+    if (renderer->textureCount == renderer->maxTextureUnits)
     {
-        if (renderer->textureCount == renderer->maxTextureUnits)
-        {
-            FlushRenderer(renderer);
-        }
-
-        texIndex = renderer->textureCount++;
-        renderer->textureIDs[texIndex] = textureID;
+        FlushRenderer(renderer);
     }
 
-    return (f32)texIndex;
+    renderer->textureIDs[renderer->textureCount] = textureID;
+
+    return (f32)renderer->textureCount++;
 }
 
-internal void DrawTextureMat(Renderer *renderer, Texture texture, m4 transform)
+internal void DrawTextureMat(Renderer *renderer, GLuint textureID, m4 transform, v2 *texCoords)
 {
     if (renderer->quadCount == MAX_QUADS)
     {
         FlushRenderer(renderer);
     }
 
-    f32 texIndex = FindOrCreateTextureIndex(renderer, texture.id);
+    f32 texIndex = FindOrCreateTextureIndex(renderer, textureID);
 
     TextureVertex vertices[] = {
-        {V4MultiplyM4(v4(0, 1, 0, 1), transform).xy, v2(0, 1), texIndex},
-        {V4MultiplyM4(v4(1, 0, 0, 1), transform).xy, v2(1, 0), texIndex},
-        {V4MultiplyM4(v4(0, 0, 0, 1), transform).xy, v2(0, 0), texIndex},
-        {V4MultiplyM4(v4(1, 1, 0, 1), transform).xy, v2(1, 1), texIndex},
+        {V4MultiplyM4(v4(0, 1, 0, 1), transform).xy, texCoords[0], texIndex},
+        {V4MultiplyM4(v4(1, 0, 0, 1), transform).xy, texCoords[1], texIndex},
+        {V4MultiplyM4(v4(0, 0, 0, 1), transform).xy, texCoords[2], texIndex},
+        {V4MultiplyM4(v4(1, 1, 0, 1), transform).xy, texCoords[3], texIndex},
     };
 
     memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
@@ -254,7 +248,8 @@ internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 
     }
     transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
 
-    DrawTextureMat(renderer, texture, transform);
+    v2 texCoords[4] = {v2(0, 1), v2(1, 0), v2(0, 0), v2(1, 1)};
+    DrawTextureMat(renderer, texture.id, transform, texCoords);
 }
 
 internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *mapDataPath)
@@ -271,9 +266,9 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
     map->tileWidth = tiledMap->tilewidth;
     assert(layer->data_count == map->width * map->height);
 
-    map->vertexPositions = (v2 *)malloc(sizeof(v2) * layer->data_count * 4);
+    map->vertexPositions = malloc(sizeof(v2) * layer->data_count * 4);
     assert(map->vertexPositions);
-    map->texCoords = (v2 *)malloc(sizeof(v2) * layer->data_count * 4);
+    map->texCoords = malloc(sizeof(v2) * layer->data_count * 4);
     assert(map->texCoords);
 
     i32 realTileWidth = map->tileWidth * PIXEL_ART_SCALE;
@@ -379,4 +374,42 @@ internal void DrawTilemap(Renderer *renderer, Tilemap *map)
             renderer->quadCount++;
         }
     }
+}
+
+internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath, i32 frameWidth,
+                                    i32 msPerFrame)
+{
+    ani->atlas = CreateTexture(imagePath);
+    ani->time = 0;
+    ani->msPerFrame = msPerFrame;
+    ani->totalFrames = ani->atlas.width / frameWidth;
+
+    ani->texCoords = malloc(sizeof(v2) * ani->totalFrames * 4);
+    assert(ani->texCoords);
+
+    for (i32 i = 0; i < ani->totalFrames; ++i)
+    {
+        ani->texCoords[i * 4 + 0] = v2((f32)i / ani->totalFrames, 1);
+        ani->texCoords[i * 4 + 1] = v2((f32)(i + 1) / ani->totalFrames, 0);
+        ani->texCoords[i * 4 + 2] = v2((f32)i / ani->totalFrames, 0);
+        ani->texCoords[i * 4 + 3] = v2((f32)(i + 1) / ani->totalFrames, 1);
+    }
+}
+
+internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 position)
+{
+    v2 area = v2((f32)ani->atlas.width / ani->totalFrames * PIXEL_ART_SCALE,
+                 (f32)ani->atlas.height * PIXEL_ART_SCALE);
+    m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
+    transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
+
+    ani->time += app->deltaTime * 1000;
+    while (ani->time > ani->msPerFrame * ani->totalFrames)
+    {
+        ani->time -= ani->msPerFrame * ani->totalFrames;
+    }
+
+    i32 frame = (i32)(ani->time / ani->msPerFrame);
+
+    DrawTextureMat(renderer, ani->atlas.id, transform, ani->texCoords + (frame * 4));
 }

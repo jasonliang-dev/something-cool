@@ -29,6 +29,16 @@ struct Tilemap
     v2 *texCoords;
 };
 
+typedef struct SpriteAnimation SpriteAnimation;
+struct SpriteAnimation
+{
+    Texture atlas;
+    f32 time;
+    i32 msPerFrame;
+    i32 totalFrames;
+    v2 *texCoords;
+};
+
 typedef struct Renderer Renderer;
 struct Renderer
 {

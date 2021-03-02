@@ -1,3 +1,14 @@
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#pragma warning(disable : 4127)
+#pragma warning(disable : 4477)
+#pragma warning(disable : 4701)
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -17,18 +28,7 @@
 
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
-#ifdef _WIN32
-
-#pragma warning(push)
-#pragma warning(disable : 4505)
 #include <stb_image.h>
-#pragma warning(pop)
-
-#else
-
-#include <stb_image.h>
-
-#endif
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -38,26 +38,18 @@
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
-#ifdef _WIN32
-
-#pragma warning(push)
-#pragma warning(disable : 4701 4127 4100)
 #include <nuklear.h>
-#pragma warning(pop)
-
-#else
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <nuklear.h>
-#pragma GCC diagnostic pop
-
-#endif
-
 #define NK_SDL_GL3_IMPLEMENTATION
 #include <nuklear_sdl_gl3.h>
+#include "overview.c"
 
 #include <glad.c>
+
+#ifdef _WIN32
+#pragma warning(pop)
+#else
+#pragma GCC diagnostic pop
+#endif
 
 #include "language.h"
 #include "render.h"
@@ -76,18 +68,6 @@
 
 global AppState *app = NULL;
 
-#ifdef _WIN32
-
-#pragma warning(push)
-#pragma warning(disable : 4477)
-#include "overview.c"
-#pragma warning(pop)
-
-#else
-
-#include "overview.c"
-
-#endif
 #include "utils.c"
 #include "maths.c"
 #include "gl.c"
@@ -99,7 +79,7 @@ int main(int argc, char *argv[])
     (void)argv;
 
     // init app
-    app = (AppState *)malloc(sizeof(AppState));
+    app = malloc(sizeof(AppState));
     assert(app);
     app->running = true;
     app->showOverview = false;
@@ -148,11 +128,12 @@ int main(int argc, char *argv[])
 
     CreateRenderer(&app->renderer);
     app->dog = CreateTexture("data/dog.png");
+    CreateSpriteAnimation(&app->boy, "data/boy-idle.png", 32, 50);
     CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
 
     // keyboard state
     app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-    app->keyDownPrev = (const u8 *)malloc(app->keyCount);
+    app->keyDownPrev = malloc(app->keyCount);
     assert(app->keyDownPrev);
 
     app->nkContext = nk_sdl_init(app->window);
@@ -160,6 +141,7 @@ int main(int argc, char *argv[])
     nk_sdl_font_stash_begin(&atlas);
     nk_sdl_font_stash_end();
 
+    v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
     v2 dogPosition = v2(100, 100);
     f32 rotation = 0.0f;
@@ -205,7 +187,7 @@ int main(int argc, char *argv[])
         }
         nk_input_end(app->nkContext);
 
-        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 300, 250),
+        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 300, 300),
                      NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
                          NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
         {
@@ -217,9 +199,14 @@ int main(int argc, char *argv[])
             nk_property_float(app->nkContext, "camera y:", -F32_MAX, &cameraPos.y, F32_MAX, 1.0f,
                               3.0f);
             nk_layout_row_dynamic(app->nkContext, 25, 2);
-            nk_property_float(app->nkContext, "player x:", -F32_MAX, &dogPosition.x, F32_MAX, 1.0f,
+            nk_property_float(app->nkContext, "boy x:", -F32_MAX, &boyPos.x, F32_MAX, 1.0f,
                               1.0f);
-            nk_property_float(app->nkContext, "player y:", -F32_MAX, &dogPosition.y, F32_MAX, 1.0f,
+            nk_property_float(app->nkContext, "boy y:", -F32_MAX, &boyPos.y, F32_MAX, 1.0f,
+                              1.0f);
+            nk_layout_row_dynamic(app->nkContext, 25, 2);
+            nk_property_float(app->nkContext, "dog x:", -F32_MAX, &dogPosition.x, F32_MAX, 1.0f,
+                              1.0f);
+            nk_property_float(app->nkContext, "dog y:", -F32_MAX, &dogPosition.y, F32_MAX, 1.0f,
                               1.0f);
             nk_layout_row_dynamic(app->nkContext, 25, 1);
             nk_property_float(app->nkContext, "player rot:", -F32_MAX, &rotation, F32_MAX, 0.1f,
@@ -262,6 +249,7 @@ int main(int argc, char *argv[])
         BeginDraw(&app->renderer, cameraPos);
         DrawTilemap(&app->renderer, &app->map);
         DrawTexture(&app->renderer, app->dog, dogPosition, rotation);
+        DrawSpriteAnimation(&app->renderer, &app->boy, boyPos);
         FlushRenderer(&app->renderer);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);

@@ -7,6 +7,7 @@ struct AppState
 
     Renderer renderer;
     Texture dog;
+    SpriteAnimation boy;
     Tilemap map;
 
     i32 windowWidth;
