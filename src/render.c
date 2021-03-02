@@ -380,7 +380,7 @@ internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath,
                                     i32 msPerFrame)
 {
     ani->atlas = CreateTexture(imagePath);
-    ani->time = 0;
+    ani->tElapsed = 0;
     ani->msPerFrame = msPerFrame;
     ani->totalFrames = ani->atlas.width / frameWidth;
 
@@ -396,6 +396,11 @@ internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath,
     }
 }
 
+internal void DestroySpriteAnimation(SpriteAnimation *ani)
+{
+    free(ani->texCoords);
+}
+
 internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 position)
 {
     v2 area = v2((f32)ani->atlas.width / ani->totalFrames * PIXEL_ART_SCALE,
@@ -403,13 +408,13 @@ internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 p
     m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
     transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
 
-    ani->time += app->deltaTime * 1000;
-    while (ani->time > ani->msPerFrame * ani->totalFrames)
+    ani->tElapsed += app->deltaTime * 1000;
+    while (ani->tElapsed > ani->msPerFrame * ani->totalFrames)
     {
-        ani->time -= ani->msPerFrame * ani->totalFrames;
+        ani->tElapsed -= ani->msPerFrame * ani->totalFrames;
     }
 
-    i32 frame = (i32)(ani->time / ani->msPerFrame);
+    i32 frame = (i32)(ani->tElapsed / ani->msPerFrame);
 
     DrawTextureMat(renderer, ani->atlas.id, transform, ani->texCoords + (frame * 4));
 }

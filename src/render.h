@@ -33,7 +33,7 @@ typedef struct SpriteAnimation SpriteAnimation;
 struct SpriteAnimation
 {
     Texture atlas;
-    f32 time;
+    f32 tElapsed;
     i32 msPerFrame;
     i32 totalFrames;
     v2 *texCoords;
