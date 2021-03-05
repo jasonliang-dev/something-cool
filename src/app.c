@@ -55,6 +55,7 @@
 #include "audio.h"
 #include "render.h"
 #include "shaders.gen.h"
+#include "assets.h"
 #include "app.h"
 
 #define NK_MAX_VERTEX_MEMORY (512 * 1024)
@@ -74,6 +75,7 @@ global AppState *app = NULL;
 #include "gl.c"
 #include "audio.c"
 #include "render.c"
+#include "assets.c"
 
 int main(int argc, char **argv)
 {
@@ -128,14 +130,7 @@ int main(int argc, char **argv)
 
     InitAudio(&app->audio);
     CreateRenderer(&app->renderer);
-
-    {
-        app->dog = CreateTexture("data/dog.png");
-        CreateSpriteAnimation(&app->boy, "data/boy-idle.png", 32, 50);
-        CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
-        CreateSoundFromWAV(&app->wobble, "data/wobble.wav");
-        CreateSoundFromWAV(&app->coin, "data/coin.wav");
-    }
+    CreateAllAssets();
 
     app->keyDown = SDL_GetKeyboardState(&app->keyCount);
     app->keyDownPrev = malloc(app->keyCount);
@@ -150,13 +145,11 @@ int main(int argc, char **argv)
 
     v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
-    v2 dogPosition = v2(100, 100);
     f32 rotation = 0.0f;
     struct nk_colorf bg;
     bg.r = 0.10f, bg.g = 0.10f, bg.b = 0.10f, bg.a = 1.0f;
 
     SDL_PauseAudioDevice(app->audio.device, false);
-    PlaySound(&app->audio, &app->wobble);
 
     SDL_Event event;
 
@@ -225,10 +218,6 @@ int main(int argc, char **argv)
             nk_property_float(ctx, "boy x:", -F32_MAX, &boyPos.x, F32_MAX, 1.0f, 1.0f);
             nk_property_float(ctx, "boy y:", -F32_MAX, &boyPos.y, F32_MAX, 1.0f, 1.0f);
 
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "dog x:", -F32_MAX, &dogPosition.x, F32_MAX, 1.0f, 1.0f);
-            nk_property_float(ctx, "dog y:", -F32_MAX, &dogPosition.y, F32_MAX, 1.0f, 1.0f);
-
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_property_float(ctx, "player rot:", -F32_MAX, &rotation, F32_MAX, 0.1f, 0.01f);
 
@@ -267,7 +256,6 @@ int main(int argc, char **argv)
 
         BeginDraw(&app->renderer, cameraPos);
         DrawTilemap(&app->renderer, &app->map);
-        DrawTexture(&app->renderer, app->dog, dogPosition, rotation);
         DrawSpriteAnimation(&app->renderer, &app->boy, boyPos);
         FlushRenderer(&app->renderer);
 
@@ -278,11 +266,7 @@ int main(int argc, char **argv)
         GL_CheckForErrors();
     }
 
-    // free all resources
-    // ahahahaha
     {
-        // SDL_FreeWAV(sound.buffer);
-
         nk_free(app->nkContext);
         DestroyRenderer(&app->renderer);
 
@@ -290,7 +274,7 @@ int main(int argc, char **argv)
         SDL_DestroyWindow(app->window);
         SDL_Quit();
 
-        DestroyTilemap(&app->map);
+        DestroyAllAssets();
 
         free((void *)app->keyDownPrev);
         free(app);

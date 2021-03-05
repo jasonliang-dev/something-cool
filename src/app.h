@@ -8,12 +8,6 @@ struct AppState
     Audio audio;
     Renderer renderer;
 
-    Texture dog;
-    SpriteAnimation boy;
-    Tilemap map;
-    Sound wobble;
-    Sound coin;
-
     i32 windowWidth;
     i32 windowHeight;
 
@@ -26,4 +20,25 @@ struct AppState
     f32 deltaTime;
 
     b32 showOverview;
+
+    Texture dog;
+
+    /*
+    SpriteAnimation boy;
+    Tilemap map;
+    Sound wobble;
+    Sound coin;
+    */
+
+#define X(name, file, width, msPerFrame) SpriteAnimation name;
+    SPRITE_ANIMATION_ASSETS
+#undef X
+
+#define X(name, atlas, data) Tilemap name;
+    TILEMAP_ASSETS
+#undef X
+
+#define X(name, file) Sound name;
+    SOUND_ASSETS
+#undef X
 };
