@@ -5,10 +5,13 @@ struct AppState
     SDL_GLContext glContext;
     struct nk_context *nkContext;
 
+    Audio audio;
     Renderer renderer;
+
     Texture dog;
     SpriteAnimation boy;
     Tilemap map;
+    Sound wobble;
 
     i32 windowWidth;
     i32 windowHeight;

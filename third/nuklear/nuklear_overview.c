@@ -1,5 +1,5 @@
 static int
-overview(struct nk_context *ctx)
+nk_overview(struct nk_context *ctx)
 {
     /* window flags */
     static int show_menu = nk_true;
