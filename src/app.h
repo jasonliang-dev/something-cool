@@ -12,6 +12,7 @@ struct AppState
     SpriteAnimation boy;
     Tilemap map;
     Sound wobble;
+    Sound coin;
 
     i32 windowWidth;
     i32 windowHeight;

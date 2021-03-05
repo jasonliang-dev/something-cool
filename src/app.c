@@ -22,7 +22,6 @@
 #include <SDL2/SDL.h>
 
 #include <glad/glad.h>
-#undef APIENTRY // man, clean up after yourself.
 
 #define CUTE_TILED_IMPLEMENTATION
 #include <cute_tiled.h>
@@ -135,6 +134,7 @@ int main(int argc, char **argv)
         CreateSpriteAnimation(&app->boy, "data/boy-idle.png", 32, 50);
         CreateTilemap(&app->map, "data/tiles.png", "data/map.json");
         CreateSoundFromWAV(&app->wobble, "data/wobble.wav");
+        CreateSoundFromWAV(&app->coin, "data/coin.wav");
     }
 
     app->keyDown = SDL_GetKeyboardState(&app->keyCount);
@@ -206,10 +206,15 @@ int main(int argc, char **argv)
             nk_layout_row_dynamic(ctx, 25, 1);
             nk_checkbox_label(ctx, "show overview", &app->showOverview);
 
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_button_label(ctx, "Play Sound"))
+            nk_layout_row_dynamic(ctx, 25, 2);
+            if (nk_button_label(ctx, "Play Wobble"))
             {
                 PlaySound(&app->audio, &app->wobble);
+            }
+
+            if (nk_button_label(ctx, "Play Coin"))
+            {
+                PlaySound(&app->audio, &app->coin);
             }
 
             nk_layout_row_dynamic(ctx, 25, 2);
@@ -274,7 +279,10 @@ int main(int argc, char **argv)
     }
 
     // free all resources
+    // ahahahaha
     {
+        // SDL_FreeWAV(sound.buffer);
+
         nk_free(app->nkContext);
         DestroyRenderer(&app->renderer);
 
