@@ -1,42 +1,34 @@
-#define MAX_LOG_STRING_BUFFER 8192
+global const char *logfileLocation = NULL;
+
+internal void StartLogging(const char *logfile)
+{
+    logfileLocation = logfile;
+}
 
 #define LOG(fd, prefix)                                                                            \
+    FILE *logfile = fopen(logfileLocation, "a");                                                   \
+    assert(logfile);                                                                               \
+                                                                                                   \
     char buff[32];                                                                                 \
     time_t rawTime;                                                                                \
     time(&rawTime);                                                                                \
     struct tm *timeinfo = localtime(&rawTime);                                                     \
     strftime(buff, 32, "[%b %d %I:%M:%S %p] ", timeinfo);                                          \
-    fputs(buff, fd);                                                                           \
+    fputs(buff, fd);                                                                               \
+    fputs(buff, logfile);                                                                          \
                                                                                                    \
-    fputs(prefix, fd);                                                                      \
+    fputs(prefix, fd);                                                                             \
+    fputs(prefix, logfile);                                                                        \
                                                                                                    \
     va_list args;                                                                                  \
     va_start(args, format);                                                                        \
-    vfprintf(fd, format, args);                                                                \
+    vfprintf(fd, format, args);                                                                    \
+    vfprintf(logfile, format, args);                                                               \
     va_end(args);                                                                                  \
                                                                                                    \
-    fputs("\n", fd)
-
-typedef struct LoggingData LoggingData;
-struct LoggingData
-{
-    const char *logfileLocation;
-    char *stringBuffer;
-};
-
-global LoggingData loggingData;
-
-internal void StartLogging(const char *logfile)
-{
-    loggingData.logfileLocation = logfile;
-    loggingData.stringBuffer = malloc(sizeof(char) * MAX_LOG_STRING_BUFFER);
-    assert(loggingData.stringBuffer);
-}
-
-internal void DestroyLogging()
-{
-    free(loggingData.stringBuffer);
-}
+    fputs("\n", fd);                                                                               \
+    fputs("\n", logfile);                                                                          \
+    fclose(logfile)
 
 internal void LogInfo(const char *format, ...)
 {
