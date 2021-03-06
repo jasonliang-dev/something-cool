@@ -8,3 +8,19 @@
 #define SOUND_ASSETS                                                                               \
     X(wobble, "data/wobble.wav")                                                                   \
     X(coin, "data/coin.wav")
+
+typedef struct Assets Assets;
+struct Assets
+{
+#define X(name, file, width, msPerFrame) SpriteAnimation name;
+    SPRITE_ANIMATION_ASSETS
+#undef X
+
+#define X(name, atlas, data) Tilemap name;
+    TILEMAP_ASSETS
+#undef X
+
+#define X(name, file) Sound name;
+    SOUND_ASSETS
+#undef X
+};

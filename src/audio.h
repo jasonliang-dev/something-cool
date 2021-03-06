@@ -9,17 +9,11 @@ struct Sound
     SDL_AudioSpec spec;
 };
 
-typedef struct AudioSource AudioSource;
-struct AudioSource
-{
-    Sound *sound;
-    u32 progress;
-};
-
 typedef struct Audio Audio;
 struct Audio
 {
     SDL_AudioDeviceID device;
-    AudioSource sources[MAX_AUDIO_SOURCES];
+    Sound *sources[MAX_AUDIO_SOURCES];
+    u32 progress[MAX_AUDIO_SOURCES];
     b8 playing[MAX_AUDIO_SOURCES];
 };

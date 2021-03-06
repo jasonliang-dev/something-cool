@@ -2,6 +2,12 @@
 #define internal static
 #define persistent static
 
+#ifdef _WIN32
+#define export __declspec(dllexport)
+#else
+#define export
+#endif
+
 #define PI 3.1415926535897f
 #define F32_EPSILON ((f32)FLT_EPSILON)
 #define F32_MIN ((f32)FLT_MIN)

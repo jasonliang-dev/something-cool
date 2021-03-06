@@ -56,6 +56,7 @@
 #include "render.h"
 #include "shaders.gen.h"
 #include "assets.h"
+#include "hot.h"
 #include "app.h"
 
 #define NK_MAX_VERTEX_MEMORY (512 * 1024)
@@ -69,6 +70,13 @@
 #define WINDOW_TITLE "This is a title"
 
 global AppState *app = NULL;
+global Assets assets;
+
+#ifdef _WIN32
+#include "windows_os_procs.c"
+#else
+#error "platform not supported"
+#endif
 
 #include "utils.c"
 #include "maths.c"
@@ -76,6 +84,7 @@ global AppState *app = NULL;
 #include "audio.c"
 #include "render.c"
 #include "assets.c"
+#include "hot_code.c"
 
 int main(int argc, char **argv)
 {
@@ -143,6 +152,9 @@ int main(int argc, char **argv)
         nk_sdl_font_stash_end();
     }
 
+    HotCode hotCode;
+    HotCodeLoad(&hotCode, "hot.dll", "hot_copy.dll");
+
     v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
     f32 rotation = 0.0f;
@@ -202,12 +214,12 @@ int main(int argc, char **argv)
             nk_layout_row_dynamic(ctx, 25, 2);
             if (nk_button_label(ctx, "Play Wobble"))
             {
-                PlaySound(&app->audio, &app->wobble);
+                PlaySound(&app->audio, &assets.wobble);
             }
 
             if (nk_button_label(ctx, "Play Coin"))
             {
-                PlaySound(&app->audio, &app->coin);
+                PlaySound(&app->audio, &assets.coin);
             }
 
             nk_layout_row_dynamic(ctx, 25, 2);
@@ -255,8 +267,8 @@ int main(int argc, char **argv)
         glClear(GL_COLOR_BUFFER_BIT);
 
         BeginDraw(&app->renderer, cameraPos);
-        DrawTilemap(&app->renderer, &app->map);
-        DrawSpriteAnimation(&app->renderer, &app->boy, boyPos);
+        DrawTilemap(&app->renderer, &assets.map);
+        DrawSpriteAnimation(&app->renderer, &assets.boy, boyPos);
         FlushRenderer(&app->renderer);
 
         nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
@@ -264,6 +276,9 @@ int main(int argc, char **argv)
         SDL_GL_SwapWindow(app->window);
 
         GL_CheckForErrors();
+
+        hotCode.Hello();
+        HotCodeMaybeReload(&hotCode, "hot.dll", "hot_copy.dll");
     }
 
     {

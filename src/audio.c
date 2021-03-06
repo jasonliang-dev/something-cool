@@ -8,14 +8,14 @@ internal void AudioCallback(void *userdata, u8 *stream, int length)
     {
         if (audio->playing[i])
         {
-            i32 remaining = audio->sources[i].sound->length - audio->sources[i].progress;
+            i32 remaining = audio->sources[i]->length - audio->progress[i];
             i32 write = Min(remaining, length);
 
-            SDL_MixAudioFormat(stream, audio->sources[i].sound->buffer + audio->sources[i].progress,
-                               AUDIO_FORMAT, write, SDL_MIX_MAXVOLUME / 2);
-            audio->sources[i].progress += write;
+            SDL_MixAudioFormat(stream, audio->sources[i]->buffer + audio->progress[i], AUDIO_FORMAT,
+                               write, SDL_MIX_MAXVOLUME / 2);
+            audio->progress[i] += write;
 
-            if (audio->sources[i].progress == audio->sources[i].sound->length)
+            if (audio->progress[i] == audio->sources[i]->length)
             {
                 audio->playing[i] = false;
             }
@@ -53,8 +53,8 @@ internal void PlaySound(Audio *audio, Sound *sound)
         if (!audio->playing[i])
         {
             audio->playing[i] = true;
-            audio->sources[i].sound = sound;
-            audio->sources[i].progress = 0;
+            audio->sources[i] = sound;
+            audio->progress[i] = 0;
             return;
         }
     }

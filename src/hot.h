@@ -1,0 +1,3 @@
+internal void HelloStub(void)
+{
+}
