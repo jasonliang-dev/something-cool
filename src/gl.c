@@ -34,10 +34,12 @@ internal void GL_CheckForErrorsReal(const char *file, u32 line)
         case GL_INVALID_FRAMEBUFFER_OPERATION:
             error = "INVALID_FRAMEBUFFER_OPERATION";
             break;
+        default:
+            error = "UNKNOWN_ERROR";
+            break;
         }
 
-        assert(error);
-        DisplayError("%s: %s line %d\n", error, file, line);
+        LogError("GL_CheckForErrors %s: %s line %d\n", error, file, line);
     }
 }
 
@@ -102,25 +104,17 @@ void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum s
         break;
     }
 
-    const char *severityString;
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_HIGH:
-        severityString = "HIGH";
-        break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        severityString = "MEDIUM";
-        break;
     case GL_DEBUG_SEVERITY_LOW:
-        severityString = "LOW";
+        LogError("OpenGL: %s\nfrom: %s, type: %s\n", message, sourceString, typeString);
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
     default:
-        severityString = "NOTIFICATION";
+        LogInfo("OpenGL: %s\nfrom: %s, type: %s\n", message, sourceString, typeString);
         break;
     }
-
-    fprintf(stderr, "OpenGL: %s\nfrom: %s, type: %s, severity: %s\n", message, sourceString,
-            typeString, severityString);
 }
 #endif

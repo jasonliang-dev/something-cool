@@ -15,9 +15,7 @@ internal GLuint CompileGLSL(u32 type, const char *source)
         length = Max((u32)length, sizeof(message));
         glGetShaderInfoLog(shader, length, NULL, message);
 
-        DisplayError("Cannot compile shader: %s\n", message);
-        fprintf(stderr, "%s\n", source);
-        assert(0);
+        LogFatal("Cannot compile shader %s\n%s\n", message, source);
     }
 
     return shader;
@@ -53,7 +51,10 @@ internal void UpdateProjections(Renderer *renderer)
 internal void CreateRenderer(Renderer *renderer)
 {
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &renderer->maxTextureUnits);
-    assert(renderer->maxTextureUnits == 32);
+    if (renderer->maxTextureUnits != 32)
+    {
+        LogError("Only supporting machines with 32 texture units");
+    }
 
     glGenVertexArrays(1, &renderer->vao);
     glBindVertexArray(renderer->vao);
@@ -73,7 +74,11 @@ internal void CreateRenderer(Renderer *renderer)
                           (void *)offsetof(TextureVertex, texIndex));
 
     u32 *indices = malloc(sizeof(u32) * MAX_INDICES);
-    assert(indices);
+    if (!indices)
+    {
+        OutOfMemory();
+    }
+
     for (i32 i = 0, stride = 0; i < MAX_INDICES; i += 6, stride += 4)
     {
         indices[i + 0] = stride + 0;
@@ -97,7 +102,11 @@ internal void CreateRenderer(Renderer *renderer)
     glUseProgram(renderer->program);
 
     i32 *samplers = malloc(sizeof(i32) * renderer->maxTextureUnits);
-    assert(samplers);
+    if (!samplers)
+    {
+        OutOfMemory();
+    }
+
     for (i32 i = 0; i < renderer->maxTextureUnits; ++i)
     {
         samplers[i] = i;
@@ -113,10 +122,16 @@ internal void CreateRenderer(Renderer *renderer)
     glUseProgram(0);
 
     renderer->textureIDs = malloc(sizeof(GLuint) * renderer->maxTextureUnits);
-    assert(renderer->textureIDs);
+    if (!renderer->textureIDs)
+    {
+        OutOfMemory();
+    }
 
     renderer->vertices = malloc(sizeof(TextureVertex) * MAX_VERTICES);
-    assert(renderer->vertices);
+    if (!renderer->vertices)
+    {
+        OutOfMemory();
+    }
 
     GL_CheckForErrors();
 }
@@ -138,7 +153,10 @@ internal Texture CreateTexture(const char *imagePath)
 
     i32 channels;
     u8 *imageData = stbi_load(imagePath, &result.width, &result.height, &channels, 0);
-    assert(imageData);
+    if (!imageData)
+    {
+        LogFatal("Failed to load image data");
+    }
 
     glGenTextures(1, &result.id);
     glBindTexture(GL_TEXTURE_2D, result.id);
@@ -259,17 +277,26 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
     cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(mapDataPath, 0);
 
     cute_tiled_layer_t *layer = tiledMap->layers;
-    assert(!layer->next);
 
     map->width = layer->width;
     map->height = layer->height;
     map->tileWidth = tiledMap->tilewidth;
-    assert(layer->data_count == map->width * map->height);
+    if (layer->data_count != map->width * map->height)
+    {
+        LogWarn("Tilemap %s data_count and map width/height are mismatched.", mapDataPath);
+    }
 
     map->vertexPositions = malloc(sizeof(v2) * layer->data_count * 4);
-    assert(map->vertexPositions);
+    if (!map->vertexPositions)
+    {
+        OutOfMemory();
+    }
+
     map->texCoords = malloc(sizeof(v2) * layer->data_count * 4);
-    assert(map->texCoords);
+    if (!map->texCoords)
+    {
+        OutOfMemory();
+    }
 
     i32 realTileWidth = map->tileWidth * PIXEL_ART_SCALE;
     i32 tileColumns = map->atlas.width / map->tileWidth;
@@ -385,7 +412,10 @@ internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath,
     ani->totalFrames = ani->atlas.width / frameWidth;
 
     ani->texCoords = malloc(sizeof(v2) * ani->totalFrames * 4);
-    assert(ani->texCoords);
+    if (!ani->texCoords)
+    {
+        OutOfMemory();
+    }
 
     for (i32 i = 0; i < ani->totalFrames; ++i)
     {

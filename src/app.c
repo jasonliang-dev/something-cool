@@ -78,7 +78,7 @@ global Assets assets;
 #error "platform not supported"
 #endif
 
-#include "utils.c"
+#include "logging.c"
 #include "maths.c"
 #include "gl.c"
 #include "audio.c"
@@ -91,19 +91,39 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
+    StartLogging("app.log");
+
     app = malloc(sizeof(AppState));
-    assert(app);
+    if (!app)
+    {
+        OutOfMemory();
+    }
+
     app->running = true;
     app->showOverview = false;
 
-    assert(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == 0);
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == 0)
+    {
+        LogInfo("Initalized SDL");
+    }
+    else
+    {
+        LogFatal("Cannot initialize SDL");
+    }
 
     app->windowWidth = SCREEN_WIDTH;
     app->windowHeight = SCREEN_HEIGHT;
     app->window = SDL_CreateWindow(
         WINDOW_TITLE, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT,
         SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
-    assert(app->window);
+    if (app->window)
+    {
+        LogInfo("Created window");
+    }
+    else
+    {
+        LogFatal("Cannot create window");
+    }
 
     i32 glContextFlags = 0;
 #ifdef __APPLE__
@@ -127,7 +147,14 @@ int main(int argc, char **argv)
     SDL_GL_MakeCurrent(app->window, app->glContext);
     SDL_GL_SetSwapInterval(0); // vsync
 
-    assert(gladLoadGLLoader(SDL_GL_GetProcAddress));
+    if (gladLoadGLLoader(SDL_GL_GetProcAddress))
+    {
+        LogInfo("Loaded OpenGL procedures");
+    }
+    else
+    {
+        LogFatal("Could not load OpenGL procedures");
+    }
 
 #ifdef DEBUG
     glEnable(GL_DEBUG_OUTPUT);
@@ -138,12 +165,18 @@ int main(int argc, char **argv)
 #endif
 
     InitAudio(&app->audio);
+    LogInfo("Initalized audio");
     CreateRenderer(&app->renderer);
+    LogInfo("Initalized renderer");
     CreateAllAssets();
+    LogInfo("Initalized assets");
 
     app->keyDown = SDL_GetKeyboardState(&app->keyCount);
     app->keyDownPrev = malloc(app->keyCount);
-    assert(app->keyDownPrev);
+    if (!app->keyDownPrev)
+    {
+        OutOfMemory();
+    }
 
     app->nkContext = nk_sdl_init(app->window);
     {
@@ -154,6 +187,7 @@ int main(int argc, char **argv)
 
     HotCode hotCode;
     HotCodeLoad(&hotCode, "hot.dll", "hot_copy.dll");
+    LogInfo("Loaded hot code");
 
     v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
@@ -277,7 +311,6 @@ int main(int argc, char **argv)
 
         GL_CheckForErrors();
 
-        hotCode.Hello();
         HotCodeMaybeReload(&hotCode, "hot.dll", "hot_copy.dll");
     }
 
