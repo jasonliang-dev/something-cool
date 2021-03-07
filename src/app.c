@@ -56,7 +56,6 @@
 #include "render.h"
 #include "shaders.gen.h"
 #include "assets.h"
-#include "hot.h"
 #include "app.h"
 
 #define NK_MAX_VERTEX_MEMORY (512 * 1024)
@@ -73,6 +72,7 @@ global AppState *app = NULL;
 global Assets assets;
 
 #ifdef _WIN32
+#include <windows.h>
 #include "windows_os_procs.c"
 #else
 #error "platform not supported"
@@ -84,7 +84,8 @@ global Assets assets;
 #include "audio.c"
 #include "render.c"
 #include "assets.c"
-#include "hot_code.c"
+#include "hot_stub.c"
+#include "hot_code_load.c"
 
 int main(int argc, char **argv)
 {
@@ -191,7 +192,6 @@ int main(int argc, char **argv)
 
     v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
-    f32 rotation = 0.0f;
     struct nk_colorf bg;
     bg.r = 0.10f, bg.g = 0.10f, bg.b = 0.10f, bg.a = 1.0f;
 
@@ -263,9 +263,6 @@ int main(int argc, char **argv)
             nk_layout_row_dynamic(ctx, 25, 2);
             nk_property_float(ctx, "boy x:", -F32_MAX, &boyPos.x, F32_MAX, 1.0f, 1.0f);
             nk_property_float(ctx, "boy y:", -F32_MAX, &boyPos.y, F32_MAX, 1.0f, 1.0f);
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_property_float(ctx, "player rot:", -F32_MAX, &rotation, F32_MAX, 0.1f, 0.01f);
 
             nk_layout_row_dynamic(ctx, 20, 1);
             nk_label(ctx, "background:", NK_TEXT_LEFT);

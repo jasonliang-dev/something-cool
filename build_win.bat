@@ -19,17 +19,17 @@ echo WAITING FOR PDB > hotlock.tmp
 
 cl -Z7 %COMPILE_FLAGS% ../src/hot.c^
     /link /DLL -opt:ref -incremental:no -Debug:fastlink^
-    -PDB:hot_%random%.pdb /out:hot.dll || exit /b
+    -PDB:hot_%random%.pdb /out:hot.dll || exit /b 1
 
 del hotlock.tmp
 
-cl %COMPILE_FLAGS% ../src/shadergen.c || exit /b
-shadergen.exe || exit /b
+cl %COMPILE_FLAGS% ../src/shadergen.c || exit /b 1
+shadergen.exe || exit /b 1
 
 cl -Z7 %COMPILE_FLAGS% ../src/app.c^
     /link shell32.lib opengl32.lib SDL2.lib SDL2main.lib^
     /LIBPATH:../third/sdl2/lib/x64^
     -opt:ref -incremental:no -Debug:fastlink^
-    /SUBSYSTEM:CONSOLE /out:app.exe || exit /b
+    /SUBSYSTEM:CONSOLE /out:app.exe || exit /b 1
 
 popd
