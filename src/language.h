@@ -3,9 +3,9 @@
 #define persistent static
 
 #ifdef _WIN32
-#define export __declspec(dllexport)
+#    define export __declspec(dllexport)
 #else
-#define export
+#    define export
 #endif
 
 #define PI 3.1415926535897f

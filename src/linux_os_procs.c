@@ -10,12 +10,14 @@ internal b32 OS_CopyFile(const char *source, const char *dest)
     int input = input = open(source, O_RDONLY);
     if (input == -1)
     {
+        LogWarn("Could not open input file: %s", source);
         return false;
     }
 
-    int output = creat(dest, 0660);
+    int output = creat(dest, 0755);
     if (output == -1)
     {
+        LogWarn("Could not create output file: %s", dest);
         close(input);
         return false;
     }
@@ -28,5 +30,6 @@ internal b32 OS_CopyFile(const char *source, const char *dest)
     close(output);
     close(input);
 
+    LogInfo("Copied %s to %s", source, dest);
     return result != -1;
 }

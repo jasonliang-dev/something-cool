@@ -1,5 +1,6 @@
 BasedOnStyle: Microsoft
 ColumnLimit: 100
+IndentPPDirectives: AfterHash
 SortIncludes: false
 BraceWrapping:
   AfterUnion: true

@@ -1,12 +1,12 @@
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable : 4100)
-#pragma warning(disable : 4127)
-#pragma warning(disable : 4477)
-#pragma warning(disable : 4701)
+#    pragma warning(push)
+#    pragma warning(disable : 4100)
+#    pragma warning(disable : 4127)
+#    pragma warning(disable : 4477)
+#    pragma warning(disable : 4701)
 #else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
 #include <assert.h>
@@ -46,9 +46,9 @@
 #include <nuklear_overview.c>
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #else
-#pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
 #endif
 
 #include "language.h"
@@ -71,32 +71,27 @@
 global AppState *app = NULL;
 global Assets assets;
 
-#if defined(_WIN32)
-
-#include <windows.h>
-#include "windows_os_procs.c"
-
-#elif defined(__linux__)
-
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/sendfile.h>
-#include "linux_os_procs.c"
-
-#else
-
-#error "platform not supported"
-
-#endif
-
-#include "logging.c"
+#include "log.c"
 #include "strings.c"
 #include "maths.c"
 #include "gl.c"
 #include "audio.c"
 #include "render.c"
 #include "assets.c"
+
+#if defined(_WIN32)
+#    include <windows.h>
+#    include "windows_os_procs.c"
+#elif defined(__linux__)
+#    include <fcntl.h>
+#    include <unistd.h>
+#    include <sys/stat.h>
+#    include <sys/sendfile.h>
+#    include "linux_os_procs.c"
+#else
+#    error "platform not supported"
+#endif
+
 #include "hot_stub.c"
 #include "hot_code_load.c"
 
@@ -105,7 +100,7 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
-    StartLogging("app.log");
+    StartLog("app.log");
 
     app = malloc(sizeof(AppState));
     if (!app)
@@ -200,7 +195,7 @@ int main(int argc, char **argv)
     }
 
     HotCode hotCode;
-    HotCodeLoad(&hotCode, "hot.dll", "hot_copy.dll");
+    HotCodeLoad(&hotCode, "libhot.so", "libhot_copy.so");
     LogInfo("Loaded hot code");
 
     v2 boyPos = v2(0, 0);
@@ -336,6 +331,8 @@ int main(int argc, char **argv)
 
         free((void *)app->keyDownPrev);
         free(app);
+
+        EndLog();
     }
 
     return 0;

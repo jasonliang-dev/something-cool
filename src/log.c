@@ -3,11 +3,16 @@
 global const char *logfileLocation = NULL;
 global char *logStringBuffer = NULL;
 
-internal inline void StartLogging(const char *logfile)
+internal inline void StartLog(const char *logfile)
 {
     logfileLocation = logfile;
     logStringBuffer = malloc(MAX_LOG_STRING_BUFFER);
     assert(logStringBuffer);
+}
+
+internal inline void EndLog()
+{
+    free(logStringBuffer);
 }
 
 internal void Log(FILE *fd, const char *prefix, const char *format, va_list args)
@@ -21,6 +26,14 @@ internal void Log(FILE *fd, const char *prefix, const char *format, va_list args
     time(&rawTime);
     struct tm *timeinfo = localtime(&rawTime);
     strftime(buff, 32, "[%b %d %I:%M:%S %p] ", timeinfo);
+
+    // apparently, if you call vfprintf() twice with the same va_list,
+    // you get UD:
+    //
+    //     vfprintf(fd, format, args);
+    //     vfprintf(logfile, format, args);
+    //
+    // okay, I guess we use a big char * buffer instead.
 
     vsnprintf(logStringBuffer, MAX_LOG_STRING_BUFFER, format, args);
 
