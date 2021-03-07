@@ -50,7 +50,10 @@ void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum s
     (void)id;
     (void)length;
     (void)userParam;
+    (void)source;
+    (void)type;
 
+#if 0
     const char *sourceString;
     switch (source)
     {
@@ -103,18 +106,21 @@ void APIENTRY GL_MessageCallback(GLenum source, GLenum type, GLuint id, GLenum s
         typeString = "OTHER";
         break;
     }
+#endif
 
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_HIGH:
     case GL_DEBUG_SEVERITY_MEDIUM:
-    case GL_DEBUG_SEVERITY_LOW:
-        LogError("OpenGL: %s\nfrom: %s, type: %s\n", message, sourceString, typeString);
+    case GL_DEBUG_SEVERITY_LOW: {
+        LogError("OpenGL: %s", message);
         break;
+    }
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-    default:
-        LogInfo("OpenGL: %s\nfrom: %s, type: %s\n", message, sourceString, typeString);
+    default: {
+        LogInfo("OpenGL: %s", message);
         break;
+    }
     }
 }
 #endif

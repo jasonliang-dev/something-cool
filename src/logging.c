@@ -1,8 +1,13 @@
+#define MAX_LOG_STRING_BUFFER 8192
+
 global const char *logfileLocation = NULL;
+global char *logStringBuffer = NULL;
 
 internal inline void StartLogging(const char *logfile)
 {
     logfileLocation = logfile;
+    logStringBuffer = malloc(MAX_LOG_STRING_BUFFER);
+    assert(logStringBuffer);
 }
 
 internal void Log(FILE *fd, const char *prefix, const char *format, va_list args)
@@ -17,17 +22,18 @@ internal void Log(FILE *fd, const char *prefix, const char *format, va_list args
     struct tm *timeinfo = localtime(&rawTime);
     strftime(buff, 32, "[%b %d %I:%M:%S %p] ", timeinfo);
 
+    vsnprintf(logStringBuffer, MAX_LOG_STRING_BUFFER, format, args);
+
     fputs(buff, fd);
-    fputs(buff, logfile);
-
     fputs(prefix, fd);
-    fputs(prefix, logfile);
-
-    vfprintf(fd, format, args);
-    vfprintf(logfile, format, args);
-
+    fputs(logStringBuffer, fd);
     fputs("\n", fd);
+
+    fputs(buff, logfile);
+    fputs(prefix, logfile);
+    fputs(logStringBuffer, logfile);
     fputs("\n", logfile);
+
     fclose(logfile);
 }
 

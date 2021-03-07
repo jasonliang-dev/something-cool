@@ -1,4 +1,4 @@
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4100)
 #pragma warning(disable : 4127)
@@ -45,7 +45,7 @@
 #include <glad.c>
 #include <nuklear_overview.c>
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #else
 #pragma GCC diagnostic pop
@@ -71,14 +71,27 @@
 global AppState *app = NULL;
 global Assets assets;
 
-#ifdef _WIN32
+#if defined(_WIN32)
+
 #include <windows.h>
 #include "windows_os_procs.c"
+
+#elif defined(__linux__)
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/sendfile.h>
+#include "linux_os_procs.c"
+
 #else
+
 #error "platform not supported"
+
 #endif
 
 #include "logging.c"
+#include "strings.c"
 #include "maths.c"
 #include "gl.c"
 #include "audio.c"

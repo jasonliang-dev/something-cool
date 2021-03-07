@@ -17,7 +17,7 @@ internal u64 OS_GetLastWriteTime(const char *filename)
     return (copy.QuadPart / 10000000) - 11644473600LL;
 }
 
-internal void OS_CopyFile(const char *source, const char *dest)
+internal b32 OS_CopyFile(const char *source, const char *dest)
 {
-    CopyFile(source, dest, false);
+    return !!CopyFile(source, dest, false);
 }
