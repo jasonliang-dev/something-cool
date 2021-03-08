@@ -74,16 +74,28 @@ global Assets assets;
 #include "log.c"
 
 #if defined(_WIN32)
+
 #    include <windows.h>
 #    include "windows_os_procs.c"
+
+#    define HOT_SO_PATH "hot.dll"
+#    define HOT_COPY_SO_PATH "hot_copy.dll"
+
 #elif defined(__linux__)
+
 #    include <fcntl.h>
 #    include <unistd.h>
 #    include <sys/stat.h>
 #    include <sys/sendfile.h>
 #    include "linux_os_procs.c"
+
+#    define HOT_SO_PATH "./hot.so"
+#    define HOT_COPY_SO_PATH "./hot_copy.so"
+
 #else
+
 #    error "platform not supported"
+
 #endif
 
 #include "strings.c"
@@ -196,7 +208,7 @@ int main(int argc, char **argv)
     }
 
     HotCode hotCode;
-    HotCodeLoad(&hotCode, "hot.dll", "hot_copy.dll");
+    HotCodeLoad(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
     LogInfo("Loaded hot code");
 
     v2 boyPos = v2(0, 0);
@@ -317,7 +329,8 @@ int main(int argc, char **argv)
 
         GL_CheckForErrors();
 
-        HotCodeMaybeReload(&hotCode, "hot.dll", "hot_copy.dll");
+        hotCode.Hello();
+        HotCodeMaybeReload(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
     }
 
     {

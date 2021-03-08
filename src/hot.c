@@ -5,5 +5,6 @@
 
 export void Hello(void)
 {
-    printf("Goodbye World\n");
+    persistent i32 count = 0;
+    printf("%d: Hello World\n", count++);
 }

@@ -4,13 +4,16 @@ set -e
 
 FLAGS="-DDEBUG -std=c11 \
     -Werror -Wall -Wextra -pedantic-errors \
-    -Wno-gnu-anonymous-struct -Wno-missing-braces -Wno-unused-function\
+    -Wno-gnu-anonymous-struct -Wno-missing-braces -Wno-unused-function \
 "
 
 cd build
 
-clang -c ../src/hot.c -o hot.o $FLAGS
-clang -shared hot.o -o libhot.so
+touch hotlock.tmp
+clang ../src/hot.c -fPIC -shared -o hot.so $FLAGS
+rm hotlock.tmp
+
+pidof ./app > /dev/null && exit 0
 
 clang ../src/shadergen.c -o shadergen $FLAGS
 ./shadergen

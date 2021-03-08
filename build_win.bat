@@ -15,7 +15,7 @@ pushd build
 if not exist SDL2.dll copy ..\third\sdl2\lib\x64\SDL2.dll
 
 del *.pdb > NUL 2> NUL
-echo WAITING FOR PDB > hotlock.tmp
+type nul > hotlock.tmp
 
 cl -Z7 %COMPILE_FLAGS% ../src/hot.c^
     /link /DLL -opt:ref -incremental:no -Debug:fastlink^

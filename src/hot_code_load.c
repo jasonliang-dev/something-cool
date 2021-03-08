@@ -24,7 +24,7 @@ internal void HotCodeLoad(HotCode *hotCode, const char *objPath, const char *cop
     }
     else
     {
-        LogFatal("Cannot load hot code object");
+        LogFatal("Cannot load hot code object: %s", SDL_GetError());
     }
 
     hotCode->Hello = (void (*)(void))SDL_LoadFunction(hotCode->handle, "Hello");
@@ -51,6 +51,13 @@ internal void HotCodeMaybeReload(HotCode *hotCode, const char *objPath, const ch
 
     if (modTime > hotCode->modTime)
     {
+        FILE *lock = fopen("hotlock.tmp", "r");
+        if (lock)
+        {
+            fclose(lock);
+            return;
+        }
+
         HotCodeUnload(hotCode);
         HotCodeLoad(hotCode, objPath, copyPath);
         LogInfo("Reloaded hot code");
