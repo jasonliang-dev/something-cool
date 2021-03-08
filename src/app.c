@@ -72,12 +72,6 @@ global AppState *app = NULL;
 global Assets assets;
 
 #include "log.c"
-#include "strings.c"
-#include "maths.c"
-#include "gl.c"
-#include "audio.c"
-#include "render.c"
-#include "assets.c"
 
 #if defined(_WIN32)
 #    include <windows.h>
@@ -92,6 +86,12 @@ global Assets assets;
 #    error "platform not supported"
 #endif
 
+#include "strings.c"
+#include "maths.c"
+#include "gl.c"
+#include "audio.c"
+#include "render.c"
+#include "assets.c"
 #include "hot_stub.c"
 #include "hot_code_load.c"
 
@@ -159,6 +159,7 @@ int main(int argc, char **argv)
     if (gladLoadGLLoader(SDL_GL_GetProcAddress))
     {
         LogInfo("Loaded OpenGL procedures");
+        LogInfo("OpenGL %d.%d", GLVersion.major, GLVersion.minor);
     }
     else
     {
@@ -195,7 +196,7 @@ int main(int argc, char **argv)
     }
 
     HotCode hotCode;
-    HotCodeLoad(&hotCode, "libhot.so", "libhot_copy.so");
+    HotCodeLoad(&hotCode, "hot.dll", "hot_copy.dll");
     LogInfo("Loaded hot code");
 
     v2 boyPos = v2(0, 0);
