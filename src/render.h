@@ -39,6 +39,16 @@ struct SpriteAnimation
     v2 *texCoords;
 };
 
+typedef struct Font Font;
+struct Font
+{
+    Texture atlas;
+    f32 size;
+    stbtt_bakedchar charData[128];
+    m4 transforms[128];
+    v2 texCoords[128 * 4];
+};
+
 typedef struct Renderer Renderer;
 struct Renderer
 {

@@ -18,6 +18,4 @@ struct AppState
     const u8 *keyDown;
     const u8 *keyDownPrev;
     f32 deltaTime;
-
-    b32 showOverview;
 };

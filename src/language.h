@@ -8,6 +8,14 @@
 #    define export
 #endif
 
+#if defined(_MSC_VER)
+#    define DEBUGGER __debugbreak()
+#elif defined(__GNUC__)
+#    define DEBUGGER raise(SIGTRAP)
+#else
+#    define DEBUGGER
+#endif
+
 #define PI 3.1415926535897f
 #define F32_EPSILON ((f32)FLT_EPSILON)
 #define F32_MIN ((f32)FLT_MIN)

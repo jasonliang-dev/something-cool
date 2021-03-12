@@ -2,7 +2,6 @@
 
 #define COLOR_RESET "\033[0m"
 #define COLOR_FG_RED "\033[31m"
-#define COLOR_FG_GREEN "\033[32m"
 #define COLOR_FG_YELLOW "\033[33m"
 
 global const char *logfileLocation = NULL;
@@ -42,7 +41,12 @@ internal void Log(FILE *fd, const char *color, const char *prefix, const char *f
 
     vsnprintf(logStringBuffer, MAX_LOG_STRING_BUFFER, format, args);
 
+#ifdef _WIN32
+    (void)color;
+    fprintf(fd, "%s %s %s\n", timeBuff, prefix, logStringBuffer);
+#else
     fprintf(fd, "%s%s %s %s\n" COLOR_RESET, color, timeBuff, prefix, logStringBuffer);
+#endif
     fprintf(logfile, "%s %s %s\n", timeBuff, prefix, logStringBuffer);
 
     fclose(logfile);
@@ -79,10 +83,5 @@ internal inline void LogFatal(const char *format, ...)
     Log(stderr, COLOR_FG_RED, "[ FATAL ]:", format, args);
     va_end(args);
 
-    exit(1);
-}
-
-internal inline void OutOfMemory()
-{
-    LogFatal("Out of memory");
+    abort();
 }

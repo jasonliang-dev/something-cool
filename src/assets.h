@@ -9,6 +9,9 @@
     X(wobble, "data/wobble.wav")                                                                   \
     X(coin, "data/coin.wav")
 
+// name, file location, font size
+#define FONT_ASSETS X(font, "c:/windows/fonts/times.ttf", 32)
+
 typedef struct Assets Assets;
 struct Assets
 {
@@ -22,5 +25,9 @@ struct Assets
 
 #define X(name, file) Sound name;
     SOUND_ASSETS
+#undef X
+
+#define X(name, file, size) Font name;
+    FONT_ASSETS
 #undef X
 };

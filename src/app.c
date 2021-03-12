@@ -30,20 +30,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-#define NK_INCLUDE_FIXED_TYPES
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_STANDARD_VARARGS
-#define NK_INCLUDE_DEFAULT_ALLOCATOR
-#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_INCLUDE_FONT_BAKING
-#define NK_INCLUDE_DEFAULT_FONT
-#define NK_IMPLEMENTATION
-#include <nuklear.h>
-#define NK_SDL_GL3_IMPLEMENTATION
-#include <nuklear_sdl_gl3.h>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <stb_truetype.h>
 
 #include <glad.c>
-#include <nuklear_overview.c>
 
 #ifdef _MSC_VER
 #    pragma warning(pop)
@@ -58,9 +48,6 @@
 #include "assets.h"
 #include "app.h"
 
-#define NK_MAX_VERTEX_MEMORY (512 * 1024)
-#define NK_MAX_ELEMENT_MEMORY (128 * 1024)
-
 #define SCREEN_WIDTH 1366
 #define SCREEN_HEIGHT 768
 
@@ -69,7 +56,7 @@
 #define WINDOW_TITLE "This is a title"
 
 global AppState *app = NULL;
-global Assets assets;
+global Assets *assets = NULL;
 
 #include "log.c"
 
@@ -98,6 +85,7 @@ global Assets assets;
 
 #endif
 
+#include "memory.c"
 #include "strings.c"
 #include "maths.c"
 #include "gl.c"
@@ -114,14 +102,10 @@ int main(int argc, char **argv)
 
     StartLog("app.log");
 
-    app = malloc(sizeof(AppState));
-    if (!app)
-    {
-        OutOfMemory();
-    }
+    app = MemAlloc(sizeof(AppState));
+    assets = MemAlloc(sizeof(Assets));
 
     app->running = true;
-    app->showOverview = false;
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == 0)
     {
@@ -194,18 +178,7 @@ int main(int argc, char **argv)
     LogInfo("Initalized assets");
 
     app->keyDown = SDL_GetKeyboardState(&app->keyCount);
-    app->keyDownPrev = malloc(app->keyCount);
-    if (!app->keyDownPrev)
-    {
-        OutOfMemory();
-    }
-
-    app->nkContext = nk_sdl_init(app->window);
-    {
-        struct nk_font_atlas *atlas;
-        nk_sdl_font_stash_begin(&atlas);
-        nk_sdl_font_stash_end();
-    }
+    app->keyDownPrev = MemAlloc(app->keyCount);
 
     HotCode hotCode;
     HotCodeLoad(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
@@ -213,8 +186,6 @@ int main(int argc, char **argv)
 
     v2 boyPos = v2(0, 0);
     v2 cameraPos = v2(0, 0);
-    struct nk_colorf bg;
-    bg.r = 0.10f, bg.g = 0.10f, bg.b = 0.10f, bg.a = 1.0f;
 
     SDL_PauseAudioDevice(app->audio.device, false);
 
@@ -232,7 +203,6 @@ int main(int argc, char **argv)
         // must update keyDownPrev before the loop.
         memcpy((void *)app->keyDownPrev, app->keyDown, app->keyCount);
 
-        nk_input_begin(app->nkContext);
         while (SDL_PollEvent(&event) != 0)
         {
             if (event.type == SDL_QUIT)
@@ -253,88 +223,28 @@ int main(int argc, char **argv)
                     UpdateProjections(&app->renderer);
                 }
             }
-            nk_sdl_handle_event(&event);
-        }
-        nk_input_end(app->nkContext);
-
-        if (nk_begin(app->nkContext, "Window", nk_rect(50, 50, 300, 300),
-                     NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE |
-                         NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
-        {
-            struct nk_context *ctx = app->nkContext;
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_checkbox_label(ctx, "show overview", &app->showOverview);
-
-            nk_layout_row_dynamic(ctx, 25, 2);
-            if (nk_button_label(ctx, "Play Wobble"))
-            {
-                PlaySound(&app->audio, &assets.wobble);
-            }
-
-            if (nk_button_label(ctx, "Play Coin"))
-            {
-                PlaySound(&app->audio, &assets.coin);
-            }
-
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "camera x:", -F32_MAX, &cameraPos.x, F32_MAX, 1.0f, 3.0f);
-            nk_property_float(ctx, "camera y:", -F32_MAX, &cameraPos.y, F32_MAX, 1.0f, 3.0f);
-
-            nk_layout_row_dynamic(ctx, 25, 2);
-            nk_property_float(ctx, "boy x:", -F32_MAX, &boyPos.x, F32_MAX, 1.0f, 1.0f);
-            nk_property_float(ctx, "boy y:", -F32_MAX, &boyPos.y, F32_MAX, 1.0f, 1.0f);
-
-            nk_layout_row_dynamic(ctx, 20, 1);
-            nk_label(ctx, "background:", NK_TEXT_LEFT);
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            if (nk_combo_begin_color(ctx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(ctx), 400)))
-            {
-                nk_layout_row_dynamic(ctx, 120, 1);
-                bg = nk_color_picker(ctx, bg, NK_RGBA);
-                nk_layout_row_dynamic(ctx, 25, 1);
-                bg.r = nk_propertyf(ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-                bg.g = nk_propertyf(ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-                bg.b = nk_propertyf(ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-                bg.a = nk_propertyf(ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-                nk_combo_end(ctx);
-            }
-
-            nk_layout_row_dynamic(ctx, 25, 1);
-            nk_labelf(ctx, NK_TEXT_LEFT, "deltaTime: %.04f (%.02f FPS)", app->deltaTime * 1000.0f,
-                      1 / app->deltaTime);
-        }
-        nk_end(app->nkContext);
-
-        if (app->showOverview)
-        {
-            nk_overview(app->nkContext);
         }
 
         glViewport(0, 0, (int)app->windowWidth, (int)app->windowHeight);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(bg.r, bg.g, bg.b, bg.a);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         BeginDraw(&app->renderer, cameraPos);
-        DrawTilemap(&app->renderer, &assets.map);
-        DrawSpriteAnimation(&app->renderer, &assets.boy, boyPos);
+        DrawTilemap(&app->renderer, &assets->map);
+        DrawSpriteAnimation(&app->renderer, &assets->boy, boyPos);
+        DrawTextSlow(&app->renderer, &assets->font, "Hello World", v2(0, 0));
         FlushRenderer(&app->renderer);
-
-        nk_sdl_render(NK_ANTI_ALIASING_ON, NK_MAX_VERTEX_MEMORY, NK_MAX_ELEMENT_MEMORY);
 
         SDL_GL_SwapWindow(app->window);
 
         GL_CheckForErrors();
 
-        hotCode.Hello();
         HotCodeMaybeReload(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
     }
 
     {
-        nk_free(app->nkContext);
         DestroyRenderer(&app->renderer);
 
         SDL_GL_DeleteContext(app->glContext);
@@ -342,6 +252,7 @@ int main(int argc, char **argv)
         SDL_Quit();
 
         DestroyAllAssets();
+        free(assets);
 
         free((void *)app->keyDownPrev);
         free(app);

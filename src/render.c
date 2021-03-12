@@ -73,12 +73,7 @@ internal void CreateRenderer(Renderer *renderer)
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texIndex));
 
-    u32 *indices = malloc(sizeof(u32) * MAX_INDICES);
-    if (!indices)
-    {
-        OutOfMemory();
-    }
-
+    u32 *indices = MemAlloc(sizeof(u32) * MAX_INDICES);
     for (i32 i = 0, stride = 0; i < MAX_INDICES; i += 6, stride += 4)
     {
         indices[i + 0] = stride + 0;
@@ -101,16 +96,12 @@ internal void CreateRenderer(Renderer *renderer)
     renderer->program = CreateShaderProgram(TEXTURE_VERT, TEXTURE_FRAG);
     glUseProgram(renderer->program);
 
-    i32 *samplers = malloc(sizeof(i32) * renderer->maxTextureUnits);
-    if (!samplers)
-    {
-        OutOfMemory();
-    }
-
+    i32 *samplers = MemAlloc(sizeof(i32) * renderer->maxTextureUnits);
     for (i32 i = 0; i < renderer->maxTextureUnits; ++i)
     {
         samplers[i] = i;
     }
+
     glUniform1iv(glGetUniformLocation(renderer->program, "u_Textures"), renderer->maxTextureUnits,
                  samplers);
     free(samplers);
@@ -121,17 +112,8 @@ internal void CreateRenderer(Renderer *renderer)
 
     glUseProgram(0);
 
-    renderer->textureIDs = malloc(sizeof(GLuint) * renderer->maxTextureUnits);
-    if (!renderer->textureIDs)
-    {
-        OutOfMemory();
-    }
-
-    renderer->vertices = malloc(sizeof(TextureVertex) * MAX_VERTICES);
-    if (!renderer->vertices)
-    {
-        OutOfMemory();
-    }
+    renderer->textureIDs = MemAlloc(sizeof(GLuint) * renderer->maxTextureUnits);
+    renderer->vertices = MemAlloc(sizeof(TextureVertex) * MAX_VERTICES);
 
     GL_CheckForErrors();
 }
@@ -254,8 +236,6 @@ internal void DrawTextureMat(Renderer *renderer, GLuint textureID, m4 transform,
 
 internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 rotation)
 {
-    // best to avoid matrix multiplication.
-    // am lazy to change. oh well.
     v2 area = v2((f32)texture.width * PIXEL_ART_SCALE, (f32)texture.height * PIXEL_ART_SCALE);
     m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
     if (rotation != 0.0f)
@@ -268,6 +248,46 @@ internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 
 
     v2 texCoords[4] = {v2(0, 1), v2(1, 0), v2(0, 0), v2(1, 1)};
     DrawTextureMat(renderer, texture.id, transform, texCoords);
+}
+
+internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath, i32 frameWidth,
+                                    i32 msPerFrame)
+{
+    ani->atlas = CreateTexture(imagePath);
+    ani->tElapsed = 0;
+    ani->msPerFrame = msPerFrame;
+    ani->totalFrames = ani->atlas.width / frameWidth;
+
+    ani->texCoords = MemAlloc(sizeof(v2) * ani->totalFrames * 4);
+    for (i32 i = 0; i < ani->totalFrames; ++i)
+    {
+        ani->texCoords[i * 4 + 0] = v2((f32)i / ani->totalFrames, 1);
+        ani->texCoords[i * 4 + 1] = v2((f32)(i + 1) / ani->totalFrames, 0);
+        ani->texCoords[i * 4 + 2] = v2((f32)i / ani->totalFrames, 0);
+        ani->texCoords[i * 4 + 3] = v2((f32)(i + 1) / ani->totalFrames, 1);
+    }
+}
+
+internal void DestroySpriteAnimation(SpriteAnimation *ani)
+{
+    free(ani->texCoords);
+}
+
+internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 position)
+{
+    v2 area = v2((f32)ani->atlas.width / ani->totalFrames * PIXEL_ART_SCALE,
+                 (f32)ani->atlas.height * PIXEL_ART_SCALE);
+    m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
+    transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
+
+    ani->tElapsed += app->deltaTime * 1000;
+    while (ani->tElapsed > ani->msPerFrame * ani->totalFrames)
+    {
+        ani->tElapsed -= ani->msPerFrame * ani->totalFrames;
+    }
+
+    i32 frame = (i32)(ani->tElapsed / ani->msPerFrame);
+    DrawTextureMat(renderer, ani->atlas.id, transform, ani->texCoords + (frame * 4));
 }
 
 internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *mapDataPath)
@@ -286,17 +306,8 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
         LogWarn("Tilemap %s data_count and map width/height are mismatched.", mapDataPath);
     }
 
-    map->vertexPositions = malloc(sizeof(v2) * layer->data_count * 4);
-    if (!map->vertexPositions)
-    {
-        OutOfMemory();
-    }
-
-    map->texCoords = malloc(sizeof(v2) * layer->data_count * 4);
-    if (!map->texCoords)
-    {
-        OutOfMemory();
-    }
+    map->vertexPositions = MemAlloc(sizeof(v2) * layer->data_count * 4);
+    map->texCoords = MemAlloc(sizeof(v2) * layer->data_count * 4);
 
     i32 realTileWidth = map->tileWidth * PIXEL_ART_SCALE;
     i32 tileColumns = map->atlas.width / map->tileWidth;
@@ -403,48 +414,87 @@ internal void DrawTilemap(Renderer *renderer, Tilemap *map)
     }
 }
 
-internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath, i32 frameWidth,
-                                    i32 msPerFrame)
+internal void CreateFontSlow(Font *font, const char *filePath, f32 fontSize)
 {
-    ani->atlas = CreateTexture(imagePath);
-    ani->tElapsed = 0;
-    ani->msPerFrame = msPerFrame;
-    ani->totalFrames = ani->atlas.width / frameWidth;
+    font->size = fontSize;
 
-    ani->texCoords = malloc(sizeof(v2) * ani->totalFrames * 4);
-    if (!ani->texCoords)
+    font->atlas.width = 1024;
+    font->atlas.height = 1024;
+
+    FILE *ttf = fopen(filePath, "rb");
+    if (!ttf)
     {
-        OutOfMemory();
+        LogFatal("Couldn't load ttf file %s", filePath);
     }
 
-    for (i32 i = 0; i < ani->totalFrames; ++i)
+    u8 *ttfBuffer = MemAlloc(Megabytes(4));
+    u32 *image = MemAlloc(font->atlas.width * font->atlas.height * 4);
+    u8 *bitmap = MemAlloc(font->atlas.width * font->atlas.height);
+
+    fread(ttfBuffer, 1, Megabytes(4), ttf);
+    if (ferror(ttf))
     {
-        ani->texCoords[i * 4 + 0] = v2((f32)i / ani->totalFrames, 1);
-        ani->texCoords[i * 4 + 1] = v2((f32)(i + 1) / ani->totalFrames, 0);
-        ani->texCoords[i * 4 + 2] = v2((f32)i / ani->totalFrames, 0);
-        ani->texCoords[i * 4 + 3] = v2((f32)(i + 1) / ani->totalFrames, 1);
+        LogFatal("Error reading ttf file: %s", filePath);
+    }
+
+    stbtt_BakeFontBitmap(ttfBuffer, 0, font->size, bitmap, font->atlas.width, font->atlas.height, 0,
+                         ArrayCount(font->charData), font->charData);
+
+    for (i32 i = 0; i < font->atlas.width * font->atlas.height; ++i)
+    {
+        image[i] = 0xFFFFFF | (bitmap[i] << 24);
+    }
+
+    glGenTextures(1, &font->atlas.id);
+    glBindTexture(GL_TEXTURE_2D, font->atlas.id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, font->atlas.width, font->atlas.height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, image);
+
+    free(ttfBuffer);
+    free(bitmap);
+    free(image);
+
+    stbtt_aligned_quad quad;
+    v2 posIgnored;
+    for (i32 i = 0; i < ArrayCount(font->charData); ++i)
+    {
+        stbtt_GetBakedQuad(font->charData, font->atlas.width, font->atlas.height, i, &posIgnored.x,
+                           &posIgnored.y, &quad, 1);
+
+        font->transforms[i] = M4Scale(v3(quad.x1 - quad.x0, quad.y1 - quad.y0, 1.0f));
+
+        font->texCoords[i * 4 + 0] = v2(quad.s0, quad.t1);
+        font->texCoords[i * 4 + 1] = v2(quad.s1, quad.t0);
+        font->texCoords[i * 4 + 2] = v2(quad.s0, quad.t0);
+        font->texCoords[i * 4 + 3] = v2(quad.s1, quad.t1);
     }
 }
 
-internal void DestroySpriteAnimation(SpriteAnimation *ani)
+internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 position)
 {
-    free(ani->texCoords);
-}
-
-internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 position)
-{
-    v2 area = v2((f32)ani->atlas.width / ani->totalFrames * PIXEL_ART_SCALE,
-                 (f32)ani->atlas.height * PIXEL_ART_SCALE);
+#if 1
+    (void)text;
     m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
-    transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
-
-    ani->tElapsed += app->deltaTime * 1000;
-    while (ani->tElapsed > ani->msPerFrame * ani->totalFrames)
+    transform =
+        M4MultiplyM4(transform, M4Scale(v3((f32)font->atlas.width, (f32)font->atlas.height, 1.0f)));
+    v2 texCoords[4] = {v2(0, 1), v2(1, 0), v2(0, 0), v2(1, 1)};
+    DrawTextureMat(renderer, font->atlas.id, transform, texCoords);
+#else
+    f32 xAdvance = 0.0f;
+    for (i32 i = 0; text[i]; ++i)
     {
-        ani->tElapsed -= ani->msPerFrame * ani->totalFrames;
+        stbtt_bakedchar *charData = font->charData + text[i];
+        m4 transform = M4MultiplyM4(font->transforms[text[i]],
+                                    M4Translate(v3(position.x + xAdvance, position.y, 0.0f)));
+        DrawTextureMat(renderer, font->atlas.id, transform, font->texCoords + (i * 4));
+
+        xAdvance += charData->xadvance;
     }
-
-    i32 frame = (i32)(ani->tElapsed / ani->msPerFrame);
-
-    DrawTextureMat(renderer, ani->atlas.id, transform, ani->texCoords + (frame * 4));
+#endif
 }
