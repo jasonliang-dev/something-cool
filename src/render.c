@@ -418,8 +418,8 @@ internal void CreateFontSlow(Font *font, const char *filePath, f32 fontSize)
 {
     font->size = fontSize;
 
-    font->atlas.width = 1024;
-    font->atlas.height = 1024;
+    font->atlas.width = 512;
+    font->atlas.height = 512;
 
     FILE *ttf = fopen(filePath, "rb");
     if (!ttf)
@@ -427,18 +427,18 @@ internal void CreateFontSlow(Font *font, const char *filePath, f32 fontSize)
         LogFatal("Couldn't load ttf file %s", filePath);
     }
 
-    u8 *ttfBuffer = MemAlloc(Megabytes(4));
+    u8 *ttfBuffer = MemAlloc(Megabytes(2));
     u32 *image = MemAlloc(font->atlas.width * font->atlas.height * 4);
     u8 *bitmap = MemAlloc(font->atlas.width * font->atlas.height);
 
-    fread(ttfBuffer, 1, Megabytes(4), ttf);
+    fread(ttfBuffer, 1, Megabytes(2), ttf);
     if (ferror(ttf))
     {
         LogFatal("Error reading ttf file: %s", filePath);
     }
 
-    stbtt_BakeFontBitmap(ttfBuffer, 0, font->size, bitmap, font->atlas.width, font->atlas.height, 0,
-                         ArrayCount(font->charData), font->charData);
+    stbtt_BakeFontBitmap(ttfBuffer, 0, font->size, bitmap, font->atlas.width, font->atlas.height,
+                         ' ', ArrayCount(font->charData), font->charData);
 
     for (i32 i = 0; i < font->atlas.width * font->atlas.height; ++i)
     {
@@ -459,42 +459,26 @@ internal void CreateFontSlow(Font *font, const char *filePath, f32 fontSize)
     free(ttfBuffer);
     free(bitmap);
     free(image);
-
-    stbtt_aligned_quad quad;
-    v2 posIgnored;
-    for (i32 i = 0; i < ArrayCount(font->charData); ++i)
-    {
-        stbtt_GetBakedQuad(font->charData, font->atlas.width, font->atlas.height, i, &posIgnored.x,
-                           &posIgnored.y, &quad, 1);
-
-        font->transforms[i] = M4Scale(v3(quad.x1 - quad.x0, quad.y1 - quad.y0, 1.0f));
-
-        font->texCoords[i * 4 + 0] = v2(quad.s0, quad.t1);
-        font->texCoords[i * 4 + 1] = v2(quad.s1, quad.t0);
-        font->texCoords[i * 4 + 2] = v2(quad.s0, quad.t0);
-        font->texCoords[i * 4 + 3] = v2(quad.s1, quad.t1);
-    }
 }
 
 internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 position)
 {
-#if 1
-    (void)text;
-    m4 transform = M4Translate(v3(position.x, position.y, 0.0f));
-    transform =
-        M4MultiplyM4(transform, M4Scale(v3((f32)font->atlas.width, (f32)font->atlas.height, 1.0f)));
-    v2 texCoords[4] = {v2(0, 1), v2(1, 0), v2(0, 0), v2(1, 1)};
-    DrawTextureMat(renderer, font->atlas.id, transform, texCoords);
-#else
-    f32 xAdvance = 0.0f;
+    stbtt_aligned_quad quad;
     for (i32 i = 0; text[i]; ++i)
     {
-        stbtt_bakedchar *charData = font->charData + text[i];
-        m4 transform = M4MultiplyM4(font->transforms[text[i]],
-                                    M4Translate(v3(position.x + xAdvance, position.y, 0.0f)));
-        DrawTextureMat(renderer, font->atlas.id, transform, font->texCoords + (i * 4));
+        stbtt_GetBakedQuad(font->charData, font->atlas.width, font->atlas.height, text[i] - ' ',
+                           &position.x, &position.y, &quad, 1);
 
-        xAdvance += charData->xadvance;
+        m4 transform = M4Translate(v3(quad.x0, quad.y0, 0.0f));
+        transform =
+            M4MultiplyM4(transform, M4Scale(v3(quad.x1 - quad.x0, quad.y1 - quad.y0, 1.0f)));
+
+        v2 texCoords[4];
+        texCoords[0] = v2(quad.s0, quad.t1);
+        texCoords[1] = v2(quad.s1, quad.t0);
+        texCoords[2] = v2(quad.s0, quad.t0);
+        texCoords[3] = v2(quad.s1, quad.t1);
+
+        DrawTextureMat(renderer, font->atlas.id, transform, texCoords);
     }
-#endif
 }

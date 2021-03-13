@@ -65,8 +65,8 @@ global Assets *assets = NULL;
 #    include <windows.h>
 #    include "windows_os_procs.c"
 
-#    define HOT_SO_PATH "hot.dll"
-#    define HOT_COPY_SO_PATH "hot_copy.dll"
+#    define HOT_LIB_PATH "hot.dll"
+#    define HOT_COPY_LIB_PATH "hot_copy.dll"
 
 #elif defined(__linux__)
 
@@ -76,8 +76,8 @@ global Assets *assets = NULL;
 #    include <sys/sendfile.h>
 #    include "linux_os_procs.c"
 
-#    define HOT_SO_PATH "./hot.so"
-#    define HOT_COPY_SO_PATH "./hot_copy.so"
+#    define HOT_LIB_PATH "./hot.so"
+#    define HOT_COPY_LIB_PATH "./hot_copy.so"
 
 #else
 
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
     app->keyDownPrev = MemAlloc(app->keyCount);
 
     HotCode hotCode;
-    HotCodeLoad(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
+    HotCodeLoad(&hotCode, HOT_LIB_PATH, HOT_COPY_LIB_PATH);
     LogInfo("Loaded hot code");
 
     v2 boyPos = v2(0, 0);
@@ -234,14 +234,14 @@ int main(int argc, char **argv)
         BeginDraw(&app->renderer, cameraPos);
         DrawTilemap(&app->renderer, &assets->map);
         DrawSpriteAnimation(&app->renderer, &assets->boy, boyPos);
-        DrawTextSlow(&app->renderer, &assets->font, "Hello World", v2(0, 0));
+        DrawTextSlow(&app->renderer, &assets->font, "!@#$%^&*() Hello World", v2(400, 300));
         FlushRenderer(&app->renderer);
 
         SDL_GL_SwapWindow(app->window);
 
         GL_CheckForErrors();
 
-        HotCodeMaybeReload(&hotCode, HOT_SO_PATH, HOT_COPY_SO_PATH);
+        HotCodeMaybeReload(&hotCode, HOT_LIB_PATH, HOT_COPY_LIB_PATH);
     }
 
     {

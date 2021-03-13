@@ -44,9 +44,7 @@ struct Font
 {
     Texture atlas;
     f32 size;
-    stbtt_bakedchar charData[128];
-    m4 transforms[128];
-    v2 texCoords[128 * 4];
+    stbtt_bakedchar charData[95];
 };
 
 typedef struct Renderer Renderer;
