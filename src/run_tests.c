@@ -67,11 +67,6 @@ TEST(String, RemoveOutOfBounds)
     FreeString(s);
 }
 
-TEST(GitHubWorkflows, FailingTest)
-{
-    EXPECT(false);
-}
-
 int main(void)
 {
     return RunAllTests();
