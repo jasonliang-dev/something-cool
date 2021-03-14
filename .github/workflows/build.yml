@@ -6,7 +6,7 @@ on:
   - workflow_dispatch
 
 jobs:
-  Windows:
+  WindowsBuild:
     runs-on: windows-2019
     steps:
     - uses: actions/checkout@v2
@@ -15,7 +15,18 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
         .\build_win.bat
-  Linux:
+
+  WindowsTests:
+    runs-on: windows-2019
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      shell: cmd
+      run: |
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+        .\test_win.bat
+
+  LinuxBuild:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -25,3 +36,10 @@ jobs:
         sudo apt install -y libsdl2-dev
     - name: Build binary
       run: ./build_linux.sh
+
+  LinuxTests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      run: ./test_linux.sh

@@ -144,10 +144,10 @@ static int RunAllTests(void)
     DWORD mode = 0;
     HANDLE stdoutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    assert(stdoutHandle != INVALID_HANDLE_VALUE);
-    assert(GetConsoleMode(stdoutHandle, &mode));
-
-    assert(SetConsoleMode(stdoutHandle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING));
+    if (stdoutHandle != INVALID_HANDLE_VALUE && GetConsoleMode(stdoutHandle, &mode))
+    {
+        SetConsoleMode(stdoutHandle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
 #endif
 
     globalTestState.ran = 0;
@@ -157,7 +157,7 @@ static int RunAllTests(void)
     printf("\n%d out of %d tests passed\n", globalTestState.passed, globalTestState.ran);
 
 #ifdef _WIN32
-    assert(SetConsoleMode(stdoutHandle, mode));
+    SetConsoleMode(stdoutHandle, mode);
 #endif
 
     return globalTestState.ran != globalTestState.passed;
