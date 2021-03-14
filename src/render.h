@@ -15,6 +15,7 @@ struct TextureVertex
 {
     v2 position;
     v2 texCoord;
+    v4 color;
     f32 texIndex;
 };
 

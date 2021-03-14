@@ -10,7 +10,7 @@
     X(coin, "data/coin.wav")
 
 // name, file location, font size
-#define FONT_ASSETS X(font, "c:/windows/fonts/times.ttf", 32)
+#define FONT_ASSETS X(font, "data/Roboto-Regular.ttf", 32)
 
 typedef struct Assets Assets;
 struct Assets

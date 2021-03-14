@@ -42,6 +42,7 @@
 #endif
 
 #include "language.h"
+#include "strings.h"
 #include "audio.h"
 #include "render.h"
 #include "shaders.gen.h"
@@ -234,7 +235,8 @@ int main(int argc, char **argv)
         BeginDraw(&app->renderer, cameraPos);
         DrawTilemap(&app->renderer, &assets->map);
         DrawSpriteAnimation(&app->renderer, &assets->boy, boyPos);
-        DrawTextSlow(&app->renderer, &assets->font, "!@#$%^&*() Hello World", v2(400, 300));
+        DrawTextSlow(&app->renderer, &assets->font, "The quick brown fox jumped over the lazy dog.",
+                     v2(0, 0), v4(1, 1, 1, 1));
         FlushRenderer(&app->renderer);
 
         SDL_GL_SwapWindow(app->window);

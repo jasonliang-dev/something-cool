@@ -1,6 +1,7 @@
 #version 330
 
 in vec2 v_TexCoord;
+in vec4 v_Color;
 in float v_TexIndex;
 
 out vec4 color;
@@ -9,7 +10,7 @@ uniform sampler2D u_Textures[16];
 
 void main()
 {
-    vec4 texColor = vec4(1.0, 1.0, 1.0, 1.0);
+    vec4 texColor = v_Color;
     switch (int(v_TexIndex))
     {
     case 0:

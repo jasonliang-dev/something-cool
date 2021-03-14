@@ -70,7 +70,10 @@ internal void CreateRenderer(Renderer *renderer)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texCoord));
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
+                          (void *)offsetof(TextureVertex, color));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(TextureVertex),
                           (void *)offsetof(TextureVertex, texIndex));
 
     u32 *indices = MemAlloc(sizeof(u32) * MAX_INDICES);
@@ -214,7 +217,8 @@ internal f32 FindOrCreateTextureIndex(Renderer *renderer, GLuint textureID)
     return (f32)renderer->textureCount++;
 }
 
-internal void DrawTextureMat(Renderer *renderer, GLuint textureID, m4 transform, v2 *texCoords)
+internal void DrawTextureExt(Renderer *renderer, GLuint textureID, m4 transform, v4 color,
+                             v2 *texCoords)
 {
     if (renderer->quadCount == MAX_QUADS)
     {
@@ -224,10 +228,10 @@ internal void DrawTextureMat(Renderer *renderer, GLuint textureID, m4 transform,
     f32 texIndex = FindOrCreateTextureIndex(renderer, textureID);
 
     TextureVertex vertices[] = {
-        {V4MultiplyM4(v4(0, 1, 0, 1), transform).xy, texCoords[0], texIndex},
-        {V4MultiplyM4(v4(1, 0, 0, 1), transform).xy, texCoords[1], texIndex},
-        {V4MultiplyM4(v4(0, 0, 0, 1), transform).xy, texCoords[2], texIndex},
-        {V4MultiplyM4(v4(1, 1, 0, 1), transform).xy, texCoords[3], texIndex},
+        {V4MultiplyM4(v4(0, 1, 0, 1), transform).xy, texCoords[0], color, texIndex},
+        {V4MultiplyM4(v4(1, 0, 0, 1), transform).xy, texCoords[1], color, texIndex},
+        {V4MultiplyM4(v4(0, 0, 0, 1), transform).xy, texCoords[2], color, texIndex},
+        {V4MultiplyM4(v4(1, 1, 0, 1), transform).xy, texCoords[3], color, texIndex},
     };
 
     memcpy(&renderer->vertices[renderer->quadCount * 4], vertices, sizeof(vertices));
@@ -247,7 +251,7 @@ internal void DrawTexture(Renderer *renderer, Texture texture, v2 position, f32 
     transform = M4MultiplyM4(transform, M4Scale(v3(area.x, area.y, 1.0f)));
 
     v2 texCoords[4] = {v2(0, 1), v2(1, 0), v2(0, 0), v2(1, 1)};
-    DrawTextureMat(renderer, texture.id, transform, texCoords);
+    DrawTextureExt(renderer, texture.id, transform, v4(1, 1, 1, 1), texCoords);
 }
 
 internal void CreateSpriteAnimation(SpriteAnimation *ani, const char *imagePath, i32 frameWidth,
@@ -287,25 +291,12 @@ internal void DrawSpriteAnimation(Renderer *renderer, SpriteAnimation *ani, v2 p
     }
 
     i32 frame = (i32)(ani->tElapsed / ani->msPerFrame);
-    DrawTextureMat(renderer, ani->atlas.id, transform, ani->texCoords + (frame * 4));
+    DrawTextureExt(renderer, ani->atlas.id, transform, v4(1, 1, 1, 1),
+                   ani->texCoords + (frame * 4));
 }
 
-internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *mapDataPath)
+internal void InitializeTiles(Tilemap *map, cute_tiled_layer_t *layer)
 {
-    map->atlas = CreateTexture(atlasPath);
-
-    cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(mapDataPath, 0);
-
-    cute_tiled_layer_t *layer = tiledMap->layers;
-
-    map->width = layer->width;
-    map->height = layer->height;
-    map->tileWidth = tiledMap->tilewidth;
-    if (layer->data_count != map->width * map->height)
-    {
-        LogWarn("Tilemap %s data_count and map width/height are mismatched.", mapDataPath);
-    }
-
     map->vertexPositions = MemAlloc(sizeof(v2) * layer->data_count * 4);
     map->texCoords = MemAlloc(sizeof(v2) * layer->data_count * 4);
 
@@ -317,6 +308,12 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
         for (i32 x = 0; x < map->width; ++x)
         {
             i32 index = layer->data[(y * map->width) + x];
+            if (index == 0)
+            {
+                // (-1, -1) is an "invalid" position. it shouldn't be drawn.
+                map->vertexPositions[((y * map->width) + x) * 4] = v2(-1, -1);
+                continue;
+            }
 
             m4 transform = M4Translate(v3((f32)x * realTileWidth, (f32)y * realTileWidth, 0.0f));
 
@@ -365,6 +362,29 @@ internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *map
     }
 }
 
+internal void CreateTilemap(Tilemap *map, const char *atlasPath, const char *mapDataPath)
+{
+    map->atlas = CreateTexture(atlasPath);
+
+    cute_tiled_map_t *tiledMap = cute_tiled_load_map_from_file(mapDataPath, 0);
+
+    map->width = tiledMap->width;
+    map->height = tiledMap->height;
+    map->tileWidth = tiledMap->tilewidth;
+
+    for (cute_tiled_layer_t *layer = tiledMap->layers; layer != NULL; layer = layer->next)
+    {
+        if (strcmp(layer->type.ptr, "tilelayer") == 0)
+        {
+            InitializeTiles(map, layer);
+        }
+        else
+        {
+            LogWarn("Unhanded layer type: %s\n", layer->type.ptr);
+        }
+    }
+}
+
 internal void DestroyTilemap(Tilemap *map)
 {
     free(map->vertexPositions);
@@ -396,6 +416,12 @@ internal void DrawTilemap(Renderer *renderer, Tilemap *map)
                 continue;
             }
 
+            v2 pos = map->vertexPositions[(y * map->width + x) * 4];
+            if (pos.x - 1.0f <= F32_EPSILON && pos.y - 1.0f <= F32_EPSILON)
+            {
+                continue;
+            }
+
             if (renderer->quadCount == MAX_QUADS)
             {
                 FlushRenderer(renderer);
@@ -406,6 +432,7 @@ internal void DrawTilemap(Renderer *renderer, Tilemap *map)
                 TextureVertex *vertex = &renderer->vertices[renderer->quadCount * 4 + q];
                 vertex->position = map->vertexPositions[(y * map->width + x) * 4 + q];
                 vertex->texCoord = map->texCoords[(y * map->width + x) * 4 + q];
+                vertex->color = v4(1, 1, 1, 1);
                 vertex->texIndex = texIndex;
             }
 
@@ -456,12 +483,13 @@ internal void CreateFontSlow(Font *font, const char *filePath, f32 fontSize)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, font->atlas.width, font->atlas.height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, image);
 
+    fclose(ttf);
     free(ttfBuffer);
     free(bitmap);
     free(image);
 }
 
-internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 position)
+internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 position, v4 color)
 {
     stbtt_aligned_quad quad;
     for (i32 i = 0; text[i]; ++i)
@@ -469,7 +497,7 @@ internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 
         stbtt_GetBakedQuad(font->charData, font->atlas.width, font->atlas.height, text[i] - ' ',
                            &position.x, &position.y, &quad, 1);
 
-        m4 transform = M4Translate(v3(quad.x0, quad.y0, 0.0f));
+        m4 transform = M4Translate(v3(quad.x0, quad.y0 + font->size, 0.0f));
         transform =
             M4MultiplyM4(transform, M4Scale(v3(quad.x1 - quad.x0, quad.y1 - quad.y0, 1.0f)));
 
@@ -479,6 +507,6 @@ internal void DrawTextSlow(Renderer *renderer, Font *font, const char *text, v2 
         texCoords[2] = v2(quad.s0, quad.t0);
         texCoords[3] = v2(quad.s1, quad.t1);
 
-        DrawTextureMat(renderer, font->atlas.id, transform, texCoords);
+        DrawTextureExt(renderer, font->atlas.id, transform, color, texCoords);
     }
 }

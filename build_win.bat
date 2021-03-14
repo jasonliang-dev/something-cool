@@ -19,20 +19,20 @@ type nul > hotlock.tmp
 
 cl /Z7 %COMPILE_FLAGS% ../src/hot.c^
     /link /DLL /opt:ref /incremental:no /debug:fastlink^
-    -PDB:hot_%random%.pdb /out:hot.dll || exit /b 1
+    -PDB:hot_%random%.pdb /out:hot.dll || popd && exit /b 1
 
 del hotlock.tmp
 
 tasklist /FI "IMAGENAME eq app.exe" 2> NUL | find /I /N "app.exe" > NUL
-if "%ERRORLEVEL%" == "0" exit /b 0
+if "%ERRORLEVEL%" == "0" popd && exit /b 0
 
-cl %COMPILE_FLAGS% ../src/shadergen.c || exit /b 1
-shadergen.exe || exit /b 1
+cl %COMPILE_FLAGS% ../src/shadergen.c || popd && exit /b 1
+shadergen.exe || popd && exit /b 1
 
 cl /Z7 %COMPILE_FLAGS% ../src/app.c^
     /link shell32.lib opengl32.lib SDL2.lib SDL2main.lib^
     /LIBPATH:../third/sdl2/lib/x64^
     /opt:ref /incremental:no /debug:fastlink^
-    /SUBSYSTEM:CONSOLE /out:app.exe || exit /b 1
+    /SUBSYSTEM:CONSOLE /out:app.exe || popd && exit /b 1
 
 popd
