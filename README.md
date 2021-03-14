@@ -1,4 +1,5 @@
 [![build](https://github.com/jasonliang-dev/something-cool/actions/workflows/build.yml/badge.svg)](https://github.com/jasonliang-dev/something-cool/actions/workflows/build.yml)
+[![test](https://github.com/jasonliang-dev/something-cool/actions/workflows/test.yml/badge.svg)](https://github.com/jasonliang-dev/something-cool/actions/workflows/test.yml)
 
 ## Building for Windows
 
