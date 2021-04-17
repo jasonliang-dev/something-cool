@@ -2,5 +2,4 @@ build/*
 !build/data/
 !build/data/*
 .vs
-
-src/shaders.gen.h
+.DS_Store
