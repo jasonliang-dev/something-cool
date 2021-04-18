@@ -10,7 +10,7 @@ FLAGS = -DDEBUG -DGLFW_INCLUDE_NONE -std=c11 \
 SRC := $(wildcard src/*.c)
 
 ifeq ($(UNAME_S), Darwin)
-	LD = -framework Cocoa
+	LD = -framework Cocoa -framework OpenGL
 	SRC := $(wildcard src/*.m) $(filter-out src/win32_%.c, $(SRC))
 endif
 
