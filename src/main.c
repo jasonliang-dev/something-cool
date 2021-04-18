@@ -15,11 +15,11 @@ int main(void)
     WindowSwapInterval(1);
     while (!WindowShouldClose())
     {
-        persistent f32 s_Time = 0.0f;
-        s_Time += 0.05f;
+        // static f32 s_Time = 0.0f;
+        // s_Time += 0.05f;
 
-        glClearColor(sinf(s_Time) * 0.5f + 0.5f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        // glClearColor(sinf(s_Time) * 0.5f + 0.5f, 0.0f, 0.0f, 1.0f);
+        // glClear(GL_COLOR_BUFFER_BIT);
 
         WindowSwapBuffers();
         WindowPollEvents();

@@ -2,9 +2,10 @@
 
 #include <stdint.h>
 
-#define global static
-#define internal static
-#define persistent static
+// can't compile with mac if defined
+// #define global static
+// #define internal static
+// #define persistent static
 
 #define PI 3.14159265358979323846f
 

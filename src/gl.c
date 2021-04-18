@@ -1,4 +1,5 @@
 #include "gl.h"
+#include <stddef.h>
 
 void LoadOpenGLProcs(GetOpenGLProc load)
 {
