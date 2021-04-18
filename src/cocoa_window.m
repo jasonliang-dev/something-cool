@@ -1,15 +1,18 @@
+#include "gl.h"
 #include "window.h"
 #import <Cocoa/Cocoa.h>
+#include <dlfcn.h>
 
 static struct
 {
+    NSOpenGLContext *glContext;
     b32 quit;
 } g_Window;
 
-@interface MainWindowDelegate : NSObject <NSWindowDelegate>
+@interface WindowDelegate : NSObject <NSWindowDelegate>
 @end
 
-@implementation MainWindowDelegate
+@implementation WindowDelegate
 
 - (void)windowWillClose:(id)sender
 {
@@ -18,6 +21,11 @@ static struct
 }
 
 @end
+
+static void *OSX_GetProcAddress(const char *name)
+{
+    return dlsym(RTLD_DEFAULT, name);
+}
 
 b32 WindowCreate(i32 width, i32 height, const char *title)
 {
@@ -35,9 +43,27 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
     [window setTitle:@(title)];
     [window makeKeyAndOrderFront:nil];
 
-    MainWindowDelegate *mainWindowDelegate = [[MainWindowDelegate alloc] init];
-    [window setDelegate:mainWindowDelegate];
+    WindowDelegate *windowDelegate = [[WindowDelegate alloc] init];
+    [window setDelegate:windowDelegate];
 
+    NSOpenGLPixelFormatAttribute pixelFormatAttribs[] = {NSOpenGLPFAOpenGLProfile,
+                                                         NSOpenGLProfileVersion3_2Core,
+                                                         NSOpenGLPFAColorSize,
+                                                         24,
+                                                         NSOpenGLPFAAlphaSize,
+                                                         8,
+                                                         NSOpenGLPFADoubleBuffer,
+                                                         NSOpenGLPFAAccelerated,
+                                                         0};
+
+    NSOpenGLPixelFormat *pixelFormat =
+        [[NSOpenGLPixelFormat alloc] initWithAttributes:pixelFormatAttribs];
+    NSOpenGLContext *openGLContext = [[NSOpenGLContext alloc] initWithFormat:pixelFormat
+                                                                shareContext:nil];
+    [openGLContext setView:[window contentView]];
+    LoadOpenGLProcs((GetOpenGLProc)OSX_GetProcAddress);
+
+    g_Window.glContext = openGLContext;
     g_Window.quit = false;
 
     return true;
@@ -72,8 +98,14 @@ void WindowSwapInterval(i32 interval)
     (void)interval;
 }
 
+void WindowBeginDraw(void)
+{
+    [g_Window.glContext makeCurrentContext];
+}
+
 void WindowSwapBuffers(void)
 {
+    [g_Window.glContext flushBuffer];
 }
 
 i32 Window_Width(void)

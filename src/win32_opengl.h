@@ -15,5 +15,5 @@ extern PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB;
 typedef BOOL(WINAPI *PFNWGLSWAPINTERVALEXTPROC)(int);
 extern PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT;
 
-b32 W32_InitOpenGL(HDC hdc);
 const void *W32_GetProcAddress(const char *name);
+b32 W32_InitOpenGL(HDC hdc);

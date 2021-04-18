@@ -30,6 +30,18 @@ global struct
     HINSTANCE instance;
 } g_GL;
 
+const void *W32_GetProcAddress(const char *name)
+{
+    void *proc = (void *)wglGetProcAddress(name);
+
+    if (proc == 0 || p == (void *)0x1 || p == (void *)0x2 || p == (void *)0x3 || p == (void *)-1)
+    {
+        return (void *)GetProcAddress(g_GL.instance, name);
+    }
+
+    return proc;
+}
+
 b32 W32_InitOpenGL(HDC hdc)
 {
     PIXELFORMATDESCRIPTOR desired = {0};
@@ -125,15 +137,4 @@ b32 W32_InitOpenGL(HDC hdc)
     g_GL.context = glContext;
     g_GL.instance = opengl32;
     return true;
-}
-
-const void *W32_GetProcAddress(const char *name)
-{
-    void *proc = (void *)wglGetProcAddress(name);
-    if (proc)
-    {
-        return proc;
-    }
-
-    return (void *)GetProcAddress(g_GL.instance, name);
 }
