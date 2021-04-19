@@ -251,6 +251,10 @@ static i32 OSX_KeyCodeToInputKey(u16 keyCode)
         return Key_F19;
     case kVK_F20:
         return Key_F20;
+    case kVK_Help:
+        return Key_Insert;
+    case kVK_ForwardDelete:
+        return Key_Delete;
     case kVK_Home:
         return Key_Home;
     case kVK_PageUp:
@@ -268,8 +272,6 @@ static i32 OSX_KeyCodeToInputKey(u16 keyCode)
     case kVK_UpArrow:
         return Key_Up;
 
-    case kVK_ForwardDelete:
-    case kVK_Help:
     case kVK_VolumeUp:
     case kVK_VolumeDown:
     case kVK_Mute:

@@ -39,6 +39,7 @@
     X(Key_Minus, "Minus")                                                                          \
     X(Key_Equal, "Equal")                                                                          \
     X(Key_Backspace, "Backspace")                                                                  \
+    X(Key_Insert, "Insert")                                                                        \
     X(Key_Delete, "Delete")                                                                        \
     X(Key_Tab, "Tab")                                                                              \
     X(Key_A, "A")                                                                                  \
