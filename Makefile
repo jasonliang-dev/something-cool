@@ -9,20 +9,27 @@ FLAGS = -DDEBUG -DGLFW_INCLUDE_NONE -std=c11 \
 
 SRC := $(filter-out src/win32_%.c, $(wildcard src/*.c))
 
-.PHONY: all dir app
+.PHONY: all
 
-all: dir app
-
-dir:
-	mkdir -p build
-
+# build for macos
 ifeq ($(UNAME_S), Darwin)
 
-LD = -framework Cocoa -framework OpenGL
-SRC := $(wildcard src/*.m) $(SRC)
+LIB = -framework Cocoa -framework OpenGL
+SRC := $(wildcard src/*.m) $(filter-out src/x11_%.c, $(SRC))
 
-app:
+all:
 	mkdir -p build/$(BIN).app/Contents/MacOS/
-	$(CC) $(SRC) $(LD) -o build/$(BIN).app/Contents/MacOS/$(BIN) $(FLAGS)
+	$(CC) $(SRC) $(LIB) -o build/$(BIN).app/Contents/MacOS/$(BIN) $(FLAGS)
+
+endif
+
+# build for linux
+ifeq ($(UNAME_S), Linux)
+
+LIB = -lX11 -lGL -lm
+
+all:
+	mkdir -p build
+	$(CC) $(SRC) $(LIB) -o build/$(BIN) $(FLAGS)
 
 endif
