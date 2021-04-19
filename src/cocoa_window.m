@@ -1,4 +1,5 @@
 #import "cocoa_input.h"
+#include "geometry.h"
 #include "gl.h"
 #include "window.h"
 #import <Cocoa/Cocoa.h>
@@ -9,6 +10,15 @@ static struct
     NSWindow *handle;
     NSOpenGLContext *glContext;
     b32 quit;
+    union
+    {
+        iv2 contentResolution;
+        struct
+        {
+            i32 width;
+            i32 height;
+        };
+    };
 } g_Window;
 
 @interface CustomWindowDelegate : NSObject <NSWindowDelegate>
@@ -20,6 +30,16 @@ static struct
 {
     (void)sender;
     g_Window.quit = true;
+}
+
+- (void)windowDidResize:(NSNotification *)notification
+{
+    (void)notification;
+
+    NSRect content = [g_Window.handle contentRectForFrameRect:[g_Window.handle frame]];
+    g_Window.width = content.size.width;
+    g_Window.height = content.size.height;
+    glViewport(0, 0, g_Window.width, g_Window.height);
 }
 
 @end
@@ -153,10 +173,10 @@ void WindowSwapBuffers(void)
 
 i32 Window_Width(void)
 {
-    return 0;
+    return g_Window.width;
 }
 
 i32 Window_Height(void)
 {
-    return 0;
+    return g_Window.height;
 }
