@@ -7,24 +7,22 @@ FLAGS = -DDEBUG -DGLFW_INCLUDE_NONE -std=c11 \
 	-Werror -Wall -Wextra -pedantic-errors \
 	-Wno-missing-braces
 
-SRC := $(wildcard src/*.c)
+SRC := $(filter-out src/win32_%.c, $(wildcard src/*.c))
 
-ifeq ($(UNAME_S), Darwin)
-	LD = -framework Cocoa -framework OpenGL
-	SRC := $(wildcard src/*.m) $(filter-out src/win32_%.c, $(SRC))
-endif
-
-ifeq ($(UNAME_S), Linux)
-	LD =
-	SRC :=
-endif
-
-.PHONY: all
+.PHONY: all dir app
 
 all: dir app
 
 dir:
 	mkdir -p build
 
+ifeq ($(UNAME_S), Darwin)
+
+LD = -framework Cocoa -framework OpenGL
+SRC := $(wildcard src/*.m) $(SRC)
+
 app:
-	$(CC) $(SRC) $(LD) -o build/$(BIN) $(FLAGS)
+	mkdir -p build/$(BIN).app/Contents/MacOS/
+	$(CC) $(SRC) $(LD) -o build/$(BIN).app/Contents/MacOS/$(BIN) $(FLAGS)
+
+endif

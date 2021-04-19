@@ -1,11 +1,12 @@
+#import "cocoa_input.h"
 #include "gl.h"
-#include "input.h"
 #include "window.h"
 #import <Cocoa/Cocoa.h>
 #include <dlfcn.h>
 
 static struct
 {
+    NSWindow *handle;
     NSOpenGLContext *glContext;
     b32 quit;
 } g_Window;
@@ -78,6 +79,7 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
     [openGLContext makeCurrentContext];
     LoadOpenGLProcs(OSX_GetProcAddress);
 
+    g_Window.handle = window;
     g_Window.glContext = openGLContext;
     g_Window.quit = false;
 
@@ -108,14 +110,34 @@ void WindowPollEvents(void)
         switch ([event type])
         {
         case NSEventTypeKeyDown:
-            OnKeyPress(Key_Unknown);
+            (event.isARepeat ? OnKeyRepeat : OnKeyPress)(OSX_KeyCodeToInputKey(event.keyCode));
             break;
         case NSEventTypeKeyUp:
-            OnKeyRelease(Key_Unknown);
+            OnKeyRelease(OSX_KeyCodeToInputKey(event.keyCode));
             break;
-        default:
-            [NSApp sendEvent:event];
+        case NSEventTypeLeftMouseDown:
+            OnMouseClick(Mouse_Left);
+            break;
+        case NSEventTypeLeftMouseUp:
+            OnMouseRelease(Mouse_Left);
+            break;
+        case NSEventTypeRightMouseDown:
+            OnMouseClick(Mouse_Right);
+            break;
+        case NSEventTypeRightMouseUp:
+            OnMouseRelease(Mouse_Right);
+            break;
+        case NSEventTypeMouseMoved: {
+            NSPoint mouse = [event locationInWindow];
+            NSRect content = [g_Window.handle contentRectForFrameRect:[g_Window.handle frame]];
+            OnMouseMove(mouse.x, content.size.height - mouse.y);
+            break;
         }
+        default:
+            break;
+        }
+
+        [NSApp sendEvent:event];
     } while (event != nil);
 }
 
