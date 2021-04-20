@@ -4,14 +4,25 @@
 #include <limits.h>
 #include <string.h>
 
-typedef GLXContext (*glXCreateContextAttribsARBProc)(Display *, GLXFBConfig, GLXContext, Bool,
-                                                     const int *);
+typedef GLXContext (*PFNGLXCREATECONTEXTATTRIBSARBPROC)(Display *dpy, GLXFBConfig config,
+                                                        GLXContext share_context, Bool direct,
+                                                        const int *attrib_list);
+PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = NULL;
 
-glXCreateContextAttribsARBProc glXCreateContextAttribsARB = NULL;
+typedef void (*PFNGLXSWAPINTERVALEXTPROC)(Display *dpy, GLXDrawable drawable, int interval);
+PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = NULL;
 
 const void *X11_GetProcAddress(const char *name)
 {
     return (void *)glXGetProcAddressARB((const GLubyte *)name);
+}
+
+void X11_SwapInterval(Display *display, i32 interval)
+{
+    if (glXSwapIntervalEXT)
+    {
+        glXSwapIntervalEXT(display, glXGetCurrentReadDrawable(), interval);
+    }
 }
 
 void X11_SwapBuffers(Display *display, Window window)
@@ -89,11 +100,9 @@ static GLXFBConfig X11_GetBestFBC(Display *display, i32 screenID)
     return bestConfig;
 }
 
-static void X11_CreateOpenGLContext(Display *display, Window window, i32 screenID, GLXFBConfig fbc)
+static GLXContext X11_CreateOpenGLContext(Display *display, GLXFBConfig fbc,
+                                          const char *glxExtensions)
 {
-    glXCreateContextAttribsARB = (glXCreateContextAttribsARBProc)glXGetProcAddressARB(
-        (const GLubyte *)"glXCreateContextAttribsARB");
-
     i32 contextAttribs[] = {GLX_CONTEXT_MAJOR_VERSION_ARB,
                             3,
                             GLX_CONTEXT_MINOR_VERSION_ARB,
@@ -102,18 +111,14 @@ static void X11_CreateOpenGLContext(Display *display, Window window, i32 screenI
                             GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
                             None};
 
-    GLXContext context = NULL;
-    if (strstr(glXQueryExtensionsString(display, screenID), "GLX_ARB_create_context") == 0)
+    if (strstr(glxExtensions, "GLX_ARB_create_context") == 0)
     {
-        context = glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
-    }
-    else
-    {
-        context = glXCreateContextAttribsARB(display, fbc, 0, true, contextAttribs);
+        return glXCreateNewContext(display, fbc, GLX_RGBA_TYPE, 0, True);
     }
 
-    XSync(display, False);
-    glXMakeCurrent(display, window, context);
+    glXCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddressARB(
+        (const GLubyte *)"glXCreateContextAttribsARB");
+    return glXCreateContextAttribsARB(display, fbc, 0, true, contextAttribs);
 }
 
 b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 height,
@@ -165,10 +170,20 @@ b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 hei
         display, RootWindow(display, screenID), 0, 0, width, height, 0, visual->depth, InputOutput,
         visual->visual, CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &windowAttribs);
 
-    Atom atomWmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(display, window, &atomWmDeleteWindow, 1);
+    Atom atomWMDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(display, window, &atomWMDeleteWindow, 1);
 
-    X11_CreateOpenGLContext(display, window, screenID, bestFBC);
+    const char *glxExtensions = glXQueryExtensionsString(display, screenID);
+
+    GLXContext context = X11_CreateOpenGLContext(display, bestFBC, glxExtensions);
+    XSync(display, False);
+    glXMakeCurrent(display, window, context);
+
+    if (strstr(glxExtensions, "GLX_EXT_swap_control"))
+    {
+        glXSwapIntervalEXT =
+            (PFNGLXSWAPINTERVALEXTPROC)glXGetProcAddressARB((const GLubyte *)"glXSwapIntervalEXT");
+    }
 
     XStoreName(display, window, title);
     XClearWindow(display, window);
@@ -176,7 +191,7 @@ b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 hei
 
     state->display = display;
     state->window = window;
-    state->atomWmDeleteWindow = atomWmDeleteWindow;
+    state->WMDeleteWindow = atomWMDeleteWindow;
 
     return true;
 }

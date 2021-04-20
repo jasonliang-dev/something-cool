@@ -7,7 +7,7 @@ struct X11_WindowState
 {
     Display *display;
     Window window;
-    Atom atomWmDeleteWindow;
+    Atom WMDeleteWindow;
     b32 quit;
     i32 width;
     i32 height;

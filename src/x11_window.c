@@ -41,7 +41,7 @@ void WindowPollEvents(void)
             break;
         }
         case ClientMessage:
-            if (event.xclient.data.l[0] == (long)g_Window.atomWmDeleteWindow)
+            if ((Atom)event.xclient.data.l[0] == g_Window.WMDeleteWindow)
             {
                 g_Window.quit = true;
             }
@@ -57,7 +57,7 @@ void WindowPollEvents(void)
 
 void WindowSwapInterval(i32 interval)
 {
-    (void)interval;
+    X11_SwapInterval(g_Window.display, interval);
 }
 
 void WindowSwapBuffers(void)
