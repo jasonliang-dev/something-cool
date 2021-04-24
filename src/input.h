@@ -70,6 +70,7 @@
     X(Key_Z, "Z")                                                                                  \
     X(Key_Space, "Space")                                                                          \
     X(Key_Enter, "Enter")                                                                          \
+    X(Key_CapsLock, "CapsLock")                                                                    \
     X(Key_LeftCtrl, "LeftCtrl")                                                                    \
     X(Key_LeftShift, "LeftShift")                                                                  \
     X(Key_LeftAlt, "LeftAlt")                                                                      \
@@ -84,6 +85,7 @@
     X(Key_PageDown, "PageDown")                                                                    \
     X(Key_Home, "Home")                                                                            \
     X(Key_End, "End")                                                                              \
+    X(Key_Pause, "Pause")                                                                          \
     X(Key_ForwardSlash, "ForwardSlash")                                                            \
     X(Key_BackSlash, "BackSlash")                                                                  \
     X(Key_Period, "Period")                                                                        \

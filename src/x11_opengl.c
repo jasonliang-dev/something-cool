@@ -164,11 +164,12 @@ b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 hei
     windowAttribs.override_redirect = True;
     windowAttribs.colormap =
         XCreateColormap(display, RootWindow(display, screenID), visual->visual, AllocNone);
-    windowAttribs.event_mask = ExposureMask;
+    windowAttribs.event_mask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask;
+    u32 attrMask = CWBackPixel | CWColormap | CWBorderPixel | CWEventMask;
 
-    Window window = XCreateWindow(
-        display, RootWindow(display, screenID), 0, 0, width, height, 0, visual->depth, InputOutput,
-        visual->visual, CWBackPixel | CWColormap | CWBorderPixel | CWEventMask, &windowAttribs);
+    Window window =
+        XCreateWindow(display, RootWindow(display, screenID), 0, 0, width, height, 0, visual->depth,
+                      InputOutput, visual->visual, attrMask, &windowAttribs);
 
     Atom atomWMDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(display, window, &atomWMDeleteWindow, 1);

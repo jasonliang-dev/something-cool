@@ -3,7 +3,7 @@ UNAME_S = $(shell uname -s)
 BIN = app
 CC = clang
 
-FLAGS = -DDEBUG -DGLFW_INCLUDE_NONE -std=c11 \
+FLAGS = -DDEBUG -std=c11 \
 	-Werror -Wall -Wextra -pedantic-errors \
 	-Wno-missing-braces
 

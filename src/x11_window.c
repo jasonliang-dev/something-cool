@@ -1,7 +1,10 @@
 #include "gl.h"
+#include "input.h"
 #include "window.h"
+#include "x11_input.h"
 #include "x11_opengl.h"
 #include "x11_window_state.h"
+#include <stdio.h>
 
 static X11_WindowState g_Window;
 
@@ -13,7 +16,9 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
     }
 
     LoadOpenGLProcs(X11_GetProcAddress);
+    X11_InitInput(g_Window.display);
 
+    XFlush(g_Window.display);
     return true;
 }
 
@@ -48,6 +53,26 @@ void WindowPollEvents(void)
             break;
         case DestroyNotify:
             g_Window.quit = true;
+            break;
+        case KeyPress:
+            OnKeyPress(X11_TranslateKeyEvent((XKeyEvent *)&event));
+            break;
+        case KeyRelease:
+            if (XEventsQueued(g_Window.display, QueuedAfterReading))
+            {
+                XEvent nextEvent;
+                XPeekEvent(g_Window.display, &nextEvent);
+
+                if (nextEvent.type == KeyPress && event.xkey.time == nextEvent.xkey.time &&
+                    event.xkey.keycode == nextEvent.xkey.keycode)
+                {
+                    XNextEvent(g_Window.display, &nextEvent);
+                    OnKeyRepeat(X11_TranslateKeyEvent((XKeyEvent *)&event));
+                    break;
+                }
+            }
+
+            OnKeyRelease(X11_TranslateKeyEvent((XKeyEvent *)&event));
             break;
         default:
             break;
