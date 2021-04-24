@@ -14,15 +14,8 @@ static struct
     HWND handle;
     HDC hdc;
     b32 quit;
-    union
-    {
-        iv2 resolution;
-        struct
-        {
-            i32 width;
-            i32 height;
-        };
-    };
+    i32 width;
+    i32 height;
 } g_Window;
 
 static i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
@@ -225,10 +218,6 @@ void WindowSwapInterval(i32 interval)
 void WindowSwapBuffers(void)
 {
     SwapBuffers(g_Window.hdc);
-}
-
-void WindowBeginDraw(void)
-{
 }
 
 i32 WindowWidth(void)

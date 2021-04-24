@@ -21,20 +21,20 @@ int main(void)
     WindowSwapInterval(1);
 
     Camera2D camera = Camera2DCreate();
-    Texture tex = TextureCreate("data/test.bmp");
+    Texture tex = TextureCreate("data/Blue.bmp");
 
     Shader basicShader = ShaderCreate(BASIC_VERT, BASIC_FRAG);
     ShaderSetInt(basicShader, "u_Texture", 0);
 
     f32 vertices[] = {
-        // xyz            tex
+        // xyz            uv
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, //
         1.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
         0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
 
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, //
         1.0f, 1.0f, 0.0f, 1.0f, 1.0f, //
-        1.0f, 0.0f, 0.0f, 1.0f, 0.0f  //
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
     };
 
     VAO vao = VAOCreate();
@@ -58,7 +58,7 @@ int main(void)
         ShaderSetM4(basicShader, "u_Projection", camera.projection);
 
         m4 model = M4Translate(M4Identity(), v3(50, 50, 0));
-        model = M4Scale(model, v3(tex.width * 32.0f, tex.height * 32.0f, 1));
+        model = M4Scale(model, TextureV3(tex));
         ShaderSetM4(basicShader, "u_Model", model);
 
         TextureBind(tex, 0);

@@ -9,10 +9,10 @@ static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
 {
     enum
     {
-        DATA_OFFSET = 0x000A,
-        WIDTH_OFFSET = 0x0012,
-        HEIGHT_OFFSET = 0x0016,
-        BITS_PER_PIXEL_OFFSET = 0x001C,
+        DATA_OFFSET = 0xA,
+        WIDTH_OFFSET = 0x12,
+        HEIGHT_OFFSET = 0x16,
+        BITS_PER_PIXEL_OFFSET = 0x1C,
     };
 
     i32 fileSize;
@@ -22,16 +22,27 @@ static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
         return NULL;
     }
 
+    i32 dataOffset = *(i32 *)(fileData + DATA_OFFSET);
     *width = *(i32 *)(fileData + WIDTH_OFFSET);
     *height = *(i32 *)(fileData + HEIGHT_OFFSET);
     *channels = *(i16 *)(fileData + BITS_PER_PIXEL_OFFSET) / 8;
 
-    i32 imageDataSize = (*width) * (*height) * (*channels);
-    u8 *imageData = malloc(imageDataSize);
-
     // assuming no padding (already 4 bytes aligned)
-    i32 dataOffset = *(i32 *)(fileData + DATA_OFFSET);
-    memcpy(imageData, fileData + dataOffset, imageDataSize);
+    u8 *imageData = malloc((*width) * (*height) * (*channels));
+    for (i32 y = 0; y < *height; ++y)
+    {
+        for (i32 x = 0; x < *width; ++x)
+        {
+            u8 *dest = imageData + (y * (*width) + x) * (*channels);
+            u8 *src = fileData + dataOffset + ((*height - 1 - y) * (*width) + x) * (*channels);
+
+            // convert from bgra to rgba
+            dest[0] = src[2];
+            dest[1] = src[1];
+            dest[2] = src[0];
+            dest[3] = src[3];
+        }
+    }
 
     free(fileData);
     return imageData;
