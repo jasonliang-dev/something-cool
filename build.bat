@@ -10,10 +10,14 @@ set FLAGS=^
     /Z7 /MD /nologo /W4 /wd4201
 
 set SOURCES=^
+    ../src/camera2d.c^
     ../src/file_io.c^
     ../src/geometry.c^
+    ../src/gfx.c^
     ../src/gl.c^
     ../src/input.c^
+    ../src/shader.c^
+    ../src/shaders.gen.c^
     ../src/texture.c^
     ../src/win32_opengl.c^
     ../src/win32_window.c^
@@ -23,6 +27,8 @@ set LIBS= user32.lib gdi32.lib opengl32.lib
 
 if not exist build mkdir build
 pushd build
+
+cl %FLAGS% ..\src\shadergen.c && shadergen.exe
 
 cl %FLAGS% %SOURCES% /link %LIBS%^
     /opt:ref /incremental:no /debug:fastlink^

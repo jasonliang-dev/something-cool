@@ -9,5 +9,10 @@ void WindowPollEvents(void);
 void WindowSwapInterval(i32 interval);
 void WindowSwapBuffers(void);
 
-i32 Window_Width(void);
-i32 Window_Height(void);
+i32 WindowWidth(void);
+i32 WindowHeight(void);
+
+static v2 WindowV2(void)
+{
+    return v2((f32)WindowWidth(), (f32)WindowHeight());
+}

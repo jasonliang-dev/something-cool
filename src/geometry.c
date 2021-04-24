@@ -1,6 +1,6 @@
 #include "geometry.h"
 
-m4 M4_Identity(void)
+m4 M4Identity(void)
 {
     return (m4){{
         {1.0f, 0.0f, 0.0f, 0.0f},
@@ -27,7 +27,7 @@ m4 M4xM4(m4 a, m4 b)
     return result;
 }
 
-m4 M4_Translate(m4 m, v3 translation)
+m4 M4Translate(m4 m, v3 translation)
 {
     m.elements[3][0] += translation.x;
     m.elements[3][1] += translation.y;
@@ -35,7 +35,7 @@ m4 M4_Translate(m4 m, v3 translation)
     return m;
 }
 
-m4 M4_Scale(m4 m, v3 scale)
+m4 M4Scale(m4 m, v3 scale)
 {
     m.elements[0][0] += scale.x;
     m.elements[1][1] += scale.y;

@@ -255,7 +255,7 @@ union m4
         __VA_ARGS__                                                                                \
     }
 
-m4 M4_Identity(void);
+m4 M4Identity(void);
 m4 M4xM4(m4 a, m4 b);
-m4 M4_Translate(m4 m, v3 translation);
-m4 M4_Scale(m4 m, v3 scale);
+m4 M4Translate(m4 m, v3 translation);
+m4 M4Scale(m4 m, v3 scale);

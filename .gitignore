@@ -3,3 +3,5 @@ build/*
 !build/data/*
 .vs
 .DS_Store
+
+*.gen.[ch]

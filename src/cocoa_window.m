@@ -163,12 +163,12 @@ void WindowSwapBuffers(void)
     [g_Window.glContext flushBuffer];
 }
 
-i32 Window_Width(void)
+i32 WindowWidth(void)
 {
     return g_Window.width;
 }
 
-i32 Window_Height(void)
+i32 WindowHeight(void)
 {
     return g_Window.height;
 }
