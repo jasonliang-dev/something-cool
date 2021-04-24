@@ -3,14 +3,25 @@
 #include "window.h"
 #include "x11_input.h"
 #include "x11_opengl.h"
-#include "x11_window_state.h"
-#include <stdio.h>
+#include <X11/Xlib.h>
 
-static X11_WindowState g_Window;
+static struct
+{
+    Display *display;
+    Window window;
+    Atom WMDeleteWindow;
+    b32 quit;
+    i32 width;
+    i32 height;
+} g_Window;
 
 b32 WindowCreate(i32 width, i32 height, const char *title)
 {
-    if (!X11_CreateWindowWithOpenGLContext(&g_Window, width, height, title))
+    i32 eventMask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask |
+                    ButtonPressMask | ButtonReleaseMask | PointerMotionMask;
+    if (!X11_CreateWindowWithOpenGLContext(&g_Window.display, &g_Window.window,
+                                           &g_Window.WMDeleteWindow, eventMask, width, height,
+                                           title))
     {
         return false;
     }
@@ -19,6 +30,11 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
     X11_InitInput(g_Window.display);
 
     XFlush(g_Window.display);
+
+    g_Window.quit = false;
+    g_Window.width = width;
+    g_Window.height = height;
+
     return true;
 }
 
@@ -55,7 +71,7 @@ void WindowPollEvents(void)
             g_Window.quit = true;
             break;
         case KeyPress:
-            OnKeyPress(X11_TranslateKeyEvent((XKeyEvent *)&event));
+            OnKeyPress(X11_TranslateKeyEvent(&event.xkey));
             break;
         case KeyRelease:
             if (XEventsQueued(g_Window.display, QueuedAfterReading))
@@ -66,13 +82,23 @@ void WindowPollEvents(void)
                 if (nextEvent.type == KeyPress && event.xkey.time == nextEvent.xkey.time &&
                     event.xkey.keycode == nextEvent.xkey.keycode)
                 {
+                    // key isn't actually released.
                     XNextEvent(g_Window.display, &nextEvent);
-                    OnKeyRepeat(X11_TranslateKeyEvent((XKeyEvent *)&event));
+                    OnKeyRepeat(X11_TranslateKeyEvent(&event.xkey));
                     break;
                 }
             }
 
-            OnKeyRelease(X11_TranslateKeyEvent((XKeyEvent *)&event));
+            OnKeyRelease(X11_TranslateKeyEvent(&event.xkey));
+            break;
+        case MotionNotify:
+            OnMouseMove(event.xmotion.x, event.xmotion.y);
+            break;
+        case ButtonPress:
+            OnMouseClick(X11_TranslateButtonEvent(&event.xbutton));
+            break;
+        case ButtonRelease:
+            OnMouseRelease(X11_TranslateButtonEvent(&event.xbutton));
             break;
         default:
             break;
@@ -80,13 +106,18 @@ void WindowPollEvents(void)
     }
 }
 
+// wrapping calls to glXSwapIntervalEXT and glXSwapBuffers because
+// GL/glx.h doesn't like the gl.h header.
+
 void WindowSwapInterval(i32 interval)
 {
+    // glXSwapIntervalEXT
     X11_SwapInterval(g_Window.display, interval);
 }
 
 void WindowSwapBuffers(void)
 {
+    // glXSwapBuffers
     X11_SwapBuffers(g_Window.display, g_Window.window);
 }
 

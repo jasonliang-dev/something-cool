@@ -8,3 +8,4 @@
 
 void X11_InitInput(Display *display);
 i32 X11_TranslateKeyEvent(XKeyEvent *event);
+i32 X11_TranslateButtonEvent(XButtonEvent *event);

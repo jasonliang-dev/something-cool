@@ -256,3 +256,23 @@ i32 X11_TranslateKeyEvent(XKeyEvent *event)
 
     return g_Input.keycodeTable[event->keycode];
 }
+
+i32 X11_TranslateButtonEvent(XButtonEvent *event)
+{
+    switch (event->button)
+    {
+    case Button1:
+        return Mouse_Left;
+    case Button2:
+        return Mouse_Middle;
+    case Button3:
+        return Mouse_Right;
+    case Button4:
+        return Mouse_4;
+    case Button5:
+        return Mouse_5;
+
+    default:
+        return Mouse_Unknown;
+    }
+}

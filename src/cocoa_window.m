@@ -1,4 +1,4 @@
-#include "cocoa_inputkey.h"
+#include "cocoa_input.h"
 #include "gl.h"
 #include "window.h"
 #import <Cocoa/Cocoa.h>

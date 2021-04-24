@@ -65,9 +65,7 @@ static GLXFBConfig X11_GetBestFBC(Display *display, i32 screenID)
     }
 
     i32 bestFBC = -1;
-    i32 worstFBC = -1;
     i32 bestSampleCount = INT_MIN;
-    i32 worstSampleCount = INT_MAX;
 
     for (i32 i = 0; i < fbcount; ++i)
     {
@@ -83,12 +81,6 @@ static GLXFBConfig X11_GetBestFBC(Display *display, i32 screenID)
             {
                 bestFBC = i;
                 bestSampleCount = samples;
-            }
-
-            if (worstFBC < 0 || !sampleBuffers || samples < worstSampleCount)
-            {
-                worstFBC = i;
-                worstSampleCount = samples;
             }
         }
         XFree(vi);
@@ -121,8 +113,9 @@ static GLXContext X11_CreateOpenGLContext(Display *display, GLXFBConfig fbc,
     return glXCreateContextAttribsARB(display, fbc, 0, true, contextAttribs);
 }
 
-b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 height,
-                                      const char *title)
+b32 X11_CreateWindowWithOpenGLContext(Display **displayP, Window *windowP,
+                                      Atom *atomWMDeleteWindowP, i32 eventMask, i32 width,
+                                      i32 height, const char *title)
 {
     Screen *screen;
     i32 screenID;
@@ -164,7 +157,7 @@ b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 hei
     windowAttribs.override_redirect = True;
     windowAttribs.colormap =
         XCreateColormap(display, RootWindow(display, screenID), visual->visual, AllocNone);
-    windowAttribs.event_mask = ExposureMask | StructureNotifyMask | KeyPressMask | KeyReleaseMask;
+    windowAttribs.event_mask = eventMask;
     u32 attrMask = CWBackPixel | CWColormap | CWBorderPixel | CWEventMask;
 
     Window window =
@@ -190,9 +183,9 @@ b32 X11_CreateWindowWithOpenGLContext(X11_WindowState *state, i32 width, i32 hei
     XClearWindow(display, window);
     XMapRaised(display, window);
 
-    state->display = display;
-    state->window = window;
-    state->WMDeleteWindow = atomWMDeleteWindow;
+    *displayP = display;
+    *windowP = window;
+    *atomWMDeleteWindowP = atomWMDeleteWindow;
 
     return true;
 }
