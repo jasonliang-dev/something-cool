@@ -24,7 +24,7 @@ PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = NULL;
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
 PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = NULL;
 
-global struct
+static struct
 {
     HGLRC context;
     HINSTANCE instance;
@@ -34,7 +34,8 @@ const void *W32_GetProcAddress(const char *name)
 {
     void *proc = (void *)wglGetProcAddress(name);
 
-    if (proc == 0 || p == (void *)0x1 || p == (void *)0x2 || p == (void *)0x3 || p == (void *)-1)
+    if (proc == 0 || proc == (void *)0x1 || proc == (void *)0x2 || proc == (void *)0x3 ||
+        proc == (void *)-1)
     {
         return (void *)GetProcAddress(g_GL.instance, name);
     }

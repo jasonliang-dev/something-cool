@@ -9,14 +9,22 @@ set FLAGS=^
     /D_CRT_SECURE_NO_WARNINGS^
     /Z7 /MD /nologo /W4 /wd4201
 
-set SOURCES= ..\src\*.c
+set SOURCES=^
+    ../src/file_io.c^
+    ../src/geometry.c^
+    ../src/gl.c^
+    ../src/input.c^
+    ../src/texture.c^
+    ../src/win32_opengl.c^
+    ../src/win32_window.c^
+    ../src/main.c
 
 set LIBS= user32.lib gdi32.lib opengl32.lib
 
 if not exist build mkdir build
 pushd build
 
-cl %FLAGS% /I../include %SOURCES% /link %LIBS%^
+cl %FLAGS% %SOURCES% /link %LIBS%^
     /opt:ref /incremental:no /debug:fastlink^
     /ENTRY:mainCRTStartup /SUBSYSTEM:CONSOLE^
     /out:%OUT_EXE%.exe

@@ -1,5 +1,6 @@
 #include "gl.h"
 #include "window.h"
+#include "texture.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +14,10 @@ int main(void)
     }
 
     WindowSwapInterval(1);
+
+    Texture tex = TextureCreate("data/test.bmp");
+    (void)tex;
+
     while (!WindowShouldClose())
     {
         static f32 s_Time = 0.0f;

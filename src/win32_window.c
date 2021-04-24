@@ -9,7 +9,7 @@
 
 #define W32_WNDCLASSNAME "ApplicationWindowClass"
 
-global struct
+static struct
 {
     HWND handle;
     HDC hdc;
@@ -25,7 +25,7 @@ global struct
     };
 } g_Window;
 
-internal i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
+static i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
 {
     if (vkeyCode >= 'A' && vkeyCode <= 'Z')
     {
@@ -47,7 +47,7 @@ internal i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
     case VK_ESCAPE:
         return Key_Esc;
     case VK_OEM_3:
-        return Key_GraveAccent;
+        return Key_Grave;
     case VK_OEM_MINUS:
         return Key_Minus;
     case VK_OEM_PLUS:
@@ -61,11 +61,11 @@ internal i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
     case VK_RETURN:
         return Key_Enter;
     case VK_CONTROL:
-        return Key_Ctrl;
+        return Key_LeftCtrl;
     case VK_SHIFT:
-        return Key_Shift;
+        return Key_LeftShift;
     case VK_MENU:
-        return Key_Alt;
+        return Key_LeftAlt;
     case VK_UP:
         return Key_Up;
     case VK_LEFT:
@@ -101,8 +101,7 @@ internal i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
     }
 }
 
-internal LRESULT CALLBACK W32_WindowProcedure(HWND handle, UINT message, WPARAM wParam,
-                                              LPARAM lParam)
+static LRESULT CALLBACK W32_WindowProcedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
@@ -226,6 +225,10 @@ void WindowSwapInterval(i32 interval)
 void WindowSwapBuffers(void)
 {
     SwapBuffers(g_Window.hdc);
+}
+
+void WindowBeginDraw(void)
+{
 }
 
 i32 Window_Width(void)
