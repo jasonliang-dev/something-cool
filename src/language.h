@@ -26,3 +26,9 @@ typedef i32 b32;
 typedef i64 b64;
 typedef float f32;
 typedef double f64;
+
+static f32 Clamp(f32 x, f32 min, f32 max)
+{
+    x = x < min ? min : x;
+    return x > max ? max : x;
+}

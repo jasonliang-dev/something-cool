@@ -255,6 +255,16 @@ union m4
         __VA_ARGS__                                                                                \
     }
 
+v3 V3PlusV3(v3 a, v3 b);
+v3 V3MinusV3(v3 a, v3 b);
+v3 V3xV3(v3 a, v3 b);
+v3 V3xF32(v3 v, f32 f);
+v3 V3Normalize(v3 v);
+v3 V3Cross(v3 a, v3 b);
+f32 V3Dot(v3 a, v3 b);
+
+b32 V4EqualV4(v4 a, v4 b);
+
 m4 M4Identity(void);
 m4 M4xM4(m4 a, m4 b);
 m4 M4Translate(m4 m, v3 translation);

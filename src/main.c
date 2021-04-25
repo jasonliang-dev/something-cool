@@ -1,4 +1,5 @@
 #include "camera2d.h"
+#include "camera3d.h"
 #include "geometry.h"
 #include "gfx.h"
 #include "gl.h"
@@ -19,7 +20,9 @@ int main(void)
         abort();
     }
 
-    Camera2D camera = Camera2DCreate();
+    Camera3D camera;
+    Camera3DCreate(&camera, v3(0.0f, 0.0f, -3.0f), PI / 2.0f, 0.0f);
+
     Texture tex = TextureCreate("data/Blue.bmp");
 
     Shader basicShader = ShaderCreate(BASIC_VERT, BASIC_FRAG);
@@ -46,14 +49,33 @@ int main(void)
     WindowSwapInterval(1);
     while (!WindowShouldClose())
     {
-        if (KeyPressed(Key_S))
-            printf("S Pressed\n");
+        v2 look = v2(0, 0);
+        f32 sensitivity = 6.0f;
+        if (KeyDown(Key_Up))
+            look.y += sensitivity;
+        if (KeyDown(Key_Down))
+            look.y -= sensitivity;
+        if (KeyDown(Key_Left))
+            look.x -= sensitivity;
+        if (KeyDown(Key_Right))
+            look.x += sensitivity;
 
+        Camera3DUpdateLook(&camera, look);
+
+        f32 moveSpeed = 0.2f;
+        if (KeyDown(Key_W))
+            camera.position = V3PlusV3(camera.position, V3xF32(camera.forward, moveSpeed));
         if (KeyDown(Key_S))
-            printf("S Down\n");
+            camera.position = V3PlusV3(camera.position, V3xF32(camera.forward, -moveSpeed));
+        if (KeyDown(Key_A))
+            camera.position = V3PlusV3(camera.position, V3xF32(camera.right, -moveSpeed));
+        if (KeyDown(Key_D))
+            camera.position = V3PlusV3(camera.position, V3xF32(camera.right, moveSpeed));
 
-        if (KeyReleased(Key_S))
-            printf("S Released\n");
+        if (KeyDown(Key_Space))
+            camera.position.y -= moveSpeed;
+        if (KeyDown(Key_LeftShift))
+            camera.position.y += moveSpeed;
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -61,14 +83,13 @@ int main(void)
         glClearColor(0.1f, 0.1f, 0.1f, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        Camera2DUpdate(&camera, WindowV2());
+        Camera3DUpdateViewProj(&camera, WindowV2());
 
         ShaderUse(basicShader);
-        ShaderSetM4(basicShader, "u_View", M4Identity());
+        ShaderSetM4(basicShader, "u_View", camera.view);
         ShaderSetM4(basicShader, "u_Projection", camera.projection);
 
-        m4 model = M4Translate(M4Identity(), v3(50, 50, 0));
-        model = M4Scale(model, TextureV3(tex));
+        m4 model = M4Scale(M4Identity(), v3(4, 4, 4));
         ShaderSetM4(basicShader, "u_Model", model);
 
         TextureBind(tex, 0);

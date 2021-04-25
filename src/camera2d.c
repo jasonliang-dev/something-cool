@@ -28,7 +28,8 @@ static m4 Ortho(f32 left, f32 right, f32 bottom, f32 top, f32 zNear, f32 zFar)
     return result;
 }
 
-void Camera2DUpdate(Camera2D *camera, v2 bottomRight)
+void Camera2DUpdate(Camera2D *camera, v2 resolution)
 {
-    camera->projection = Ortho(0, bottomRight.x, bottomRight.y, 0, -1, 1);
+    camera->projection = Ortho(0, resolution.x, resolution.y, 0, -1, 1);
+    camera->view = M4Translate(M4Identity(), v3(camera->position.x, camera->position.y, 0));
 }

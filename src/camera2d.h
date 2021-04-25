@@ -7,8 +7,9 @@ typedef struct Camera2D Camera2D;
 struct Camera2D
 {
     m4 projection;
+    m4 view;
     v2 position;
 };
 
 Camera2D Camera2DCreate(void);
-void Camera2DUpdate(Camera2D *camera, v2 bottomRight);
+void Camera2DUpdate(Camera2D *camera, v2 resolution);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "language.h"
+#include "geometry.h"
 
 enum
 {
@@ -136,7 +137,9 @@ b32 KeyPressed(i32 key);
 b32 KeyReleased(i32 key);
 b32 KeyDown(i32 key);
 
-// only platform layer should use functions below
+v2 GetMousePos(void);
+
+// only window events should call these functions below
 void OnKeyPress(i32 key);
 void OnKeyRelease(i32 key);
 void OnKeyRepeat(i32 key);

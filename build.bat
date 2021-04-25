@@ -11,6 +11,7 @@ set FLAGS=^
 
 set SOURCES=^
     ../src/camera2d.c^
+    ../src/camera3d.c^
     ../src/file_io.c^
     ../src/geometry.c^
     ../src/gfx.c^

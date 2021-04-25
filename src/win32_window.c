@@ -195,6 +195,20 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
     return true;
 }
 
+void WindowClose(void)
+{
+    g_Window.quit = true;
+}
+
+void *WindowGetHandle(void) {
+    return g_Window.handle;
+}
+
+b32 WindowIsFocused(void)
+{
+    return g_Window.handle == GetFocus();
+}
+
 b32 WindowShouldClose(void)
 {
     return g_Window.quit;
@@ -228,4 +242,11 @@ i32 WindowWidth(void)
 i32 WindowHeight(void)
 {
     return g_Window.height;
+}
+
+v4 WindowRect(void)
+{
+    RECT rect;
+    GetWindowRect(g_Window.handle, &rect);
+    return v4((f32)rect.left, (f32)rect.top, (f32)rect.right, (f32)rect.bottom);
 }

@@ -9,7 +9,8 @@ static struct
     b8 keysDownPrev[Key_Max];
     b8 mouseButtonsDown[Mouse_Max];
     b8 mouseButtonsDownPrev[Mouse_Max];
-    v2 mousePosition;
+    v2 mousePos;
+    v2 mousePosPrev;
 } g_Input;
 
 const char *KeyToString(i32 key)
@@ -251,6 +252,9 @@ void InputUpdate(void)
     memcpy(g_Input.keysDownPrev, g_Input.keysDown, sizeof(g_Input.keysDown));
     memcpy(g_Input.mouseButtonsDownPrev, g_Input.mouseButtonsDown,
            sizeof(g_Input.mouseButtonsDown));
+
+    g_Input.mousePosPrev.x = g_Input.mousePos.x;
+    g_Input.mousePosPrev.y = g_Input.mousePos.y;
 }
 
 b32 KeyPressed(i32 key)
@@ -266,6 +270,11 @@ b32 KeyReleased(i32 key)
 b32 KeyDown(i32 key)
 {
     return g_Input.keysDown[key];
+}
+
+v2 GetMousePos(void)
+{
+    return g_Input.mousePos;
 }
 
 void OnKeyPress(i32 key)
@@ -295,5 +304,5 @@ void OnMouseRelease(i32 button)
 
 void OnMouseMove(i32 x, i32 y)
 {
-    g_Input.mousePosition = v2((f32)x, (f32)y);
+    g_Input.mousePos = v2((f32)x, (f32)y);
 }

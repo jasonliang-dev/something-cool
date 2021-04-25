@@ -1,4 +1,49 @@
 #include "geometry.h"
+#include <math.h>
+
+v3 V3PlusV3(v3 a, v3 b)
+{
+    return v3(a.x + b.x, a.y + b.y, a.z + b.z);
+}
+
+v3 V3MinusV3(v3 a, v3 b)
+{
+    return v3(a.x - b.x, a.y - b.y, a.z - b.z);
+}
+
+v3 V3xV3(v3 a, v3 b)
+{
+    return v3(a.x * b.x, a.y * b.y, a.z * b.z);
+}
+
+v3 V3xF32(v3 v, f32 f)
+{
+    return v3(v.x * f, v.y * f, v.z * f);
+}
+
+v3 V3Normalize(v3 v)
+{
+    f32 length = sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+    return v3(v.x / length, v.y / length, v.z / length);
+}
+
+v3 V3Cross(v3 a, v3 b)
+{
+    f32 x = a.y * b.z - a.z * b.y;
+    f32 y = a.z * b.x - a.x * b.z;
+    f32 z = a.x * b.y - a.y * b.x;
+    return v3(x, y, z);
+}
+
+f32 V3Dot(v3 a, v3 b)
+{
+    return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+b32 V4EqualV4(v4 a, v4 b)
+{
+    return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
+}
 
 m4 M4Identity(void)
 {
