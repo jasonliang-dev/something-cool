@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
+static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *fileName)
 {
     enum
     {
@@ -16,8 +16,13 @@ static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
     };
 
     i32 fileSize;
-    u8 *fileData = ReadFileData(&fileSize, filename);
+    u8 *fileData = ReadFileData(&fileSize, fileName);
     if (!fileData)
+    {
+        return NULL;
+    }
+
+    if (fileData[0] != 'B' || fileData[1] != 'M')
     {
         return NULL;
     }
@@ -33,8 +38,8 @@ static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
     {
         for (i32 x = 0; x < *width; ++x)
         {
-            u8 *dest = imageData + (y * (*width) + x) * (*channels);
-            u8 *src = fileData + dataOffset + ((*height - 1 - y) * (*width) + x) * (*channels);
+            u8 *dest = imageData + (*channels) * ((*width) * y + x);
+            u8 *src = fileData + dataOffset + (*channels) * ((*width) * (*height - 1 - y) + x);
 
             // convert from bgra to rgba
             dest[0] = src[2];
@@ -48,15 +53,15 @@ static u8 *ReadBMP(i32 *width, i32 *height, i32 *channels, const char *filename)
     return imageData;
 }
 
-Texture TextureCreate(const char *filename)
+Texture TextureCreate(const char *fileName)
 {
     Texture result;
 
     i32 channels;
-    u8 *imageData = ReadBMP(&result.width, &result.height, &channels, filename);
+    u8 *imageData = ReadBMP(&result.width, &result.height, &channels, fileName);
     if (!imageData)
     {
-        fprintf(stderr, "Failed to load image %s\n", filename);
+        fprintf(stderr, "Failed to load image %s\n", fileName);
         abort();
     }
 

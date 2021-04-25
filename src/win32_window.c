@@ -137,9 +137,9 @@ static LRESULT CALLBACK W32_WindowProcedure(HWND handle, UINT message, WPARAM wP
         OnMouseMove(mouse.x, mouse.y);
         return 0;
     }
+    default:
+        return DefWindowProc(handle, message, wParam, lParam);
     }
-
-    return DefWindowProc(handle, message, wParam, lParam);
 }
 
 b32 WindowCreate(i32 width, i32 height, const char *title)
@@ -157,7 +157,7 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
         return false;
     }
 
-    DWORD windowStyle = WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME;
+    DWORD windowStyle = WS_OVERLAPPEDWINDOW;
     RECT windowSize;
     windowSize.left = 0;
     windowSize.top = 0;

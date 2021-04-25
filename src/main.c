@@ -2,6 +2,7 @@
 #include "geometry.h"
 #include "gfx.h"
 #include "gl.h"
+#include "input.h"
 #include "shader.h"
 #include "shaders.gen.h"
 #include "texture.h"
@@ -17,8 +18,6 @@ int main(void)
         fprintf(stderr, "Failed to create a window\n");
         abort();
     }
-
-    WindowSwapInterval(1);
 
     Camera2D camera = Camera2DCreate();
     Texture tex = TextureCreate("data/Blue.bmp");
@@ -43,8 +42,19 @@ int main(void)
     VertexAttrPush(3);
     VertexAttrPush(2);
 
+    InputInit();
+    WindowSwapInterval(1);
     while (!WindowShouldClose())
     {
+        if (KeyPressed(Key_S))
+            printf("S Pressed\n");
+
+        if (KeyDown(Key_S))
+            printf("S Down\n");
+
+        if (KeyReleased(Key_S))
+            printf("S Released\n");
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -68,6 +78,7 @@ int main(void)
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         WindowSwapBuffers();
+        InputUpdate();
         WindowPollEvents();
     }
 }
