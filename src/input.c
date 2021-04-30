@@ -272,7 +272,7 @@ b32 KeyDown(i32 key)
     return g_Input.keysDown[key];
 }
 
-v2 GetMousePos(void)
+v2 MouseGetPos(void)
 {
     return g_Input.mousePos;
 }

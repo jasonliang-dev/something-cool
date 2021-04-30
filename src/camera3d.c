@@ -1,4 +1,6 @@
 #include "camera3d.h"
+#include "input.h"
+#include "window.h"
 #include <math.h>
 #include <string.h>
 
@@ -16,12 +18,16 @@ void Camera3DCreate(Camera3D *camera, v3 position, f32 yaw, f32 pitch)
     camera->position = position;
     camera->yaw = yaw;
     camera->pitch = pitch;
+
     camera->sensitivity = 0.005f;
+    camera->fov = PI / 4;
+    camera->zNear = 0.01f;
+    camera->zFar = 1000.0f;
 
     UpdateCameraVectors(camera);
 }
 
-void Camera3DUpdateLook(Camera3D *camera, v2 delta)
+static void UpdateLook(Camera3D *camera, v2 delta)
 {
     f32 justUnderHalfPi = PI / 2.0f - 0.01f;
 
@@ -79,8 +85,41 @@ static m4 LookAt(Camera3D *camera)
     return result;
 }
 
-void Camera3DUpdateViewProj(Camera3D *camera, v2 resolution)
+static void UpdateViewProj(Camera3D *camera, v2 resolution)
 {
-    camera->projection = Perspective(PI / 4.0f, resolution, 0.1f, 1000.0f);
+    camera->projection = Perspective(camera->fov, resolution, camera->zNear, camera->zFar);
     camera->view = LookAt(camera);
+}
+
+void Camera3DFreeUpdate(Camera3D *camera)
+{
+    v2 look = v2(0, 0);
+    f32 sensitivity = 6.0f;
+    if (KeyDown(Key_Up))
+        look.y += sensitivity;
+    if (KeyDown(Key_Down))
+        look.y -= sensitivity;
+    if (KeyDown(Key_Left))
+        look.x -= sensitivity;
+    if (KeyDown(Key_Right))
+        look.x += sensitivity;
+
+    UpdateLook(camera, look);
+
+    f32 moveSpeed = 0.2f;
+    if (KeyDown(Key_W))
+        camera->position = V3PlusV3(camera->position, V3xF32(camera->forward, moveSpeed));
+    if (KeyDown(Key_S))
+        camera->position = V3PlusV3(camera->position, V3xF32(camera->forward, -moveSpeed));
+    if (KeyDown(Key_A))
+        camera->position = V3PlusV3(camera->position, V3xF32(camera->right, -moveSpeed));
+    if (KeyDown(Key_D))
+        camera->position = V3PlusV3(camera->position, V3xF32(camera->right, moveSpeed));
+
+    if (KeyDown(Key_Space))
+        camera->position.y -= moveSpeed;
+    if (KeyDown(Key_LeftShift))
+        camera->position.y += moveSpeed;
+
+    UpdateViewProj(camera, WindowV2());
 }

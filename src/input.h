@@ -137,7 +137,8 @@ b32 KeyPressed(i32 key);
 b32 KeyReleased(i32 key);
 b32 KeyDown(i32 key);
 
-v2 GetMousePos(void);
+v2 MouseGetPos(void);
+void MouseSetPos(i32 x, i32 y);
 
 // only window events should call these functions below
 void OnKeyPress(i32 key);

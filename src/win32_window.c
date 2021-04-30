@@ -13,10 +13,9 @@ static struct
 {
     HWND handle;
     HDC hdc;
-    b32 quit;
-    i32 width;
-    i32 height;
-} g_Window;
+} g_Internal;
+
+WindowState window;
 
 static i32 W32_VKeyCodeToInputKey(u64 vkeyCode)
 {
@@ -101,14 +100,14 @@ static LRESULT CALLBACK W32_WindowProcedure(HWND handle, UINT message, WPARAM wP
     case WM_CLOSE:
     case WM_DESTROY:
     case WM_QUIT:
-        g_Window.quit = true;
+        window.quit = true;
         return 0;
     case WM_MENUCHAR:
         return MAKELRESULT(0, MNC_CLOSE);
     case WM_SIZE:
-        g_Window.width = LOWORD(lParam);
-        g_Window.height = HIWORD(lParam);
-        glViewport(0, 0, g_Window.width, g_Window.height);
+        window.width = LOWORD(lParam);
+        window.height = HIWORD(lParam);
+        glViewport(0, 0, window.width, window.height);
         return 0;
     case WM_KEYDOWN: {
         b32 prevDown = lParam & (1 << 30);
@@ -169,49 +168,41 @@ b32 WindowCreate(i32 width, i32 height, const char *title)
         return false;
     }
 
-    HWND window =
+    HWND handle =
         CreateWindow(W32_WNDCLASSNAME, title, windowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
                      windowSize.right - windowSize.left, windowSize.bottom - windowSize.top, NULL,
                      NULL, GetModuleHandleW(NULL), NULL);
 
-    if (!window)
+    if (!handle)
     {
         return false;
     }
 
-    HDC hdc = GetDC(window);
+    HDC hdc = GetDC(handle);
     if (!W32_InitOpenGL(hdc))
     {
         return false;
     }
     LoadOpenGLProcs(W32_GetProcAddress);
 
-    ShowWindow(window, SW_SHOW);
+    ShowWindow(handle, SW_SHOW);
 
-    g_Window.handle = window;
-    g_Window.hdc = hdc;
-    g_Window.quit = false;
+    g_Internal.handle = handle;
+    g_Internal.hdc = hdc;
+
+    window.quit = false;
 
     return true;
 }
 
-void WindowClose(void)
+void *WindowGetHandle(void)
 {
-    g_Window.quit = true;
-}
-
-void *WindowGetHandle(void) {
-    return g_Window.handle;
+    return g_Internal.handle;
 }
 
 b32 WindowIsFocused(void)
 {
-    return g_Window.handle == GetFocus();
-}
-
-b32 WindowShouldClose(void)
-{
-    return g_Window.quit;
+    return g_Internal.handle == GetFocus();
 }
 
 void WindowPollEvents(void)
@@ -231,22 +222,12 @@ void WindowSwapInterval(i32 interval)
 
 void WindowSwapBuffers(void)
 {
-    SwapBuffers(g_Window.hdc);
-}
-
-i32 WindowWidth(void)
-{
-    return g_Window.width;
-}
-
-i32 WindowHeight(void)
-{
-    return g_Window.height;
+    SwapBuffers(g_Internal.hdc);
 }
 
 v4 WindowRect(void)
 {
     RECT rect;
-    GetWindowRect(g_Window.handle, &rect);
+    GetWindowRect(g_Internal.handle, &rect);
     return v4((f32)rect.left, (f32)rect.top, (f32)rect.right, (f32)rect.bottom);
 }

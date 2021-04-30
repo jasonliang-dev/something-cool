@@ -14,8 +14,11 @@ struct Camera3D
     f32 yaw;
     f32 pitch;
     f32 sensitivity;
+    f32 zNear;
+    f32 zFar;
+    f32 fov;
 };
 
 void Camera3DCreate(Camera3D *camera, v3 position, f32 yaw, f32 pitch);
-void Camera3DUpdateLook(Camera3D *camera, v2 delta); // updates yaw, pitch and vectors
-void Camera3DUpdateViewProj(Camera3D *camera, v2 resolution); // call after updating position
+void Camera3DFreeUpdate(Camera3D *camera);
+// void Camera3DFirstPersonUpdate(Camera3D *camera);

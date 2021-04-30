@@ -47,35 +47,12 @@ int main(void)
 
     InputInit();
     WindowSwapInterval(1);
-    while (!WindowShouldClose())
+    while (!window.quit)
     {
-        v2 look = v2(0, 0);
-        f32 sensitivity = 6.0f;
-        if (KeyDown(Key_Up))
-            look.y += sensitivity;
-        if (KeyDown(Key_Down))
-            look.y -= sensitivity;
-        if (KeyDown(Key_Left))
-            look.x -= sensitivity;
-        if (KeyDown(Key_Right))
-            look.x += sensitivity;
+        if (KeyDown(Key_Esc))
+            break;
 
-        Camera3DUpdateLook(&camera, look);
-
-        f32 moveSpeed = 0.2f;
-        if (KeyDown(Key_W))
-            camera.position = V3PlusV3(camera.position, V3xF32(camera.forward, moveSpeed));
-        if (KeyDown(Key_S))
-            camera.position = V3PlusV3(camera.position, V3xF32(camera.forward, -moveSpeed));
-        if (KeyDown(Key_A))
-            camera.position = V3PlusV3(camera.position, V3xF32(camera.right, -moveSpeed));
-        if (KeyDown(Key_D))
-            camera.position = V3PlusV3(camera.position, V3xF32(camera.right, moveSpeed));
-
-        if (KeyDown(Key_Space))
-            camera.position.y -= moveSpeed;
-        if (KeyDown(Key_LeftShift))
-            camera.position.y += moveSpeed;
+        Camera3DFreeUpdate(&camera);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -83,13 +60,11 @@ int main(void)
         glClearColor(0.1f, 0.1f, 0.1f, 1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        Camera3DUpdateViewProj(&camera, WindowV2());
-
         ShaderUse(basicShader);
         ShaderSetM4(basicShader, "u_View", camera.view);
         ShaderSetM4(basicShader, "u_Projection", camera.projection);
 
-        m4 model = M4Scale(M4Identity(), v3(4, 4, 4));
+        m4 model = M4Scale(M4Identity(), v3(2, 2, 2));
         ShaderSetM4(basicShader, "u_Model", model);
 
         TextureBind(tex, 0);
