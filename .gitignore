@@ -1,7 +1,6 @@
 build/*
 !build/data/
 !build/data/*
+
 .vs
 .DS_Store
-
-*.gen.[ch]

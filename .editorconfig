@@ -4,9 +4,13 @@ root = true
 end_of_line = lf
 insert_final_newline = true
 
-[*.{c,cpp,h,m,vert,frag}]
+[*.{c,cpp,cc,h,hpp,m,mm,vert,frag}]
 indent_style = space
 indent_size = 4
+
+[CMakeLists.txt, *.cmake]
+indent_style = space
+indent_size = 2
 
 [Makefile]
 indent_style = tab

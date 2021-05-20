@@ -1,4 +1,5 @@
 BasedOnStyle: Microsoft
-ColumnLimit: 100
+ColumnLimit: 90
 BraceWrapping:
   AfterUnion: true
+  BeforeLambdaBody: true

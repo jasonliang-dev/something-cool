@@ -1,16 +1,14 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
 
 #define PI 3.14159265358979323846f
 
-#define true 1
-#define false 0
-
 #define ArrayCount(a) (sizeof(a) / sizeof((a)[0]))
-
-#define Min(x, y) (((x) < (y)) ? (x) : (y))
-#define Max(x, y) (((x) > (y)) ? (x) : (y))
 
 typedef int8_t i8;
 typedef int16_t i16;
@@ -27,8 +25,7 @@ typedef i64 b64;
 typedef float f32;
 typedef double f64;
 
-static f32 Clamp(f32 x, f32 min, f32 max)
-{
-    x = x < min ? min : x;
-    return x > max ? max : x;
-}
+typedef glm::vec2 v2;
+typedef glm::vec3 v3;
+typedef glm::vec4 v4;
+typedef glm::mat4 m4;
