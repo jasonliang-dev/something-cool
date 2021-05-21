@@ -5,7 +5,6 @@
 #include <glad/gl.h>
 #include <gsl/span>
 #include <vector>
-#include <optional>
 
 class Renderer
 {
@@ -14,7 +13,8 @@ class Renderer
     ~Renderer(void);
 
     void BeginDraw(Texture *atlas, m4 mvp);
-    void Flush(void);
+    void EndDraw(void);
+    void DrawTexture(v2 pos);
     void DrawTexture(v2 pos, v4 rect);
 
   private:
@@ -48,7 +48,7 @@ class Renderer
     std::vector<Vertex> m_Vertices;
     i32 m_QuadCount;
 
-    Texture *m_CurrentTexture = nullptr;
+    Texture *m_CurrentTexture;
 
     gsl::span<Quad> AllocateQuads(i32 count);
 };

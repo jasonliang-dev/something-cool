@@ -154,11 +154,10 @@ Renderer::Renderer(void)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_QUADS * 6 * sizeof(u32), indices.data(),
                  GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
     m_Vertices.resize(MAX_QUADS * 4);
     m_QuadCount = 0;
+
+    m_CurrentTexture = nullptr;
 }
 
 Renderer::~Renderer(void)
@@ -183,7 +182,7 @@ void Renderer::BeginDraw(Texture *atlas, m4 mvp)
     m_CurrentTexture = atlas;
 }
 
-void Renderer::Flush(void)
+void Renderer::EndDraw(void)
 {
     if (m_QuadCount == 0)
     {
@@ -195,16 +194,20 @@ void Renderer::Flush(void)
                     m_Vertices.data());
 
     glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
     glDrawElements(GL_TRIANGLES, m_QuadCount * 6, GL_UNSIGNED_INT, NULL);
+}
 
-    m_QuadCount = 0;
+void Renderer::DrawTexture(v2 pos)
+{
+    assert(m_CurrentTexture);
+    v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
+
+    DrawTexture(pos, v4(0.0f, 0.0f, dim.x, dim.y));
 }
 
 void Renderer::DrawTexture(v2 pos, v4 rect)
 {
     assert(m_CurrentTexture);
-
     v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
 
     m4 transform = glm::translate(m4(1), v3(pos.x, pos.y, 0.0f));
@@ -213,8 +216,8 @@ void Renderer::DrawTexture(v2 pos, v4 rect)
     v4 uv = {
         rect.x / dim.x,
         rect.y / dim.y,
-        rect.z / dim.x,
-        rect.w / dim.y,
+        (rect.x + rect.z) / dim.x,
+        (rect.y + rect.w) / dim.y,
     };
 
     gsl::span<Quad> quads = AllocateQuads(1);
@@ -229,7 +232,8 @@ gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
 {
     if (m_QuadCount + count > MAX_QUADS)
     {
-        Flush();
+        EndDraw();
+        m_QuadCount = 0;
     }
 
     gsl::span<Quad> quads(reinterpret_cast<Quad *>(&m_Vertices[m_QuadCount * 4]), count);

@@ -36,6 +36,7 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 add_executable(${PROJECT_NAME}
+  src/input.cpp
   src/renderer.cpp
   src/texture.cpp
   src/main.cpp

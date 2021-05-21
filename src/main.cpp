@@ -1,9 +1,11 @@
+#include "app.hpp"
+#include "input.hpp"
 #include "language.hpp"
 #include "opengl_debug.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
 #include <algorithm>
-#include <enet/enet.h>
+#include <ctime>
 #include <fstream>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -21,6 +23,8 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
+
+AppState app;
 
 static void RunApplication(void)
 {
@@ -44,8 +48,11 @@ static void RunApplication(void)
         throw std::runtime_error("Cannot create window");
     }
 
+    glfwSetWindowUserPointer(window, &app);
+    glfwSetKeyCallback(window, Input_KeyCallback);
+
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
 
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
     {
@@ -85,33 +92,48 @@ static void RunApplication(void)
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
+    srand((u32)time(nullptr));
+
     bool showDemoWindow = false;
+    bool overlay = true;
+
+    v2 pos = {0.0f, 0.0f};
+    f32 scale = 1.0f;
 
     while (!glfwWindowShouldClose(window))
     {
+        if (app.input.KeyPressed(GLFW_KEY_F3))
+        {
+            overlay = !overlay;
+        }
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (showDemoWindow)
+        if (overlay)
         {
-            ImGui::ShowDemoWindow(&showDemoWindow);
-        }
+            if (showDemoWindow)
+            {
+                ImGui::ShowDemoWindow(&showDemoWindow);
+            }
 
-        static bool s_Overlay = true;
-        ImGuiWindowFlags windowFlags =
-            ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
-            ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
-            ImGuiWindowFlags_NoNav;
+            ImGuiWindowFlags windowFlags =
+                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+                ImGuiWindowFlags_NoNav;
 
-        ImGui::SetNextWindowBgAlpha(0.80f);
-        if (ImGui::Begin("Hello, world!", &s_Overlay, windowFlags))
-        {
-            ImGui::Checkbox("Demo Window", &showDemoWindow);
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                        1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::SetNextWindowBgAlpha(0.80f);
+            if (ImGui::Begin("Hello, world!", &overlay, windowFlags))
+            {
+                ImGui::Checkbox("Demo Window", &showDemoWindow);
+                ImGui::DragFloat2("xy", &pos.x, 1.0f);
+                ImGui::DragFloat("scale", &scale, 0.01f);
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            }
+            ImGui::End();
         }
-        ImGui::End();
 
         ImGui::Render();
 
@@ -126,14 +148,18 @@ static void RunApplication(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        m4 mvp = glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
-        renderer.BeginDraw(&tex, mvp);
-        renderer.DrawTexture(v2(100.0f, 100.0f), v4(0.0f, 0.0f, 64.0f, 64.0f));
-        renderer.Flush();
+        m4 projection =
+            glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
+        m4 model = glm::scale(m4(1.0f), v3(scale, scale, 1.0f));
+
+        renderer.BeginDraw(&tex, projection * model);
+        renderer.DrawTexture(pos, v4(0, 0, 64, 64));
+        renderer.EndDraw();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
+        app.input.Update();
         glfwPollEvents();
     }
 }
@@ -147,11 +173,6 @@ int main(void)
             throw std::runtime_error("Cannot initialize glfw");
         }
 
-        if (enet_initialize() != 0)
-        {
-            throw std::runtime_error("Cannot initialize ENet");
-        }
-
         RunApplication();
     }
     catch (const std::exception &e)
@@ -160,6 +181,5 @@ int main(void)
         abort();
     }
 
-    enet_deinitialize();
     glfwTerminate();
 }
