@@ -37,7 +37,6 @@ target_link_libraries(imgui PUBLIC glfw)
 
 add_executable(${PROJECT_NAME}
   src/renderer.cpp
-  src/shader.cpp
   src/texture.cpp
   src/main.cpp
 )

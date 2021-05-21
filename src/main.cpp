@@ -1,6 +1,6 @@
 #include "language.hpp"
 #include "opengl_debug.hpp"
-#include "shader.hpp"
+#include "renderer.hpp"
 #include "texture.hpp"
 #include <algorithm>
 #include <enet/enet.h>
@@ -81,56 +81,7 @@ static void RunApplication(void)
 
     Texture tex{"data/Blue.png"};
 
-    auto ReadFile = [](const char *filePath)
-    {
-        std::ifstream file(filePath);
-
-        if (!file.is_open())
-        {
-            throw std::runtime_error("failed to open file");
-        }
-
-        std::string data{std::istreambuf_iterator<char>(file),
-                         std::istreambuf_iterator<char>()};
-
-        file.close();
-        return data;
-    };
-
-    Shader shader{ReadFile("data/basic.vert").c_str(),
-                  ReadFile("data/basic.frag").c_str()};
-    shader.Use();
-    shader.SetInt("u_Texture", 0);
-
-    f32 vertices[] = {
-        // xy             uv
-        0.0f, 1.0f, 0.0f, 0.0f, 1.0f, //
-        1.0f, 0.0f, 0.0f, 1.0f, 0.0f, //
-        0.0f, 0.0f, 0.0f, 0.0f, 0.0f, //
-
-        0.0f, 1.0f, 0.0f, 0.0f, 1.0f, //
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f, //
-        1.0f, 0.0f, 0.0f, 1.0f, 0.0f  //
-    };
-
-    GLuint VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // position attribute
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          reinterpret_cast<void *>(0));
-
-    // texture coord attribute
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          reinterpret_cast<void *>(3 * sizeof(float)));
+    Renderer renderer;
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -175,21 +126,10 @@ static void RunApplication(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        tex.Bind(0);
-
-        shader.Use();
-        shader.SetM4("u_View", m4(1));
-
-        shader.SetM4("u_Projection", glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight,
-                                                0.0f, -1.0f, 1.0f));
-
-        m4 model = glm::translate(m4(1), v3(50.0f, 50.0f, 0.0f));
-        model = glm::scale(model, v3(64.0f, 64.0f, 1.0f));
-
-        shader.SetM4("u_Model", model);
-
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        m4 mvp = glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
+        renderer.BeginDraw(&tex, mvp);
+        renderer.DrawTexture(v2(100.0f, 100.0f), v4(0.0f, 0.0f, 64.0f, 64.0f));
+        renderer.Flush();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

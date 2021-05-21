@@ -92,20 +92,7 @@ static GLuint CreateShaderProgram(const char *vert, const char *frag)
 
 Renderer::Renderer(void)
 {
-    constexpr char *vert = "                          \n\
-        #version 330 core                             \n\
-                                                      \n\
-        in vec2 v_TexCoord;                           \n\
-        out vec4 f_Color;                             \n\
-        uniform sampler2D u_Texture;                  \n\
-                                                      \n\
-        void main()                                   \n\
-        {                                             \n\
-            f_Color = texture(u_Texture, v_TexCoord); \n\
-        }                                             \n\
-    ";
-
-    constexpr char *frag = "                             \n\
+    constexpr char *vert = "                             \n\
         #version 330 core                                \n\
                                                          \n\
         layout(location = 0) in vec3 a_Position;         \n\
@@ -118,6 +105,19 @@ Renderer::Renderer(void)
             v_TexCoord = a_TexCoord;                     \n\
             gl_Position = u_MVP * vec4(a_Position, 1.0); \n\
         }                                                \n\
+    ";
+
+    constexpr char *frag = "                          \n\
+        #version 330 core                             \n\
+                                                      \n\
+        in vec2 v_TexCoord;                           \n\
+        out vec4 f_Color;                             \n\
+        uniform sampler2D u_Texture;                  \n\
+                                                      \n\
+        void main()                                   \n\
+        {                                             \n\
+            f_Color = texture(u_Texture, v_TexCoord); \n\
+        }                                             \n\
     ";
 
     m_Program = CreateShaderProgram(vert, frag);
@@ -157,7 +157,7 @@ Renderer::Renderer(void)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    m_Vertices.reserve(MAX_QUADS * 4);
+    m_Vertices.resize(MAX_QUADS * 4);
     m_QuadCount = 0;
 }
 
@@ -201,23 +201,28 @@ void Renderer::Flush(void)
     m_QuadCount = 0;
 }
 
-void Renderer::DrawTexture(v2 pos, v2 rect)
+void Renderer::DrawTexture(v2 pos, v4 rect)
 {
     assert(m_CurrentTexture);
 
-    v2 dim = v2((f32)m_CurrentTexture->GetWidth(),
-                (f32)m_CurrentTexture->GetHeight());
+    v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
 
     m4 transform = glm::translate(m4(1), v3(pos.x, pos.y, 0.0f));
     transform = glm::scale(transform, v3(dim, 1.0f));
 
-    v2 uv = dim / rect;
+    v4 uv = {
+        rect.x / dim.x,
+        rect.y / dim.y,
+        rect.z / dim.x,
+        rect.w / dim.y,
+    };
 
     gsl::span<Quad> quads = AllocateQuads(1);
-    quads[0].vertices[0] = {transform * v4(0.0f, 1.0f, 0.0f, 1.0f), uv * v2(0.0f, 1.0f)};
-    quads[0].vertices[1] = {transform * v4(1.0f, 0.0f, 0.0f, 1.0f), uv * v2(1.0f, 0.0f)};
-    quads[0].vertices[2] = {transform * v4(0.0f, 0.0f, 0.0f, 1.0f), uv * v2(0.0f, 0.0f)};
-    quads[0].vertices[3] = {transform * v4(1.0f, 1.0f, 0.0f, 1.0f), uv * v2(1.0f, 1.0f)};
+
+    quads[0].vertices[0] = {transform * v4(0.0f, 1.0f, 0.0f, 1.0f), v2(uv.x, uv.w)};
+    quads[0].vertices[1] = {transform * v4(1.0f, 0.0f, 0.0f, 1.0f), v2(uv.z, uv.y)};
+    quads[0].vertices[2] = {transform * v4(0.0f, 0.0f, 0.0f, 1.0f), v2(uv.x, uv.y)};
+    quads[0].vertices[3] = {transform * v4(1.0f, 1.0f, 0.0f, 1.0f), v2(uv.z, uv.w)};
 }
 
 gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)

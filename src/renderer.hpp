@@ -1,7 +1,6 @@
 #pragma once
 
 #include "language.hpp"
-#include "shader.hpp"
 #include "texture.hpp"
 #include <glad/gl.h>
 #include <gsl/span>
@@ -16,7 +15,7 @@ class Renderer
 
     void BeginDraw(Texture *atlas, m4 mvp);
     void Flush(void);
-    void DrawTexture(v2 pos, v2 rect);
+    void DrawTexture(v2 pos, v4 rect);
 
   private:
     static const u32 MAX_QUADS = 20000;
@@ -49,7 +48,7 @@ class Renderer
     std::vector<Vertex> m_Vertices;
     i32 m_QuadCount;
 
-    Texture *m_CurrentTexture;
+    Texture *m_CurrentTexture = nullptr;
 
     gsl::span<Quad> AllocateQuads(i32 count);
 };
