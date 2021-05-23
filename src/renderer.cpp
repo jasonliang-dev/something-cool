@@ -222,8 +222,7 @@ gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
         m_QuadCount = 0;
     }
 
-    gsl::span<Quad> quads(reinterpret_cast<Quad *>(&m_Quads[m_QuadCount]), count);
-
+    gsl::span<Quad> quads(&m_Quads[m_QuadCount], count);
     m_QuadCount += count;
     return quads;
 }
@@ -241,7 +240,7 @@ void Renderer::DrawTexture(v2 pos, v4 rect)
     v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
 
     m4 transform = glm::translate(m4(1), v3(pos.x, pos.y, 0.0f));
-    transform = glm::scale(transform, v3(dim, 1.0f));
+    transform = glm::scale(transform, v3(rect.z, rect.w, 1.0f));
 
     v4 texCoords = {
         rect.x / dim.x,

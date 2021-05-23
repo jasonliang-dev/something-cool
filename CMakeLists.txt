@@ -9,15 +9,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/enet)
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(OpenGL REQUIRED)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/enet)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/entt)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/glfw)
-
-set(OpenGL_GL_PREFERENCE GLVND)
-find_package(OpenGL REQUIRED)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/range-v3)
 
 add_library(imgui
   third/imgui/imgui.cpp
@@ -36,11 +37,10 @@ target_include_directories(imgui PUBLIC
 
 target_link_libraries(imgui PUBLIC glfw)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/range-v3)
-
 add_executable(${PROJECT_NAME}
   src/input.cpp
   src/renderer.cpp
+  src/sprite_animation.cpp
   src/texture.cpp
   src/tilemap.cpp
   src/main.cpp
@@ -60,9 +60,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
   OpenGL::GL
   enet
+  EnTT::EnTT
   glfw
   imgui
-  range-v3
+  range-v3::range-v3
 )
 
 if(WIN32 AND MSVC_IDE)
