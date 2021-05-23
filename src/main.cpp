@@ -1,15 +1,22 @@
+#define CUTE_TILED_IMPLEMENTATION
+#define GLAD_GL_IMPLEMENTATION
+#define GLFW_INCLUDE_NONE
+#define STB_IMAGE_IMPLEMENTATION
+#define WIN32_LEAN_AND_MEAN
+#define _CRT_SECURE_NO_WARNINGS
+#define NOMINMAX
+
 #include "app.hpp"
 #include "input.hpp"
 #include "language.hpp"
 #include "opengl_debug.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
-#include <algorithm>
-#include <ctime>
-#include <fstream>
-#define GLFW_INCLUDE_NONE
+#include "tilemap.hpp"
 #include <GLFW/glfw3.h>
-#define GLAD_GL_IMPLEMENTATION
+#include <algorithm>
+#include <cute_tiled.h>
+#include <fstream>
 #include <glad/gl.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -17,8 +24,8 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
 #include <iostream>
+#include <memory>
 #include <sstream>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #include <stdexcept>
 #include <thread>
@@ -52,7 +59,7 @@ static void RunApplication(void)
     glfwSetKeyCallback(window, Input_KeyCallback);
 
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
 
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
     {
@@ -86,19 +93,16 @@ static void RunApplication(void)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    Texture tex{"data/Blue.png"};
+    Tilemap map{"data/test.json", std::make_shared<Texture>("data/atlas.png")};
 
     Renderer renderer;
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-    srand((u32)time(nullptr));
-
     bool showDemoWindow = false;
     bool overlay = true;
 
-    v2 pos = {0.0f, 0.0f};
-    f32 scale = 1.0f;
+    f32 scale = 3.0f;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -127,7 +131,6 @@ static void RunApplication(void)
             if (ImGui::Begin("Hello, world!", &overlay, windowFlags))
             {
                 ImGui::Checkbox("Demo Window", &showDemoWindow);
-                ImGui::DragFloat2("xy", &pos.x, 1.0f);
                 ImGui::DragFloat("scale", &scale, 0.01f);
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
                             1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -152,9 +155,7 @@ static void RunApplication(void)
             glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
         m4 model = glm::scale(m4(1.0f), v3(scale, scale, 1.0f));
 
-        renderer.BeginDraw(&tex, projection * model);
-        renderer.DrawTexture(pos, v4(0, 0, 64, 64));
-        renderer.EndDraw();
+        map.Draw(renderer, projection * model);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

@@ -2541,6 +2541,7 @@ GLAD_API_CALL int gladLoadGL( GLADloadfunc load);
 
 /* Source */
 #ifdef GLAD_GL_IMPLEMENTATION
+#undef GLAD_GL_IMPLEMENTATION
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

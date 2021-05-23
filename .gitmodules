@@ -13,3 +13,6 @@
 [submodule "third/GSL"]
 	path = third/GSL
 	url = https://github.com/microsoft/GSL.git
+[submodule "third/range-v3"]
+	path = third/range-v3
+	url = https://github.com/ericniebler/range-v3.git

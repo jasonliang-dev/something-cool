@@ -18,4 +18,7 @@ class Texture
     GLuint m_ID;
     i32 m_Width;
     i32 m_Height;
+
+    Texture(const Texture &);
+    Texture &operator=(const Texture &);
 };

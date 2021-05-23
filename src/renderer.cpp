@@ -3,11 +3,24 @@
 #include <sstream>
 #include <stdexcept>
 
+Renderer::Quad::Quad(m4 transform, v4 texCoords)
+{
+    vertices[0].a_Position = transform * v4(0.0f, 1.0f, 0.0f, 1.0f);
+    vertices[1].a_Position = transform * v4(1.0f, 0.0f, 0.0f, 1.0f);
+    vertices[2].a_Position = transform * v4(0.0f, 0.0f, 0.0f, 1.0f);
+    vertices[3].a_Position = transform * v4(1.0f, 1.0f, 0.0f, 1.0f);
+
+    vertices[0].a_TexCoord = v2(texCoords.x, texCoords.w);
+    vertices[1].a_TexCoord = v2(texCoords.z, texCoords.y);
+    vertices[2].a_TexCoord = v2(texCoords.x, texCoords.y);
+    vertices[3].a_TexCoord = v2(texCoords.z, texCoords.w);
+}
+
 static GLuint CreateShaderProgram(const char *vert, const char *frag)
 {
     GLuint program = glCreateProgram();
 
-    auto CompileGLSL = [](GLuint type, const char *source)
+    auto CompileGLSL = [](GLuint type, const char *source) -> GLuint
     {
         GLuint shader = glCreateShader(type);
         glShaderSource(shader, 1, &source, NULL);
@@ -53,7 +66,7 @@ static GLuint CreateShaderProgram(const char *vert, const char *frag)
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
 
-    auto ShaderProgramError = [program](const char *prefixMessage)
+    auto ShaderProgramError = [program](const char *prefixMessage) -> void
     {
         i32 length;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
@@ -92,7 +105,7 @@ static GLuint CreateShaderProgram(const char *vert, const char *frag)
 
 Renderer::Renderer(void)
 {
-    constexpr char *vert = "                             \n\
+    const char *vert = "                                 \n\
         #version 330 core                                \n\
                                                          \n\
         layout(location = 0) in vec3 a_Position;         \n\
@@ -107,7 +120,7 @@ Renderer::Renderer(void)
         }                                                \n\
     ";
 
-    constexpr char *frag = "                          \n\
+    const char *frag = "                              \n\
         #version 330 core                             \n\
                                                       \n\
         in vec2 v_TexCoord;                           \n\
@@ -154,7 +167,7 @@ Renderer::Renderer(void)
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, MAX_QUADS * 6 * sizeof(u32), indices.data(),
                  GL_STATIC_DRAW);
 
-    m_Vertices.resize(MAX_QUADS * 4);
+    m_Quads.resize(MAX_QUADS);
     m_QuadCount = 0;
 
     m_CurrentTexture = nullptr;
@@ -169,7 +182,12 @@ Renderer::~Renderer(void)
     glDeleteVertexArrays(1, &m_VAO);
 }
 
-void Renderer::BeginDraw(Texture *atlas, m4 mvp)
+GLuint Renderer::GetShaderProgram(void) const
+{
+    return m_Program;
+}
+
+void Renderer::BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp)
 {
     glUseProgram(m_Program);
 
@@ -190,18 +208,30 @@ void Renderer::EndDraw(void)
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, m_QuadCount * 4 * sizeof(Renderer::Vertex),
-                    m_Vertices.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, m_QuadCount * sizeof(Quad), m_Quads.data());
 
     glBindVertexArray(m_VAO);
     glDrawElements(GL_TRIANGLES, m_QuadCount * 6, GL_UNSIGNED_INT, NULL);
+}
+
+gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
+{
+    if (m_QuadCount + count > MAX_QUADS)
+    {
+        EndDraw();
+        m_QuadCount = 0;
+    }
+
+    gsl::span<Quad> quads(reinterpret_cast<Quad *>(&m_Quads[m_QuadCount]), count);
+
+    m_QuadCount += count;
+    return quads;
 }
 
 void Renderer::DrawTexture(v2 pos)
 {
     assert(m_CurrentTexture);
     v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
-
     DrawTexture(pos, v4(0.0f, 0.0f, dim.x, dim.y));
 }
 
@@ -213,7 +243,7 @@ void Renderer::DrawTexture(v2 pos, v4 rect)
     m4 transform = glm::translate(m4(1), v3(pos.x, pos.y, 0.0f));
     transform = glm::scale(transform, v3(dim, 1.0f));
 
-    v4 uv = {
+    v4 texCoords = {
         rect.x / dim.x,
         rect.y / dim.y,
         (rect.x + rect.z) / dim.x,
@@ -221,23 +251,5 @@ void Renderer::DrawTexture(v2 pos, v4 rect)
     };
 
     gsl::span<Quad> quads = AllocateQuads(1);
-
-    quads[0].vertices[0] = {transform * v4(0.0f, 1.0f, 0.0f, 1.0f), v2(uv.x, uv.w)};
-    quads[0].vertices[1] = {transform * v4(1.0f, 0.0f, 0.0f, 1.0f), v2(uv.z, uv.y)};
-    quads[0].vertices[2] = {transform * v4(0.0f, 0.0f, 0.0f, 1.0f), v2(uv.x, uv.y)};
-    quads[0].vertices[3] = {transform * v4(1.0f, 1.0f, 0.0f, 1.0f), v2(uv.z, uv.w)};
-}
-
-gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
-{
-    if (m_QuadCount + count > MAX_QUADS)
-    {
-        EndDraw();
-        m_QuadCount = 0;
-    }
-
-    gsl::span<Quad> quads(reinterpret_cast<Quad *>(&m_Vertices[m_QuadCount * 4]), count);
-
-    m_QuadCount += count;
-    return quads;
+    quads[0] = Quad(transform, texCoords);
 }
