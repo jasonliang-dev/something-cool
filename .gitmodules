@@ -1,21 +1,9 @@
 [submodule "third/glfw"]
 	path = third/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "third/glm"]
-	path = third/glm
-	url = https://github.com/g-truc/glm.git
 [submodule "third/imgui"]
 	path = third/imgui
 	url = https://github.com/ocornut/imgui.git
 [submodule "third/enet"]
 	path = third/enet
 	url = https://github.com/lsalzman/enet.git
-[submodule "third/GSL"]
-	path = third/GSL
-	url = https://github.com/microsoft/GSL.git
-[submodule "third/range-v3"]
-	path = third/range-v3
-	url = https://github.com/ericniebler/range-v3.git
-[submodule "third/entt"]
-	path = third/entt
-	url = https://github.com/skypjack/entt.git

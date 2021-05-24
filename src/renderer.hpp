@@ -1,15 +1,15 @@
 #pragma once
 
 #include "language.hpp"
+#include "span.hpp"
 #include "texture.hpp"
+#include <HandmadeMath.h>
 #include <glad/gl.h>
-#include <gsl/span>
 #include <memory>
 #include <vector>
 
-class Renderer
+struct Renderer
 {
-  public:
     struct Vertex
     {
         v3 a_Position;
@@ -35,19 +35,19 @@ class Renderer
     Renderer(void);
     ~Renderer(void);
 
-    GLuint GetShaderProgram(void) const;
+    Renderer(const Renderer &) = delete;
+    Renderer &operator=(const Renderer &) = delete;
 
     void BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp);
     void EndDraw(void);
 
     // write to returned buffer to draw stuff. must be in between BeginDraw/EndDraw
-    gsl::span<Quad> AllocateQuads(i32 count);
+    [[nodiscard]] Span<Quad> AllocateQuads(i32 count);
 
-    // ultimately just calls AllocateQuads
-    void DrawTexture(v2 pos); // draw entire texture
+    // ultimately calls AllocateQuads
+    void DrawTexture(v2 pos);          // draw entire texture
     void DrawTexture(v2 pos, v4 rect); // draw part of texture
 
-  private:
     static const u32 MAX_QUADS = 20000;
 
     GLuint m_Program;
@@ -59,5 +59,5 @@ class Renderer
     std::vector<Quad> m_Quads;
     i32 m_QuadCount;
 
-    std::shared_ptr<Texture> m_CurrentTexture;
+    std::shared_ptr<Texture> m_CurrentAtlas;
 };

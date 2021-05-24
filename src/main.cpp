@@ -1,6 +1,7 @@
 #define CUTE_TILED_IMPLEMENTATION
 #define GLAD_GL_IMPLEMENTATION
 #define GLFW_INCLUDE_NONE
+#define HANDMADE_MATH_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -13,24 +14,23 @@
 #include "texture.hpp"
 #include "tilemap.hpp"
 #include <GLFW/glfw3.h>
+#include <HandmadeMath.h>
 #include <algorithm>
 #include <cmath>
 #include <cute_tiled.h>
 #include <fstream>
 #include <glad/gl.h>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
 #include <iostream>
 #include <memory>
+#include <robin_hood.h>
 #include <sstream>
 #include <stb_image.h>
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 static void RunApplication(void)
@@ -103,8 +103,8 @@ static void RunApplication(void)
 
     std::ifstream atlasListFile("data/atlas_list.txt");
 
-    std::unordered_map<std::string, v4> crops;
-    std::unordered_map<std::string, SpriteAnimation> animations;
+    robin_hood::unordered_flat_map<std::string, v4> crops;
+    robin_hood::unordered_flat_map<std::string, SpriteAnimation> animations;
 
     std::string line;
     while (std::getline(atlasListFile, line))
@@ -119,7 +119,7 @@ static void RunApplication(void)
         }
 
         v4 rect;
-        if (!(ss >> rect.x >> rect.y >> rect.z >> rect.w))
+        if (!(ss >> rect.X >> rect.Y >> rect.Z >> rect.W))
         {
             throw std::runtime_error("Malformed atlas data");
         }
@@ -127,7 +127,7 @@ static void RunApplication(void)
         i32 count;
         if (ss >> count)
         {
-            animations[name] = {rect, count, 100};
+            animations[name] = {rect, count};
         }
         else
         {
@@ -223,16 +223,16 @@ static void RunApplication(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        m4 projection =
-            glm::ortho(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
-        m4 model = glm::scale(m4(1.0f), v3(scale, scale, 1.0f));
+        m4 projection = HMM_Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f,
+                                         -1.0f, 1.0f);
+        m4 model = HMM_Scale(v3{scale, scale, 1.0f});
 
         // map.Draw(renderer, projection * model);
 
         renderer.BeginDraw(atlas, projection * model);
         SpriteAnimation &ani = animations[animationList[currentAnimation]];
         ani.Update(deltaTime);
-        renderer.DrawTexture(v2(10.0f, 10.0f), ani.GetFrameRect());
+        renderer.DrawTexture(v2{10.0f, 10.0f}, ani.GetFrameRect());
         renderer.EndDraw();
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -254,6 +254,7 @@ int main(void)
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
-        abort();
+        DEBUGGER();
+        return EXIT_FAILURE;
     }
 }

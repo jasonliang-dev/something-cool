@@ -1,19 +1,19 @@
 #include "renderer.hpp"
-#include <glm/ext/matrix_transform.hpp>
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 
 Renderer::Quad::Quad(m4 transform, v4 texCoords)
 {
-    vertices[0].a_Position = transform * v4(0.0f, 1.0f, 0.0f, 1.0f);
-    vertices[1].a_Position = transform * v4(1.0f, 0.0f, 0.0f, 1.0f);
-    vertices[2].a_Position = transform * v4(0.0f, 0.0f, 0.0f, 1.0f);
-    vertices[3].a_Position = transform * v4(1.0f, 1.0f, 0.0f, 1.0f);
+    vertices[0].a_Position = (transform * v4{0.0f, 1.0f, 0.0f, 1.0f}).XYZ;
+    vertices[1].a_Position = (transform * v4{1.0f, 0.0f, 0.0f, 1.0f}).XYZ;
+    vertices[2].a_Position = (transform * v4{0.0f, 0.0f, 0.0f, 1.0f}).XYZ;
+    vertices[3].a_Position = (transform * v4{1.0f, 1.0f, 0.0f, 1.0f}).XYZ;
 
-    vertices[0].a_TexCoord = v2(texCoords.x, texCoords.w);
-    vertices[1].a_TexCoord = v2(texCoords.z, texCoords.y);
-    vertices[2].a_TexCoord = v2(texCoords.x, texCoords.y);
-    vertices[3].a_TexCoord = v2(texCoords.z, texCoords.w);
+    vertices[0].a_TexCoord = v2{texCoords.X, texCoords.W};
+    vertices[1].a_TexCoord = v2{texCoords.Z, texCoords.Y};
+    vertices[2].a_TexCoord = v2{texCoords.X, texCoords.Y};
+    vertices[3].a_TexCoord = v2{texCoords.Z, texCoords.W};
 }
 
 static GLuint CreateShaderProgram(const char *vert, const char *frag)
@@ -170,7 +170,7 @@ Renderer::Renderer(void)
     m_Quads.resize(MAX_QUADS);
     m_QuadCount = 0;
 
-    m_CurrentTexture = nullptr;
+    m_CurrentAtlas = nullptr;
 }
 
 Renderer::~Renderer(void)
@@ -182,11 +182,6 @@ Renderer::~Renderer(void)
     glDeleteVertexArrays(1, &m_VAO);
 }
 
-GLuint Renderer::GetShaderProgram(void) const
-{
-    return m_Program;
-}
-
 void Renderer::BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp)
 {
     glUseProgram(m_Program);
@@ -194,10 +189,11 @@ void Renderer::BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp)
     glUniform1i(glGetUniformLocation(m_Program, "u_Texture"), 0);
     atlas->Bind(0);
 
-    glUniformMatrix4fv(glGetUniformLocation(m_Program, "u_MVP"), 1, GL_FALSE, &mvp[0][0]);
+    glUniformMatrix4fv(glGetUniformLocation(m_Program, "u_MVP"), 1, GL_FALSE,
+                       *mvp.Elements);
 
     m_QuadCount = 0;
-    m_CurrentTexture = atlas;
+    m_CurrentAtlas = atlas;
 }
 
 void Renderer::EndDraw(void)
@@ -214,7 +210,7 @@ void Renderer::EndDraw(void)
     glDrawElements(GL_TRIANGLES, m_QuadCount * 6, GL_UNSIGNED_INT, NULL);
 }
 
-gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
+[[nodiscard]] Span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
 {
     if (m_QuadCount + count > MAX_QUADS)
     {
@@ -222,33 +218,33 @@ gsl::span<Renderer::Quad> Renderer::AllocateQuads(i32 count)
         m_QuadCount = 0;
     }
 
-    gsl::span<Quad> quads(&m_Quads[m_QuadCount], count);
+    Span<Quad> quads(&m_Quads[m_QuadCount], count);
     m_QuadCount += count;
     return quads;
 }
 
 void Renderer::DrawTexture(v2 pos)
 {
-    assert(m_CurrentTexture);
-    v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
-    DrawTexture(pos, v4(0.0f, 0.0f, dim.x, dim.y));
+    assert(m_CurrentAtlas);
+    v2 dim = m_CurrentAtlas->GetDim();
+    DrawTexture(pos, v4{0.0f, 0.0f, dim.X, dim.Y});
 }
 
 void Renderer::DrawTexture(v2 pos, v4 rect)
 {
-    assert(m_CurrentTexture);
-    v2 dim = v2((f32)m_CurrentTexture->GetWidth(), (f32)m_CurrentTexture->GetHeight());
+    assert(m_CurrentAtlas);
+    v2 dim = m_CurrentAtlas->GetDim();
 
-    m4 transform = glm::translate(m4(1), v3(pos.x, pos.y, 0.0f));
-    transform = glm::scale(transform, v3(rect.z, rect.w, 1.0f));
+    m4 transform = HMM_Translate(v3{pos.X, pos.Y, 0.0f});
+    transform = transform * HMM_Scale(v3{rect.Z, rect.W, 1.0f});
 
     v4 texCoords = {
-        rect.x / dim.x,
-        rect.y / dim.y,
-        (rect.x + rect.z) / dim.x,
-        (rect.y + rect.w) / dim.y,
+        rect.X / dim.X,
+        rect.Y / dim.Y,
+        (rect.X + rect.Z) / dim.X,
+        (rect.Y + rect.W) / dim.Y,
     };
 
-    gsl::span<Quad> quads = AllocateQuads(1);
+    Span<Quad> quads = AllocateQuads(1);
     quads[0] = Quad(transform, texCoords);
 }

@@ -3,7 +3,7 @@
 
 Input g_Input;
 
-Input::Input(void)
+Input::Input(void) noexcept
 {
     m_KeysDown.fill(false);
     m_KeysDownPrev.fill(false);

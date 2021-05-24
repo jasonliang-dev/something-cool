@@ -3,3 +3,5 @@ ColumnLimit: 90
 BraceWrapping:
   AfterUnion: true
   BeforeLambdaBody: true
+
+IndentPPDirectives: BeforeHash

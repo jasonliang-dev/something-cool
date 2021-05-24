@@ -1,7 +1,9 @@
 #include "texture.hpp"
+#include <HandmadeMath.h>
 #include <sstream>
 #include <stb_image.h>
 #include <stdexcept>
+#include <utility>
 
 Texture::Texture(const char *filePath)
 {
@@ -9,8 +11,8 @@ Texture::Texture(const char *filePath)
     u8 *imageData = stbi_load(filePath, &m_Width, &m_Height, &channels, 0);
     if (!imageData)
     {
-        std::stringstream ss;
-        ss << "Failed to load image " << filePath;
+        std::ostringstream ss;
+        ss << "Failed to load image: " << filePath;
         throw std::runtime_error(ss.str());
     }
 
@@ -27,8 +29,7 @@ Texture::Texture(const char *filePath)
         format = GL_RGBA;
         break;
     default: {
-        // 2 channels?
-        std::stringstream ss;
+        std::ostringstream ss;
         ss << "Can't handle image with " << channels << " channels";
         throw std::runtime_error(ss.str());
     }
@@ -55,18 +56,30 @@ Texture::~Texture(void)
     glDeleteTextures(1, &m_ID);
 }
 
+Texture::Texture(Texture &&other) noexcept
+    : m_ID(std::exchange(other.m_ID, 0)), m_Width(std::exchange(other.m_Width, 0)),
+      m_Height(std::exchange(other.m_Height, 0))
+{
+}
+
+Texture &Texture::operator=(Texture &&other) noexcept
+{
+    glDeleteTextures(1, &m_ID);
+
+    m_ID = std::exchange(other.m_ID, 0);
+    m_Width = std::exchange(other.m_Width, 0);
+    m_Height = std::exchange(other.m_Height, 0);
+
+    return *this;
+}
+
 void Texture::Bind(i32 unit)
 {
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, m_ID);
 }
 
-i32 Texture::GetWidth(void) const
+v2 Texture::GetDim(void) const
 {
-    return m_Width;
-}
-
-i32 Texture::GetHeight(void) const
-{
-    return m_Height;
+    return v2{(f32)m_Width, (f32)m_Height};
 }

@@ -13,12 +13,10 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/enet)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/entt)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/glfw)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/range-v3)
 
 add_library(imgui
   third/imgui/imgui.cpp
@@ -47,23 +45,19 @@ add_executable(${PROJECT_NAME}
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4505 /wd4201 /permissive->
+  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /wd4505 /wd4201>
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Werror -pedantic>
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/third/
-  ${PROJECT_SOURCE_DIR}/third/glm
-  ${PROJECT_SOURCE_DIR}/third/GSL/include
 )
 
 target_link_libraries(${PROJECT_NAME}
   OpenGL::GL
   enet
-  EnTT::EnTT
   glfw
   imgui
-  range-v3::range-v3
 )
 
 if(WIN32 AND MSVC_IDE)

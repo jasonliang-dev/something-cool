@@ -6,10 +6,9 @@
 #include <GLFW/glfw3.h>
 #include <array>
 
-class Input
+struct Input
 {
-  public:
-    Input(void);
+    Input(void) noexcept;
 
     // call before polling events
     void Update(void);

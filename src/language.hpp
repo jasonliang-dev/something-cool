@@ -1,10 +1,19 @@
 #pragma once
 
 #include <cstdint>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
-#include <glm/mat4x4.hpp>
+
+#ifndef NDEBUG
+    #if defined(_WIN32)
+        #define DEBUGGER() __debugbreak()
+    #elif defined(__linux__)
+        #include <signal.h>
+        #define DEBUGGER() raise(SIGTRAP)
+    #endif
+#endif
+
+#ifndef DEBUGGER
+    #define DEBUGGER()
+#endif
 
 #define PI 3.14159265358979323846f
 
@@ -25,7 +34,7 @@ typedef i64 b64;
 typedef float f32;
 typedef double f64;
 
-typedef glm::vec2 v2;
-typedef glm::vec3 v3;
-typedef glm::vec4 v4;
-typedef glm::mat4 m4;
+typedef union hmm_vec2 v2;
+typedef union hmm_vec3 v3;
+typedef union hmm_vec4 v4;
+typedef union hmm_mat4 m4;
