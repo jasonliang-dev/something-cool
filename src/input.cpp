@@ -1,5 +1,4 @@
 #include "input.hpp"
-#include "app.hpp"
 
 Input g_Input;
 

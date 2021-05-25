@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.0)
 project(app)
 
 set(CMAKE_BUILD_TYPE "Debug")
@@ -9,14 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+enable_testing()
+add_subdirectory(tests)
+
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/enet)
+add_subdirectory(third/enet)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third/glfw)
+add_subdirectory(third/glfw)
 
 add_library(imgui
   third/imgui/imgui.cpp
@@ -29,8 +32,8 @@ add_library(imgui
 )
 
 target_include_directories(imgui PUBLIC
-  ${PROJECT_SOURCE_DIR}/third/
-  ${PROJECT_SOURCE_DIR}/third/imgui
+  third/
+  third/imgui/
 )
 
 target_link_libraries(imgui PUBLIC glfw)
@@ -50,7 +53,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}/third/
+  third/
 )
 
 target_link_libraries(${PROJECT_NAME}

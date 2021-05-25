@@ -5,7 +5,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define _CRT_SECURE_NO_WARNINGS
 
-#include "app.hpp"
 #include "input.hpp"
 #include "language.hpp"
 #include "opengl_debug.hpp"
@@ -60,7 +59,6 @@ static void RunApplication(void)
         throw std::runtime_error("Cannot create window");
     }
 
-    // glfwSetWindowUserPointer(window, &app);
     glfwSetKeyCallback(window, Input_KeyCallback);
 
     glfwMakeContextCurrent(window);
