@@ -12,7 +12,7 @@ TEST(Span, CtorDtor)
 TEST(Span, OperatorSquareBrackets)
 {
     std::vector<int> nums{1, 2, 3, 4, 5};
-    Span<int> span(&nums[0], 3);
+    Span<int> span(nums.data(), 3);
 
     EXPECT(span[0] == 1);
     EXPECT(span[1] == 2);
@@ -22,7 +22,7 @@ TEST(Span, OperatorSquareBrackets)
 TEST(Span, RangeFor)
 {
     std::vector<int> nums{1, 2, 3, 4, 5};
-    Span<int> span(&nums[0], 3);
+    Span<int> span(nums.data(), 3);
 
     int i = 1;
     for (int n : span)
