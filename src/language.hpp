@@ -33,8 +33,3 @@ typedef i32 b32;
 typedef i64 b64;
 typedef float f32;
 typedef double f64;
-
-typedef union hmm_vec2 v2;
-typedef union hmm_vec3 v3;
-typedef union hmm_vec4 v4;
-typedef union hmm_mat4 m4;

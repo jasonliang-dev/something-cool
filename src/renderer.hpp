@@ -1,9 +1,9 @@
 #pragma once
 
 #include "language.hpp"
+#include "geometry.hpp"
 #include "span.hpp"
 #include "texture.hpp"
-#include <HandmadeMath.h>
 #include <glad/gl.h>
 #include <memory>
 #include <vector>

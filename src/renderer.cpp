@@ -5,15 +5,15 @@
 
 Renderer::Quad::Quad(m4 transform, v4 texCoords)
 {
-    vertices[0].a_Position = (transform * v4{0.0f, 1.0f, 0.0f, 1.0f}).XYZ;
-    vertices[1].a_Position = (transform * v4{1.0f, 0.0f, 0.0f, 1.0f}).XYZ;
-    vertices[2].a_Position = (transform * v4{0.0f, 0.0f, 0.0f, 1.0f}).XYZ;
-    vertices[3].a_Position = (transform * v4{1.0f, 1.0f, 0.0f, 1.0f}).XYZ;
+    vertices[0].a_Position = (transform * v4{0.0f, 1.0f, 0.0f, 1.0f}).xyz;
+    vertices[1].a_Position = (transform * v4{1.0f, 0.0f, 0.0f, 1.0f}).xyz;
+    vertices[2].a_Position = (transform * v4{0.0f, 0.0f, 0.0f, 1.0f}).xyz;
+    vertices[3].a_Position = (transform * v4{1.0f, 1.0f, 0.0f, 1.0f}).xyz;
 
-    vertices[0].a_TexCoord = v2{texCoords.X, texCoords.W};
-    vertices[1].a_TexCoord = v2{texCoords.Z, texCoords.Y};
-    vertices[2].a_TexCoord = v2{texCoords.X, texCoords.Y};
-    vertices[3].a_TexCoord = v2{texCoords.Z, texCoords.W};
+    vertices[0].a_TexCoord = v2{texCoords.x, texCoords.w};
+    vertices[1].a_TexCoord = v2{texCoords.z, texCoords.y};
+    vertices[2].a_TexCoord = v2{texCoords.x, texCoords.y};
+    vertices[3].a_TexCoord = v2{texCoords.z, texCoords.w};
 }
 
 static GLuint CreateShaderProgram(const char *vert, const char *frag)
@@ -189,8 +189,7 @@ void Renderer::BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp)
     glUniform1i(glGetUniformLocation(m_Program, "u_Texture"), 0);
     atlas->Bind(0);
 
-    glUniformMatrix4fv(glGetUniformLocation(m_Program, "u_MVP"), 1, GL_FALSE,
-                       *mvp.Elements);
+    glUniformMatrix4fv(glGetUniformLocation(m_Program, "u_MVP"), 1, GL_FALSE, &mvp[0][0]);
 
     m_QuadCount = 0;
     m_CurrentAtlas = atlas;
@@ -227,7 +226,7 @@ void Renderer::DrawTexture(v2 pos)
 {
     assert(m_CurrentAtlas);
     v2 dim = m_CurrentAtlas->GetDim();
-    DrawTexture(pos, v4{0.0f, 0.0f, dim.X, dim.Y});
+    DrawTexture(pos, v4{0.0f, 0.0f, dim.x, dim.y});
 }
 
 void Renderer::DrawTexture(v2 pos, v4 rect)
@@ -235,14 +234,14 @@ void Renderer::DrawTexture(v2 pos, v4 rect)
     assert(m_CurrentAtlas);
     v2 dim = m_CurrentAtlas->GetDim();
 
-    m4 transform = HMM_Translate(v3{pos.X, pos.Y, 0.0f});
-    transform = transform * HMM_Scale(v3{rect.Z, rect.W, 1.0f});
+    m4 transform =
+        m4(1).Translate(v3{pos.x, pos.y, 0.0f}).Scale(v3{rect.z, rect.w, 1.0f});
 
     v4 texCoords = {
-        rect.X / dim.X,
-        rect.Y / dim.Y,
-        (rect.X + rect.Z) / dim.X,
-        (rect.Y + rect.W) / dim.Y,
+        rect.x / dim.x,
+        rect.y / dim.y,
+        (rect.x + rect.z) / dim.x,
+        (rect.y + rect.w) / dim.y,
     };
 
     Span<Quad> quads = AllocateQuads(1);

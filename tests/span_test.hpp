@@ -1,5 +1,3 @@
-#include "test.hpp"
-
 #include "../src/span.hpp"
 #include <vector>
 

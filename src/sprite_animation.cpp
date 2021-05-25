@@ -8,6 +8,7 @@ SpriteAnimation::SpriteAnimation(v4 rect, i32 frames, i32 msPerFrame) noexcept
 
 void SpriteAnimation::Update(f32 deltaTime)
 {
+    // between (0) to (m_MsPerFrame * m_Frames)
     m_ElapsedTime =
         fmod(m_ElapsedTime + (deltaTime * 1000.0f), (f32)(m_MsPerFrame * m_Frames));
 }
@@ -16,6 +17,6 @@ v4 SpriteAnimation::GetFrameRect(void) const
 {
     v4 result = m_Rect;
     i32 frame = (i32)(m_ElapsedTime / m_MsPerFrame);
-    result.X += m_Rect.Z * frame;
+    result.x += m_Rect.z * frame;
     return result;
 }

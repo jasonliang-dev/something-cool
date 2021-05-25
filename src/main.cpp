@@ -13,7 +13,6 @@
 #include "texture.hpp"
 #include "tilemap.hpp"
 #include <GLFW/glfw3.h>
-#include <HandmadeMath.h>
 #include <algorithm>
 #include <cmath>
 #include <cute_tiled.h>
@@ -117,7 +116,7 @@ static void RunApplication(void)
         }
 
         v4 rect;
-        if (!(ss >> rect.X >> rect.Y >> rect.Z >> rect.W))
+        if (!(ss >> rect.x >> rect.y >> rect.z >> rect.w))
         {
             throw std::runtime_error("Malformed atlas data");
         }
@@ -221,11 +220,11 @@ static void RunApplication(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        m4 projection = HMM_Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f,
-                                         -1.0f, 1.0f);
-        m4 model = HMM_Scale(v3{scale, scale, 1.0f});
+        m4 projection =
+            m4::Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
+        m4 model = m4(1).Scale(v3{scale, scale, 1.0f});
 
-        // map.Draw(renderer, projection * model);
+        map.Draw(renderer, projection * model);
 
         renderer.BeginDraw(atlas, projection * model);
         SpriteAnimation &ani = animations[animationList[currentAnimation]];

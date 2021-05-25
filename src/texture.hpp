@@ -1,6 +1,7 @@
 #pragma once
 
 #include "language.hpp"
+#include "geometry.hpp"
 #include <glad/gl.h>
 
 struct Texture

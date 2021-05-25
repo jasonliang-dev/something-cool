@@ -52,39 +52,38 @@ std::vector<Renderer::Quad> Tilemap::InitializeTiles(cute_tiled_layer_t *layer,
                 continue;
             }
 
-            m4 transform =
-                HMM_Translate(v3{(f32)(x * m_TileWidth) + (m_TileWidth / 2.0f),
-                                 (f32)(y * m_TileHeight) + (m_TileHeight / 2.0f), 0.0f});
+            m4 transform = m4(1);
+            transform.Translate(v3{(f32)(x * m_TileWidth) + (m_TileWidth / 2.0f),
+                                   (f32)(y * m_TileHeight) + (m_TileHeight / 2.0f),
+                                   0.0f});
 
             if (index & CUTE_TILED_FLIPPED_HORIZONTALLY_FLAG)
             {
-                transform = transform * HMM_Scale(v3{-1.0f, 1.0f, 1.0f});
+                transform.Scale(v3{-1.0f, 1.0f, 1.0f});
             }
 
             if (index & CUTE_TILED_FLIPPED_VERTICALLY_FLAG)
             {
-                transform = transform * HMM_Scale(v3{1.0f, -1.0f, 1.0f});
+                transform.Scale(v3{1.0f, -1.0f, 1.0f});
             }
 
             if (index & CUTE_TILED_FLIPPED_DIAGONALLY_FLAG)
             {
-                transform = transform * HMM_Scale(v3{-1.0f, -1.0f, 1.0f});
+                transform.Scale(v3{-1.0f, -1.0f, 1.0f});
             }
 
-            transform = transform * HMM_Translate(v3{-m_TileWidth / 2.0f,
-                                                     -m_TileHeight / 2.0f, 0.0f});
-            transform =
-                transform * HMM_Scale(v3{(f32)m_TileWidth, (f32)m_TileHeight, 1.0f});
+            transform.Translate(v3{-m_TileWidth / 2.0f, -m_TileHeight / 2.0f, 0.0f});
+            transform.Scale(v3{(f32)m_TileWidth, (f32)m_TileHeight, 1.0f});
 
             i32 id = cute_tiled_unset_flags(index) - firstgid;
 
             v2 atlasPos = v2{(f32)(id % tileColumns), (f32)(id / tileColumns)};
 
             v4 texCoords = {
-                atlasPos.X * m_TileWidth / (f32)m_Atlas->m_Width,
-                atlasPos.Y * m_TileHeight / (f32)m_Atlas->m_Height,
-                (atlasPos.X + 1.0f) * m_TileWidth / (f32)m_Atlas->m_Width,
-                (atlasPos.Y + 1.0f) * m_TileHeight / (f32)m_Atlas->m_Height,
+                atlasPos.x * m_TileWidth / (f32)m_Atlas->m_Width,
+                atlasPos.y * m_TileHeight / (f32)m_Atlas->m_Height,
+                (atlasPos.x + 1.0f) * m_TileWidth / (f32)m_Atlas->m_Width,
+                (atlasPos.y + 1.0f) * m_TileHeight / (f32)m_Atlas->m_Height,
             };
 
             tiles.push_back({transform, texCoords});

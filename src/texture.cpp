@@ -1,5 +1,4 @@
 #include "texture.hpp"
-#include <HandmadeMath.h>
 #include <sstream>
 #include <stb_image.h>
 #include <stdexcept>
