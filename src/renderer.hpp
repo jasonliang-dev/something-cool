@@ -32,22 +32,6 @@ struct Renderer
         Quad(m4 transform, v4 texCoords);
     };
 
-    Renderer(void);
-    ~Renderer(void);
-
-    Renderer(const Renderer &) = delete;
-    Renderer &operator=(const Renderer &) = delete;
-
-    void BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp);
-    void EndDraw(void);
-
-    // write to returned buffer to draw stuff. must be in between BeginDraw/EndDraw
-    [[nodiscard]] Span<Quad> AllocateQuads(i32 count);
-
-    // ultimately calls AllocateQuads
-    void DrawTexture(v2 pos);          // draw entire texture
-    void DrawTexture(v2 pos, v4 rect); // draw part of texture
-
     static const u32 MAX_QUADS = 20000;
 
     GLuint m_Program;
@@ -57,7 +41,23 @@ struct Renderer
     GLuint m_EBO;
 
     std::vector<Quad> m_Quads;
-    i32 m_QuadCount;
+    i32 m_QuadCount = 0;
 
-    std::shared_ptr<Texture> m_CurrentAtlas;
+    Texture m_CurrentAtlas{};
+
+    Renderer(void);
+    ~Renderer(void);
+
+    Renderer(const Renderer &) = delete;
+    Renderer &operator=(const Renderer &) = delete;
+
+    void BeginDraw(Texture atlas, m4 mvp);
+    void EndDraw(void);
+
+    // write to returned buffer to draw stuff. must be in between BeginDraw/EndDraw
+    [[nodiscard]] Span<Quad> AllocateQuads(i32 count);
+
+    // ultimately calls AllocateQuads
+    void DrawTexture(v2 pos);          // draw entire texture
+    void DrawTexture(v2 pos, v4 rect); // draw part of texture
 };

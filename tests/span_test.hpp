@@ -1,7 +1,7 @@
 #include "../src/span.hpp"
 #include <vector>
 
-TEST(Span, CtorDtor)
+TEST(Span, ConstructDestruct)
 {
     Span<int> span;
     (void)span;

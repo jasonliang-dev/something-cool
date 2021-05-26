@@ -8,13 +8,13 @@
 
 struct Input
 {
-    Input(void) noexcept;
+    std::array<b8, GLFW_KEY_LAST> m_KeysDown;
+    std::array<b8, GLFW_KEY_LAST> m_KeysDownPrev;
+
+    Input(void);
 
     // call before polling events
     void Update(void);
-
-    std::array<b8, GLFW_KEY_LAST> m_KeysDown;
-    std::array<b8, GLFW_KEY_LAST> m_KeysDownPrev;
 };
 
 extern Input g_Input;

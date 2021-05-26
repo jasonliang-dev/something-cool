@@ -10,6 +10,13 @@ TEST(Matrix4x4, Zero)
     {
         EXPECT(f == 0.0f);
     }
+
+    m4 defaultConstructed;
+
+    for (float f : defaultConstructed.elements)
+    {
+        EXPECT(f == 0.0f);
+    }
 }
 
 TEST(Matrix4x4, Identity)
@@ -37,7 +44,7 @@ TEST(Matrix4x4, Translate)
     m4 m = m4(1).Translate(v3{1, 2, 3});
 
     v4 result = m * v4{1.0f, 2.0f, 3.0f, 1.0f};
-    // I'm laughing.
+    // operator== on floats. uhh okay.
     EXPECT(result.x == 2.0f);
     EXPECT(result.y == 4.0f);
     EXPECT(result.z == 6.0f);

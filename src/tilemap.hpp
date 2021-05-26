@@ -9,12 +9,7 @@
 
 struct Tilemap
 {
-    Tilemap(const char *jsonFile, std::shared_ptr<Texture> atlas);
-    std::vector<Renderer::Quad> InitializeTiles(cute_tiled_layer_t *layer, i32 firstgid);
-
-    void Draw(Renderer &renderer, m4 mvp);
-
-    std::shared_ptr<Texture> m_Atlas;
+    Texture m_Atlas;
 
     i32 m_Width; // in tiles
     i32 m_Height;
@@ -23,4 +18,9 @@ struct Tilemap
     i32 m_TileHeight;
 
     std::vector<std::vector<Renderer::Quad>> m_Layers;
+
+    Tilemap(const char *jsonFile, Texture atlas);
+    std::vector<Renderer::Quad> InitializeTiles(cute_tiled_layer_t *layer, i32 firstgid);
+
+    void Draw(Renderer &renderer, m4 mvp) const;
 };

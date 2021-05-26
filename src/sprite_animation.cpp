@@ -1,7 +1,7 @@
 #include "sprite_animation.hpp"
 #include <cmath>
 
-SpriteAnimation::SpriteAnimation(v4 rect, i32 frames, i32 msPerFrame) noexcept
+SpriteAnimation::SpriteAnimation(v4 rect, i32 frames, i32 msPerFrame)
     : m_Rect(rect), m_Frames(frames), m_MsPerFrame(msPerFrame)
 {
 }

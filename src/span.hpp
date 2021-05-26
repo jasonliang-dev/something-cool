@@ -1,32 +1,61 @@
 #pragma once
 
-#include <cstddef>
-
-// very very small subset of c++20's std::span
+// tiny subset of c++20's std::span
 
 template <typename T> struct Span
 {
+    typedef T &reference;
+    typedef const T &const_reference;
+    typedef T *iterator;
+    typedef const T *const_iterator;
+    typedef size_t size_type;
+
+    T *m_Begin = nullptr;
+    size_t m_Size = 0;
+
     Span(void) = default;
 
-    Span(T *begin, size_t size) noexcept : m_Begin(begin), m_Size(size)
+    Span(iterator begin, size_type size) : m_Begin(begin), m_Size(size)
     {
     }
 
-    T *begin(void) const noexcept
+    iterator begin(void)
     {
         return m_Begin;
     }
 
-    T *end(void) const noexcept
+    const_iterator begin(void) const
+    {
+        return m_Begin;
+    }
+
+    const_iterator cbegin(void) const
+    {
+        return m_Begin;
+    }
+
+    iterator end(void)
     {
         return m_Begin + m_Size;
     }
 
-    T &operator[](size_t i) const
+    const_iterator end(void) const
+    {
+        return m_Begin + m_Size;
+    }
+
+    const_iterator cend(void) const
+    {
+        return m_Begin + m_Size;
+    }
+
+    reference operator[](size_type i)
     {
         return m_Begin[i];
     }
 
-    T *m_Begin = nullptr;
-    size_t m_Size = 0;
+    const_reference operator[](size_type i) const
+    {
+        return m_Begin[i];
+    }
 };

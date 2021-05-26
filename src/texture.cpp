@@ -4,7 +4,18 @@
 #include <stdexcept>
 #include <utility>
 
-Texture::Texture(const char *filePath)
+void Texture::Bind(i32 unit) const
+{
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, m_ID);
+}
+
+v2 Texture::GetDim(void) const
+{
+    return v2{(f32)m_Width, (f32)m_Height};
+}
+
+TextureHandle::TextureHandle(const char *filePath)
 {
     i32 channels;
     u8 *imageData = stbi_load(filePath, &m_Width, &m_Height, &channels, 0);
@@ -50,35 +61,19 @@ Texture::Texture(const char *filePath)
     stbi_image_free(imageData);
 }
 
-Texture::~Texture(void)
+TextureHandle::~TextureHandle(void)
 {
     glDeleteTextures(1, &m_ID);
 }
 
-Texture::Texture(Texture &&other) noexcept
-    : m_ID(std::exchange(other.m_ID, 0)), m_Width(std::exchange(other.m_Width, 0)),
-      m_Height(std::exchange(other.m_Height, 0))
+TextureHandle::TextureHandle(TextureHandle &&other) noexcept
+    : Texture{std::exchange(other.m_ID, 0), 0, 0}
 {
 }
 
-Texture &Texture::operator=(Texture &&other) noexcept
+TextureHandle &TextureHandle::operator=(TextureHandle &&other) noexcept
 {
     glDeleteTextures(1, &m_ID);
-
     m_ID = std::exchange(other.m_ID, 0);
-    m_Width = std::exchange(other.m_Width, 0);
-    m_Height = std::exchange(other.m_Height, 0);
-
     return *this;
-}
-
-void Texture::Bind(i32 unit)
-{
-    glActiveTexture(GL_TEXTURE0 + unit);
-    glBindTexture(GL_TEXTURE_2D, m_ID);
-}
-
-v2 Texture::GetDim(void) const
-{
-    return v2{(f32)m_Width, (f32)m_Height};
 }

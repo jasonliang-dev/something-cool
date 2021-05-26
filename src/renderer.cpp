@@ -168,9 +168,6 @@ Renderer::Renderer(void)
                  GL_STATIC_DRAW);
 
     m_Quads.resize(MAX_QUADS);
-    m_QuadCount = 0;
-
-    m_CurrentAtlas = nullptr;
 }
 
 Renderer::~Renderer(void)
@@ -182,12 +179,12 @@ Renderer::~Renderer(void)
     glDeleteVertexArrays(1, &m_VAO);
 }
 
-void Renderer::BeginDraw(std::shared_ptr<Texture> atlas, m4 mvp)
+void Renderer::BeginDraw(Texture atlas, m4 mvp)
 {
     glUseProgram(m_Program);
 
     glUniform1i(glGetUniformLocation(m_Program, "u_Texture"), 0);
-    atlas->Bind(0);
+    atlas.Bind(0);
 
     glUniformMatrix4fv(glGetUniformLocation(m_Program, "u_MVP"), 1, GL_FALSE, &mvp[0][0]);
 
@@ -224,15 +221,13 @@ void Renderer::EndDraw(void)
 
 void Renderer::DrawTexture(v2 pos)
 {
-    assert(m_CurrentAtlas);
-    v2 dim = m_CurrentAtlas->GetDim();
+    v2 dim = m_CurrentAtlas.GetDim();
     DrawTexture(pos, v4{0.0f, 0.0f, dim.x, dim.y});
 }
 
 void Renderer::DrawTexture(v2 pos, v4 rect)
 {
-    assert(m_CurrentAtlas);
-    v2 dim = m_CurrentAtlas->GetDim();
+    v2 dim = m_CurrentAtlas.GetDim();
 
     m4 transform =
         m4(1).Translate(v3{pos.x, pos.y, 0.0f}).Scale(v3{rect.z, rect.w, 1.0f});

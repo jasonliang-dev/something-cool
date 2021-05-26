@@ -2,7 +2,7 @@
 #include <cassert>
 #include <stdexcept>
 
-Tilemap::Tilemap(const char *jsonFile, std::shared_ptr<Texture> atlas) : m_Atlas(atlas)
+Tilemap::Tilemap(const char *jsonFile, Texture atlas) : m_Atlas(atlas)
 {
     cute_tiled_map_t *map = cute_tiled_load_map_from_file(jsonFile, nullptr);
 
@@ -39,7 +39,7 @@ std::vector<Renderer::Quad> Tilemap::InitializeTiles(cute_tiled_layer_t *layer,
     std::vector<Renderer::Quad> tiles;
     tiles.reserve(layer->data_count);
 
-    i32 tileColumns = m_Atlas->m_Width / m_TileWidth;
+    i32 tileColumns = m_Atlas.m_Width / m_TileWidth;
 
     for (i32 y = 0; y < m_Height; ++y)
     {
@@ -72,18 +72,18 @@ std::vector<Renderer::Quad> Tilemap::InitializeTiles(cute_tiled_layer_t *layer,
                 transform.Scale(v3{-1.0f, -1.0f, 1.0f});
             }
 
-            transform.Translate(v3{-m_TileWidth / 2.0f, -m_TileHeight / 2.0f, 0.0f});
-            transform.Scale(v3{(f32)m_TileWidth, (f32)m_TileHeight, 1.0f});
+            transform.Translate(v3{-m_TileWidth / 2.0f, -m_TileHeight / 2.0f, 0.0f})
+                .Scale(v3{(f32)m_TileWidth, (f32)m_TileHeight, 1.0f});
 
             i32 id = cute_tiled_unset_flags(index) - firstgid;
 
             v2 atlasPos = v2{(f32)(id % tileColumns), (f32)(id / tileColumns)};
 
             v4 texCoords = {
-                atlasPos.x * m_TileWidth / (f32)m_Atlas->m_Width,
-                atlasPos.y * m_TileHeight / (f32)m_Atlas->m_Height,
-                (atlasPos.x + 1.0f) * m_TileWidth / (f32)m_Atlas->m_Width,
-                (atlasPos.y + 1.0f) * m_TileHeight / (f32)m_Atlas->m_Height,
+                atlasPos.x * m_TileWidth / (f32)m_Atlas.m_Width,
+                atlasPos.y * m_TileHeight / (f32)m_Atlas.m_Height,
+                (atlasPos.x + 1.0f) * m_TileWidth / (f32)m_Atlas.m_Width,
+                (atlasPos.y + 1.0f) * m_TileHeight / (f32)m_Atlas.m_Height,
             };
 
             tiles.push_back({transform, texCoords});
@@ -94,7 +94,7 @@ std::vector<Renderer::Quad> Tilemap::InitializeTiles(cute_tiled_layer_t *layer,
     return tiles;
 }
 
-void Tilemap::Draw(Renderer &renderer, m4 mvp)
+void Tilemap::Draw(Renderer &renderer, m4 mvp) const
 {
     renderer.BeginDraw(m_Atlas, mvp);
 

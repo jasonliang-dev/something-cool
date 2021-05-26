@@ -1,26 +1,28 @@
 #pragma once
 
-#include "language.hpp"
 #include "geometry.hpp"
+#include "language.hpp"
 #include <glad/gl.h>
 
 struct Texture
 {
-    Texture(void) = default;
-    Texture(const char *filePath);
-    ~Texture(void);
-
-    Texture(const Texture &) = delete;
-    Texture &operator=(const Texture &) = delete;
-
-    Texture(Texture &&other) noexcept;
-    Texture &operator=(Texture &&other) noexcept;
-
-    void Bind(i32 unit);
-
-    v2 GetDim(void) const;
-
     GLuint m_ID = 0;
     i32 m_Width = 0;
     i32 m_Height = 0;
+
+    void Bind(i32 unit) const;
+    v2 GetDim(void) const;
+};
+
+struct TextureHandle : public Texture
+{
+    TextureHandle(void) = default;
+    TextureHandle(const char *filePath);
+    ~TextureHandle(void);
+
+    TextureHandle(const TextureHandle &) = delete;
+    TextureHandle &operator=(const TextureHandle &) = delete;
+
+    TextureHandle(TextureHandle &&other) noexcept;
+    TextureHandle &operator=(TextureHandle &&other) noexcept;
 };

@@ -16,6 +16,7 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(third/enet)
+add_subdirectory(third/entt)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -39,6 +40,7 @@ target_include_directories(imgui PUBLIC
 target_link_libraries(imgui PUBLIC glfw)
 
 add_executable(${PROJECT_NAME}
+  src/app.cpp
   src/input.cpp
   src/renderer.cpp
   src/sprite_animation.cpp
@@ -57,10 +59,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-  OpenGL::GL
   enet
+  EnTT::EnTT
   glfw
   imgui
+  OpenGL::GL
 )
 
 if(WIN32 AND MSVC_IDE)

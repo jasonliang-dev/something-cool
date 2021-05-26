@@ -1,27 +1,33 @@
 #pragma once
 
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <windows.h>
+#endif
+
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <vector>
 
-#ifdef _WIN32
-    #include <windows.h>
-#endif
+namespace test
+{
+
+struct TestCase
+{
+    std::string_view name;
+    void (*RunTest)(void);
+};
+
+struct TestCategory
+{
+    std::string_view name;
+    std::vector<TestCase> cases;
+};
 
 static struct TestState
 {
-    struct TestCase
-    {
-        std::string_view name;
-        void (*RunTest)(void);
-    };
-
-    struct TestCategory
-    {
-        std::string_view name;
-        std::vector<TestCase> cases;
-    };
-
     std::vector<TestCategory> m_Categories;
     std::string m_Reason;
 
@@ -37,14 +43,8 @@ static struct TestState
                                 { return categoryName == category.name; });
 
         TestCase testcase{testName, TestFn};
-        if (it == m_Categories.end())
-        {
-            m_Categories.push_back({categoryName, {testcase}});
-        }
-        else
-        {
-            it->cases.push_back(testcase);
-        }
+        (it == m_Categories.end()) ? m_Categories.push_back({categoryName, {testcase}})
+                                   : it->cases.push_back(testcase);
     }
 } s_TestState;
 
@@ -65,8 +65,8 @@ static struct TestState
     void(_TestFn_##category##_##testName)(void);                                         \
     INITIALIZER(_TestFn_##category##_##testName##_Init)                                  \
     {                                                                                    \
-        s_TestState.RegisterTestCase(#category, #testName,                               \
-                                     _TestFn_##category##_##testName);                   \
+        test::s_TestState.RegisterTestCase(#category, #testName,                         \
+                                           _TestFn_##category##_##testName);             \
     }                                                                                    \
     void(_TestFn_##category##_##testName)(void)
 
@@ -74,8 +74,9 @@ static struct TestState
     if (!(cond))                                                                         \
     {                                                                                    \
         std::ostringstream ss;                                                           \
-        ss << "EXPECT(" << #cond << ")";                                                 \
-        s_TestState.m_Reason = ss.str();                                                 \
+        ss << "EXPECT(" << #cond << ") at "                                              \
+           << std::filesystem::path(__FILE__).filename().string() << ":" << __LINE__;    \
+        test::s_TestState.m_Reason = ss.str();                                           \
         return;                                                                          \
     }
 
@@ -85,19 +86,20 @@ static int RunAllTests(void)
     int testsPassed = 0;
 
 #ifdef _WIN32
-    int COL_RESET = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
-    int FG_RED = FOREGROUND_RED;
-    int FG_GREEN = FOREGROUND_GREEN;
+    const int COL_RESET = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+    const int FG_GRAY = FOREGROUND_INTENSITY;
+    const int FG_RED = FOREGROUND_RED;
+    const int FG_GREEN = FOREGROUND_GREEN;
 
     auto ConsoleSetColor = [](int color) -> void
     { SetConsoleTextAttribute(s_TestState.m_ConsoleHandle, color); };
 #else
-    std::string_view COL_RESET = "\x1b[0m";
-    std::string_view FG_RED = "\x1b[31m";
-    std::string_view FG_GREEN = "\x1b[32m";
+    const std::string_view COL_RESET = "\x1b[0m";
+    const std::string_view FG_GRAY = "\x1b[90m";
+    const std::string_view FG_RED = "\x1b[31m";
+    const std::string_view FG_GREEN = "\x1b[32m";
 
-    auto ConsoleSetColor = [](std::string_view color) -> void
-    { std::cout << color };
+    auto ConsoleSetColor = [](std::string_view color) -> void { std::cout << color };
 #endif
 
     for (const auto &category : s_TestState.m_Categories)
@@ -120,14 +122,17 @@ static int RunAllTests(void)
                 ConsoleSetColor(FG_RED);
                 std::cout << "FAIL";
                 ConsoleSetColor(COL_RESET);
-                std::cout << " " << category.name << ", " << testcase.name << ": "
-                          << s_TestState.m_Reason << "\n";
+                std::cout << " " << category.name << ", " << testcase.name << ": ";
+                ConsoleSetColor(FG_GRAY);
+                std::cout << s_TestState.m_Reason << "\n";
+                ConsoleSetColor(COL_RESET);
                 s_TestState.m_Reason = "";
             }
         }
     }
 
     std::cout << testsPassed << " out of " << testsRan << " tests passed.\n";
-
     return testsRan != testsPassed;
 }
+
+} // namespace test
