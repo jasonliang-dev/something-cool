@@ -1,12 +1,6 @@
 [submodule "third/glfw"]
 	path = third/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "third/imgui"]
-	path = third/imgui
-	url = https://github.com/ocornut/imgui.git
 [submodule "third/enet"]
 	path = third/enet
 	url = https://github.com/lsalzman/enet.git
-[submodule "third/entt"]
-	path = third/entt
-	url = https://github.com/skypjack/entt.git

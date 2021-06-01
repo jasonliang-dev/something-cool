@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad/gl.h>
-#include <iostream>
+#include <stdio.h>
 
 #define GL_CheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
 
@@ -40,8 +40,7 @@ static void GL_CheckForErrorsReal(const char *file, int line)
             break;
         }
 
-        std::cerr << "GL_CheckForErrors " << error << ": " << file << " line " << line
-                  << "\n";
+        fprintf(stderr, "GL_CheckForErrors: %s, %s:%d\n", error, file, line);
     }
 }
 
@@ -59,26 +58,21 @@ static void GL_DebugMessageCallback(GLenum source, GLenum type, GLuint id,
     case GL_DEBUG_SOURCE_API:
         sourceString = "API";
         break;
-
     case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
         sourceString = "WINDOW SYSTEM";
         break;
-
     case GL_DEBUG_SOURCE_SHADER_COMPILER:
         sourceString = "SHADER COMPILER";
         break;
-
     case GL_DEBUG_SOURCE_THIRD_PARTY:
         sourceString = "THIRD PARTY";
         break;
-
     case GL_DEBUG_SOURCE_APPLICATION:
         sourceString = "APPLICATION";
         break;
-
     case GL_DEBUG_SOURCE_OTHER:
     default:
-        sourceString = "UNKNOWN";
+        sourceString = "OTHER";
         break;
     }
 
@@ -126,7 +120,6 @@ static void GL_DebugMessageCallback(GLenum source, GLenum type, GLuint id,
         break;
     }
 
-    std::cerr << "OpenGL: " << sourceString << ": " << typeString << ": " << message
-              << "\n"
-              << "Severity: " << severityString << "\n";
+    fprintf(stderr, "OpenGL (Severity %s, Source %s, Type %s): %s\n", severityString,
+            sourceString, typeString, message);
 }

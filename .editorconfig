@@ -4,7 +4,7 @@ root = true
 end_of_line = lf
 insert_final_newline = true
 
-[*.{c,cpp,cc,h,hpp,m,mm,vert,frag}]
+[*.{c,cpp,h,hpp,m,mm,vert,frag}]
 indent_style = space
 indent_size = 4
 
