@@ -17,10 +17,7 @@
 #include <GLFW/glfw3.h>
 #include <cute_tiled.h>
 #include <glad/gl.h>
-#include <malloc.h>
 #include <stb_image.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 GLFWwindow *g_Window;
 
@@ -84,7 +81,6 @@ static void InitWindow(void)
 
 static void RunApplication(void)
 {
-    // Texture blue = CreateTexture("data/Blue.png");
     Texture atlas = CreateTexture("data/atlas.png");
     Tilemap map = CreateTilemap("data/test.json", atlas);
     Player player = CreatePlayer();
@@ -117,12 +113,10 @@ static void RunApplication(void)
             M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
         m4 view = M4Scale(m4(1), v3(3, 3, 1));
 
-        {
-            BeginDraw(atlas, M4xM4(projection, view));
-            DrawTilemap(&map);
-            DrawPlayer(&player);
-            EndDraw();
-        }
+        BeginDraw(atlas, M4xM4(projection, view));
+        DrawTilemap(&map);
+        DrawPlayer(&player);
+        EndDraw();
 
         glfwSwapBuffers(g_Window);
 

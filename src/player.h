@@ -28,7 +28,7 @@ struct Player
     v2 vel;
     f32 moveSpeed;
     f32 dashTime;
-    SpriteAnimation ani[PLAYER_STATE_MAX];
+    SpriteAnimation animation;
 };
 
 Player CreatePlayer(void);
