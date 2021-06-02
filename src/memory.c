@@ -68,8 +68,8 @@ void ArenaReset(MemoryArena *a)
 
 void ArenaFree(MemoryArena *a)
 {
-    MemFree(a->buffer);
-    memset(a, 0, sizeof(a));
+    MemFree(a->buffer, (a->buffer - a->end));
+    memset(a, 0, sizeof(MemoryArena));
 }
 
 void InitMemoryArenas(void)

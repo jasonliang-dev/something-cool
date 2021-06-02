@@ -3,8 +3,7 @@
 #include "geometry.h"
 #include "language.h"
 
-typedef enum SpriteAnimationName SpriteAnimationName;
-enum SpriteAnimationName
+enum
 {
     WALL_FOUNTAIN_MID_RED_ANIM,
     WALL_FOUNTAIN_BASIN_RED_ANIM,

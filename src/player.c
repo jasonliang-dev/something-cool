@@ -84,13 +84,13 @@ static PlayerState UpdateDash(Player *player, f32 deltaTime)
     return PLAYER_DASH;
 }
 
-static const void (*EnterState[PLAYER_STATE_MAX])(Player *player) = {
+static void (*EnterState[PLAYER_STATE_MAX])(Player *player) = {
     [PLAYER_IDLE] = EnterIdle,
     [PLAYER_RUN] = EnterRun,
     [PLAYER_DASH] = EnterDash,
 };
 
-static const PlayerState (*Update[PLAYER_STATE_MAX])(Player *player, f32 deltaTime) = {
+static PlayerState (*Update[PLAYER_STATE_MAX])(Player *player, f32 deltaTime) = {
     [PLAYER_IDLE] = UpdateIdle,
     [PLAYER_RUN] = UpdateRun,
     [PLAYER_DASH] = UpdateDash,

@@ -117,7 +117,7 @@ void DrawTilemap(const Tilemap *map)
 {
     assert(g_Renderer.currentAtlas.id == map->atlas.id);
 
-    for (i32 i = 0; i < ArrayCount(map->layers); ++i)
+    for (u32 i = 0; i < ArrayCount(map->layers); ++i)
     {
         Quad *quads = AllocateQuads(map->layers[i].quadCount);
         memcpy(quads, map->layers[i].quads, sizeof(Quad) * map->layers[i].quadCount);

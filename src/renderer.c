@@ -2,6 +2,7 @@
 #include "language.h"
 #include "memory.h"
 #include <string.h>
+#include <stddef.h>
 
 Renderer g_Renderer;
 
@@ -61,7 +62,7 @@ static GLuint CompileGLSL(GLuint type, const char *source)
     }
 
     return shader;
-};
+}
 
 static GLuint CreateShaderProgram(const char *vert, const char *frag)
 {

@@ -27,7 +27,8 @@ void MemCommit(void *ptr, size_t size)
     VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
-void MemFree(void *ptr)
+void MemFree(void *ptr, size_t size);
 {
+    (void)size;
     VirtualFree(ptr, 0, MEM_RELEASE);
 }

@@ -4,17 +4,15 @@
 #include "geometry.h"
 #include "sprite_animation.h"
 
-typedef enum PlayerState PlayerState;
-enum PlayerState
+typedef enum
 {
     PLAYER_IDLE,
     PLAYER_RUN,
     PLAYER_DASH,
     PLAYER_STATE_MAX,
-};
+} PlayerState;
 
-typedef enum PlayerFlags PlayerFlags;
-enum PlayerFlags
+enum
 {
     PLAYER_FACING_LEFT = 1 << 0,
 };
@@ -22,8 +20,8 @@ enum PlayerFlags
 typedef struct Player Player;
 struct Player
 {
-    i32 flags;
-    i32 state;
+    u32 flags;
+    u32 state;
     v2 pos;
     v2 vel;
     f32 moveSpeed;

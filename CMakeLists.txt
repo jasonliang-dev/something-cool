@@ -31,13 +31,23 @@ if(WIN32)
   set(SOURCES ${SOURCES} src/os_win32.c)
 endif()
 
+if(UNIX AND NOT APPLE)
+  set(SOURCES ${SOURCES} src/os_linux.c)
+endif()
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 # 4505: unreferenced local function has been removed
 # 4201: nameless struct/union
 target_compile_options(${PROJECT_NAME} PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX /Wv:18 /wd4505 /wd4201>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Werror -pedantic>
+  $<$<CXX_COMPILER_ID:MSVC>:
+    /W4 /WX /Wv:18
+    /wd4505 /wd4201
+  >
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
+    -Wall -Wextra -Werror -pedantic
+    -Wno-missing-braces -Wno-unused-function
+  >
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
