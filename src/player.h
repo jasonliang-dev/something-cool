@@ -1,35 +1,37 @@
 #pragma once
 
-#include "language.h"
 #include "geometry.h"
+#include "language.h"
 #include "sprite_animation.h"
+#include "tilemap.h"
 
-typedef enum
-{
-    PLAYER_IDLE,
-    PLAYER_RUN,
-    PLAYER_DASH,
-    PLAYER_STATE_MAX,
-} PlayerState;
+#define PLAYER_MAX_GHOSTS 8
+#define PLAYER_GHOST_SPAWN_TIME 0.02f
+#define PLAYER_GHOST_LIFE_TIME 0.2f
 
-enum
+typedef struct PlayerGhost PlayerGhost;
+struct PlayerGhost
 {
-    PLAYER_FACING_LEFT = 1 << 0,
+    v2 pos;
+    f32 lifeTime;
 };
 
 typedef struct Player Player;
 struct Player
 {
-    u32 flags;
-    u32 state;
+    i32 flags;
+    i32 state;
+    v4 rect;
     v2 pos;
     v2 vel;
     f32 moveSpeed;
     f32 dashTime;
     SpriteAnimation animation;
+    PlayerGhost ghosts[PLAYER_MAX_GHOSTS];
+    f32 ghostSpawnTime;
 };
 
-Player CreatePlayer(void);
+Player CreatePlayer(v2 pos);
 
-void UpdatePlayer(Player *player, f32 deltaTime);
+void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime);
 void DrawPlayer(const Player *player);

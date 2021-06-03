@@ -1,29 +1,37 @@
 #include "player.h"
 #include "input.h"
+#include <assert.h>
+#include <string.h>
+
+// state
+enum
+{
+    PLAYER_IDLE,
+    PLAYER_RUN,
+    PLAYER_DASH,
+    PLAYER_STATE_MAX,
+};
+
+// flags
+enum
+{
+    PLAYER_FACING_LEFT = 1 << 0,
+};
 
 static void EnterIdle(Player *player)
 {
-    player->animation = CreateSpriteAnimation(KNIGHT_M_IDLE_ANIM);
+    player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
     player->animation.msPerFrame = 150;
+    player->rect.x = -player->animation.rect.z / 2;
+    player->rect.y = player->animation.rect.w * 0.4f;
+    player->rect.z = player->animation.rect.z;
+    player->rect.w = player->animation.rect.w * 0.2f;
 }
 
-static void EnterRun(Player *player)
-{
-    player->animation = CreateSpriteAnimation(KNIGHT_M_RUN_ANIM);
-    player->moveSpeed = 80;
-}
-
-static void EnterDash(Player *player)
-{
-    player->animation = CreateSpriteAnimation(KNIGHT_M_RUN_ANIM);
-    player->animation.msPerFrame = 50;
-    player->moveSpeed = 200;
-    player->dashTime = 0.2f;
-}
-
-static PlayerState UpdateIdle(Player *player, f32 deltaTime)
+static i32 UpdateIdle(Player *player, const Tilemap *map, f32 deltaTime)
 {
     (void)player;
+    (void)map;
     (void)deltaTime;
 
     if (KeyDown(GLFW_KEY_D) || KeyDown(GLFW_KEY_A) || KeyDown(GLFW_KEY_S) ||
@@ -35,7 +43,13 @@ static PlayerState UpdateIdle(Player *player, f32 deltaTime)
     return PLAYER_IDLE;
 }
 
-static PlayerState UpdateRun(Player *player, f32 deltaTime)
+static void EnterRun(Player *player)
+{
+    player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
+    player->moveSpeed = 80;
+}
+
+static i32 UpdateRun(Player *player, const Tilemap *map, f32 deltaTime)
 {
     player->vel.x = (f32)KeyDown(GLFW_KEY_D) - KeyDown(GLFW_KEY_A);
     player->vel.y = (f32)KeyDown(GLFW_KEY_S) - KeyDown(GLFW_KEY_W);
@@ -44,11 +58,6 @@ static PlayerState UpdateRun(Player *player, f32 deltaTime)
     if (player->vel.x == 0.0f && player->vel.y == 0.0f)
     {
         return PLAYER_IDLE;
-    }
-
-    if (KeyPressed(GLFW_KEY_SPACE))
-    {
-        return PLAYER_DASH;
     }
 
     if (player->vel.x < 0.0f)
@@ -60,16 +69,33 @@ static PlayerState UpdateRun(Player *player, f32 deltaTime)
         player->flags &= ~PLAYER_FACING_LEFT;
     }
 
-    player->vel.x *= player->moveSpeed * deltaTime;
-    player->vel.y *= player->moveSpeed * deltaTime;
+    if (KeyPressed(GLFW_KEY_SPACE))
+    {
+        return PLAYER_DASH;
+    }
 
-    player->pos.x += player->vel.x;
-    player->pos.y += player->vel.y;
+    TilemapMovement movement =
+        MoveWithTilemap(map, player->pos,
+                        v2(player->vel.x * player->moveSpeed * deltaTime,
+                           player->vel.y * player->moveSpeed * deltaTime),
+                        player->rect);
+
+    player->pos = movement.pos;
+    player->vel = movement.vel;
 
     return PLAYER_RUN;
 }
 
-static PlayerState UpdateDash(Player *player, f32 deltaTime)
+static void EnterDash(Player *player)
+{
+    player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
+    player->animation.msPerFrame = 50;
+    player->moveSpeed = 300;
+    player->dashTime = 0.2f;
+    player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;
+}
+
+static i32 UpdateDash(Player *player, const Tilemap *map, f32 deltaTime)
 {
     player->dashTime -= deltaTime;
 
@@ -78,8 +104,30 @@ static PlayerState UpdateDash(Player *player, f32 deltaTime)
         return PLAYER_IDLE;
     }
 
-    player->pos.x += player->vel.x * player->moveSpeed * deltaTime;
-    player->pos.y += player->vel.y * player->moveSpeed * deltaTime;
+    player->ghostSpawnTime -= deltaTime;
+
+    if (player->ghostSpawnTime <= 0.0f)
+    {
+        player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;
+
+        for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
+        {
+            if (player->ghosts[i].lifeTime <= 0.0f)
+            {
+                player->ghosts[i].pos = player->pos;
+                player->ghosts[i].lifeTime = PLAYER_GHOST_LIFE_TIME;
+                break;
+            }
+        }
+    }
+
+    TilemapMovement movement =
+        MoveWithTilemap(map, player->pos,
+                        v2(player->vel.x * player->moveSpeed * deltaTime,
+                           player->vel.y * player->moveSpeed * deltaTime),
+                        player->rect);
+
+    player->pos = movement.pos;
 
     return PLAYER_DASH;
 }
@@ -90,31 +138,38 @@ static void (*EnterState[PLAYER_STATE_MAX])(Player *player) = {
     [PLAYER_DASH] = EnterDash,
 };
 
-static PlayerState (*Update[PLAYER_STATE_MAX])(Player *player, f32 deltaTime) = {
+static i32 (*Update[PLAYER_STATE_MAX])(Player *player, const Tilemap *map,
+                                       f32 deltaTime) = {
     [PLAYER_IDLE] = UpdateIdle,
     [PLAYER_RUN] = UpdateRun,
     [PLAYER_DASH] = UpdateDash,
 };
 
-Player CreatePlayer(void)
+Player CreatePlayer(v2 pos)
 {
     Player player;
 
     player.flags = 0;
     player.state = PLAYER_IDLE;
-    player.pos = v2(0, 0);
+    player.pos = pos;
     player.vel = v2(0, 0);
     player.moveSpeed = 0;
     player.dashTime = 0.0f;
+    memset(player.ghosts, 0, sizeof(player.ghosts));
 
     EnterState[player.state](&player);
 
     return player;
 }
 
-void UpdatePlayer(Player *player, f32 deltaTime)
+void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime)
 {
-    PlayerState nextState = Update[player->state](player, deltaTime);
+    for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
+    {
+        player->ghosts[i].lifeTime -= deltaTime;
+    }
+
+    i32 nextState = Update[player->state](player, map, deltaTime);
     if (nextState != player->state)
     {
         player->state = nextState;
@@ -126,9 +181,26 @@ void UpdatePlayer(Player *player, f32 deltaTime)
 
 void DrawPlayer(const Player *player)
 {
-    v4 color = player->state == PLAYER_DASH ? v4(0.5f, 0.5f, 1, 1) : v4(1, 1, 1, 1);
+    v2 scale = v2(player->flags & PLAYER_FACING_LEFT ? -1.0f : 1.0f, 1);
 
-    DrawSpriteAnimationExt(&player->animation, player->pos,
-                           v2(player->flags & PLAYER_FACING_LEFT ? -1.0f : 1.0f, 1),
-                           color);
+    for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
+    {
+        if (player->ghosts[i].lifeTime > 0.0f)
+        {
+            DrawSpriteAnimationExt(
+                &player->animation, player->ghosts[i].pos, scale,
+                v4(0.5f, 0.5f, 1,
+                   (player->ghosts[i].lifeTime / PLAYER_GHOST_LIFE_TIME) * 0.9f));
+        }
+    }
+
+    switch (player->state)
+    {
+    case PLAYER_DASH:
+        DrawSpriteAnimationExt(&player->animation, player->pos, scale,
+                               v4(0.8f, 0.8f, 1, 1));
+        break;
+    default:
+        DrawSpriteAnimationExt(&player->animation, player->pos, scale, v4(1, 1, 1, 1));
+    }
 }

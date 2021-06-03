@@ -43,14 +43,6 @@
 #define Max(x, y) (((x) > (y)) ? (x) : (y))
 #define Clamp(x, min, max) (((x) < (min)) ? (min) : ((x) > (max)) ? (max) : (x))
 
-#define Swap(T, a, b)                                                                    \
-    do                                                                                   \
-    {                                                                                    \
-        T temp__ = a;                                                                    \
-        a = b;                                                                           \
-        b = temp__;                                                                      \
-    } while (0);
-
 typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
@@ -77,33 +69,3 @@ static void Fatal(const char *format, ...)
 
     abort();
 }
-
-/*
-typedef struct ReadFileResult ReadFileResult;
-struct ReadFileResult
-{
-    char *data;
-    i32 bytes;
-};
-
-static ReadFileResult ReadEntireFile(const char *filename, const char *mode)
-{
-    ReadFileResult result = {NULL, 0};
-
-    FILE *file = fopen(filename, mode);
-    if (!file)
-    {
-        return result;
-    }
-
-    fseek(file, 0, SEEK_END);
-    result.bytes = ftell(file);
-
-    rewind(file);
-    result.data = malloc(result.bytes);
-    fread(result.data, 1, result.bytes, file);
-
-    fclose(file);
-    return result;
-}
-*/

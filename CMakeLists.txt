@@ -6,14 +6,47 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(third/enet)
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(third/glfw)
+
+add_library(cimgui STATIC
+  third/cimgui/cimgui.cpp
+  third/cimgui/imgui/imgui.cpp
+  third/cimgui/imgui/imgui_demo.cpp
+  third/cimgui/imgui/imgui_draw.cpp
+  third/cimgui/imgui/imgui_tables.cpp
+  third/cimgui/imgui/imgui_widgets.cpp
+  third/cimgui/imgui/backends/imgui_impl_glfw.cpp
+  third/cimgui/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+set(IMGUI_LIBRARIES glfw)
+
+target_compile_definitions(cimgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+if (WIN32)
+  target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
+  list(APPEND IMGUI_LIBRARIES imm32)
+else()
+  target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
+endif()
+
+target_include_directories(cimgui PUBLIC
+  third/
+  third/cimgui
+  third/cimgui/imgui
+)
+
+target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
 set(SOURCES
   src/geometry.c
@@ -52,9 +85,12 @@ target_compile_options(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   third/
+  third/enet/include/
 )
 
 target_link_libraries(${PROJECT_NAME}
+  cimgui
+  enet
   glfw
   OpenGL::GL
 )

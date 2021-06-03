@@ -186,11 +186,14 @@ void InitRenderer(void)
 
     memset(g_Renderer.quads, 0, sizeof(g_Renderer.quads));
 
-    glUseProgram(g_Renderer.program);
+    glUseProgram(0);
 }
 
 void BeginDraw(Texture atlas, m4 mvp)
 {
+    glUseProgram(g_Renderer.program);
+
+    // TODO store uniform loc
     glUniform1i(glGetUniformLocation(g_Renderer.program, "u_Texture"), 0);
     glBindTexture(GL_TEXTURE_2D, atlas.id);
 
