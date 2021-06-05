@@ -137,10 +137,7 @@ static void RunApplication(Application app)
     Tilemap map = CreateTilemap("data/test.json", atlas);
     Player player = CreatePlayer(v2(50, 50));
     SpriteAnimation ani = CreateSpriteAnimation(BIG_DEMON_IDLE_ANIM);
-
-    ENetHost *server = NULL;
-    ENetHost *client = NULL;
-    ENetPeer *peer = NULL;
+    InitClient();
 
     ScratchReset();
 
@@ -157,56 +154,9 @@ static void RunApplication(Application app)
 
         //
 
-        if (!server && KeyPressed(GLFW_KEY_F2))
+        if (KeyPressed(GLFW_KEY_F4))
         {
-            ENetAddress address;
-            address.host = ENET_HOST_ANY;
-            address.port = 4242;
-
-            // 32 connections, 2 channels, 0 and 1
-            server = enet_host_create(&address, 32, 2, 0, 0);
-
-            if (!server)
-            {
-                Fatal("Can't create server host");
-            }
-            else
-            {
-                printf("Created server\n");
-            }
-        }
-
-        if (!client && KeyPressed(GLFW_KEY_F3))
-        {
-            client = enet_host_create(NULL, 1, 2, 0, 0);
-
-            if (!client)
-            {
-                Fatal("Can't create client host");
-            }
-            else
-            {
-                printf("Created client\n");
-            }
-
-            ENetAddress address;
-            assert(enet_address_set_host(&address, "127.0.0.1") == 0);
-            address.port = 4242;
-
-            peer = enet_host_connect(client, &address, 2, 0);
-
-            if (!peer)
-            {
-                Fatal("No peer available\n");
-            }
-        }
-
-        if (client && KeyPressed(GLFW_KEY_F4))
-        {
-            ENetPacket *packet = enet_packet_create("packet", strlen("packet") + 1,
-                                                    ENET_PACKET_FLAG_RELIABLE);
-            enet_peer_send(peer, 0, packet);
-            enet_host_flush(client);
+            ClientSend("packet");
         }
 
         UpdatePlayer(&player, &map, deltaTime);
@@ -215,8 +165,31 @@ static void RunApplication(Application app)
         //
 
         static bool s_Demo = false;
+        static char s_ServerPort[16] = "4242";
+        static char s_RemoteHost[256] = "127.0.0.1";
+        static char s_RemotePort[16] = "4242";
 
-        igBegin("Test", NULL, 0);
+        igBegin("Debug Window", NULL, 0);
+
+        igInputText("Server Port", s_ServerPort, ArrayCount(s_ServerPort),
+                    ImGuiInputTextFlags_CharsDecimal, 0, 0);
+        if (igButton("Create server host", (ImVec2){0, 0}))
+        {
+            InitServer((u16)atoi(s_ServerPort));
+        }
+
+        igInputText("Remote Host", s_RemoteHost, ArrayCount(s_RemoteHost), 0, 0, 0);
+        igInputText("Port", s_RemotePort, ArrayCount(s_RemotePort),
+                    ImGuiInputTextFlags_CharsDecimal, 0, 0);
+        if (igButton("Connect to host", (ImVec2){0, 0}))
+        {
+            NetError err = ClientConnect(s_RemoteHost, (u16)atoi(s_RemotePort));
+            if (err)
+            {
+                fprintf(stderr, "error: %s\n", err);
+            }
+        }
+
         igCheckbox("Demo Window", &s_Demo);
         igText("Application average %.4f ms/frame (%.1f FPS)", deltaTime, 1 / deltaTime);
         igEnd();
@@ -257,15 +230,8 @@ static void RunApplication(Application app)
         UpdateInput();
         glfwPollEvents();
 
-        if (server)
-        {
-            ServerPollEvents(server);
-        }
-
-        if (client)
-        {
-            ClientPollEvents(client);
-        }
+        ServerPollEvents();
+        ClientPollEvents();
     }
 }
 
@@ -276,7 +242,7 @@ int main(void)
     InitMemoryArenas();
     InitInput();
     InitAudio();
-    assert(enet_initialize() == 0);
+    InitNet();
     Application app = InitApplication();
     InitRenderer();
 
