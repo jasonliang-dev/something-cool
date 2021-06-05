@@ -33,6 +33,9 @@ struct Renderer
     GLuint vbo;
     GLuint ebo;
 
+    GLint u_Texture;
+    GLint u_MVP;
+
     Quad quads[RENDERER_MAX_QUADS];
     i32 quadCount;
 

@@ -1,30 +1,42 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#define CUTE_TILED_IMPLEMENTATION
-#define GLAD_GL_IMPLEMENTATION
 #define GLFW_INCLUDE_NONE
-#define STB_IMAGE_IMPLEMENTATION
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
 #define _WINSOCKAPI_
 
-#pragma warning(push)
-#pragma warning(disable : 4214)
+#define CUTE_TILED_IMPLEMENTATION
+#define GLAD_GL_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define MINIAUDIO_IMPLEMENTATION
 
-#include <windows.h>
+#if defined(_MSC_VER)
+    #pragma warning(push)
+    #pragma warning(disable : 4100)
+    #pragma warning(disable : 4214)
+    #pragma warning(disable : 4244)
+    #pragma warning(disable : 4245)
+
+    #include <windows.h>
+#endif
 
 #include <GLFW/glfw3.h>
 #include <cimgui.h>
+#include <cimgui/generator/output/cimgui_impl.h>
 #include <cute_tiled.h>
-#include <enet/enet.h>
-#include <generator/output/cimgui_impl.h>
 #include <glad/gl.h>
+#include <miniaudio.h>
 #include <stb_image.h>
+#include <stb_vorbis.c>
 
-#pragma warning(pop)
+#if defined(_MSC_VER)
+    #pragma warning(pop)
+#endif
 
+#include "audio.h"
 #include "input.h"
 #include "language.h"
 #include "memory.h"
+#include "net.h"
 #include "opengl_debug.h"
 #include "os.h"
 #include "player.h"
@@ -98,7 +110,7 @@ static Application InitApplication(void)
     {
         glEnable(GL_DEBUG_OUTPUT);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GL_DebugMessageCallback, 0);
+        glDebugMessageCallback(GLDebugMessageCallback, 0);
         glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION,
                               0, NULL, GL_FALSE);
 
@@ -142,51 +154,6 @@ static void RunApplication(Application app)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
-
-        if (server)
-        {
-            ENetEvent event;
-            while (enet_host_service(server, &event, 0) > 0)
-            {
-                switch (event.type)
-                {
-                case ENET_EVENT_TYPE_CONNECT:
-                    printf("A new client connected from %x:%u.\n",
-                           event.peer->address.host, event.peer->address.port);
-                    event.peer->data = "Client information";
-                    break;
-                case ENET_EVENT_TYPE_RECEIVE:
-                    printf("A packet of length %u containing %s was received from %s on "
-                           "channel %u.\n",
-                           event.packet->dataLength, event.packet->data, event.peer->data,
-                           event.channelID);
-                    enet_packet_destroy(event.packet);
-                    break;
-                case ENET_EVENT_TYPE_DISCONNECT:
-                    printf("%s disconnected.\n", event.peer->data);
-                    event.peer->data = NULL;
-                }
-            }
-        }
-
-        if (client)
-        {
-            ENetEvent event;
-            while (enet_host_service(client, &event, 0) > 0)
-            {
-                switch (event.type)
-                {
-                case ENET_EVENT_TYPE_CONNECT:
-                    printf("connected to host %x:%u.\n",
-                           event.peer->address.host, event.peer->address.port);
-                    event.peer->data = "Host information";
-                    break;
-                case ENET_EVENT_TYPE_DISCONNECT:
-                    printf("%s disconnected.\n", event.peer->data);
-                    event.peer->data = NULL;
-                }
-            }
-        }
 
         //
 
@@ -289,6 +256,16 @@ static void RunApplication(Application app)
 
         UpdateInput();
         glfwPollEvents();
+
+        if (server)
+        {
+            ServerPollEvents(server);
+        }
+
+        if (client)
+        {
+            ClientPollEvents(client);
+        }
     }
 }
 
@@ -298,13 +275,10 @@ int main(void)
 
     InitMemoryArenas();
     InitInput();
+    InitAudio();
+    assert(enet_initialize() == 0);
     Application app = InitApplication();
     InitRenderer();
-
-    if (enet_initialize() != 0)
-    {
-        Fatal("Cannot initialize ENet");
-    }
 
     RunApplication(app);
 }

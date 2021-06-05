@@ -1,8 +1,8 @@
 #include "renderer.h"
 #include "language.h"
 #include "memory.h"
-#include <string.h>
 #include <stddef.h>
+#include <string.h>
 
 Renderer g_Renderer;
 
@@ -154,7 +154,6 @@ void InitRenderer(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * RENDERER_MAX_QUADS * 4, NULL,
                  GL_DYNAMIC_DRAW);
 
-
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void *)offsetof(Vertex, a_Position));
@@ -186,6 +185,9 @@ void InitRenderer(void)
 
     memset(g_Renderer.quads, 0, sizeof(g_Renderer.quads));
 
+    g_Renderer.u_Texture = glGetUniformLocation(g_Renderer.program, "u_Texture");
+    g_Renderer.u_MVP = glGetUniformLocation(g_Renderer.program, "u_MVP");
+
     glUseProgram(0);
 }
 
@@ -193,12 +195,10 @@ void BeginDraw(Texture atlas, m4 mvp)
 {
     glUseProgram(g_Renderer.program);
 
-    // TODO store uniform loc
-    glUniform1i(glGetUniformLocation(g_Renderer.program, "u_Texture"), 0);
+    glUniform1i(g_Renderer.u_Texture, 0);
     glBindTexture(GL_TEXTURE_2D, atlas.id);
 
-    glUniformMatrix4fv(glGetUniformLocation(g_Renderer.program, "u_MVP"), 1, GL_FALSE,
-                       mvp.elements);
+    glUniformMatrix4fv(g_Renderer.u_MVP, 1, GL_FALSE, mvp.elements);
 
     g_Renderer.quadCount = 0;
     g_Renderer.currentAtlas = atlas;

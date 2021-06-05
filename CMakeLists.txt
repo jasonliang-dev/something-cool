@@ -49,9 +49,11 @@ target_include_directories(cimgui PUBLIC
 target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
 set(SOURCES
+  src/audio.c
   src/geometry.c
   src/input.c
   src/memory.c
+  src/net.c
   src/player.c
   src/renderer.c
   src/sprite_animation.c

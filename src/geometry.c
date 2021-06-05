@@ -3,13 +3,12 @@
 
 v2 V2Normalize(v2 v)
 {
-    f32 len = sqrtf(v.x * v.x + v.y * v.y);
-
-    if (len == 0)
+    if (v.x == 0.0f && v.y == 0.0f)
     {
         return (v2){0, 0};
     }
 
+    f32 len = sqrtf(v.x * v.x + v.y * v.y);
     return (v2){v.x / len, v.y / len};
 }
 

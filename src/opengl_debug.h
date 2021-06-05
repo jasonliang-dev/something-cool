@@ -3,9 +3,9 @@
 #include <glad/gl.h>
 #include <stdio.h>
 
-#define GL_CheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
+#define GLCheckForErrors() GL_CheckForErrorsReal(__FILE__, __LINE__)
 
-static void GL_CheckForErrorsReal(const char *file, int line)
+static void GLCheckForErrorsReal(const char *file, int line)
 {
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR)
@@ -44,9 +44,9 @@ static void GL_CheckForErrorsReal(const char *file, int line)
     }
 }
 
-static void GL_DebugMessageCallback(GLenum source, GLenum type, GLuint id,
-                                    GLenum severity, GLsizei length,
-                                    const GLchar *message, const void *userParam)
+static void GLDebugMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                   GLsizei length, const GLchar *message,
+                                   const void *userParam)
 {
     (void)id;
     (void)length;

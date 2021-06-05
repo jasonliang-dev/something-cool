@@ -5,16 +5,9 @@
 
 i32 GetSystemPageSize(void)
 {
-    static i32 s_PageSize = 0;
-
-    if (s_PageSize == 0)
-    {
-        SYSTEM_INFO info;
-        GetSystemInfo(&info);
-        s_PageSize = info.dwPageSize;
-    }
-
-    return s_PageSize;
+    SYSTEM_INFO info;
+    GetSystemInfo(&info);
+    return info.dwPageSize;
 }
 
 void *MemReserve(size_t size)

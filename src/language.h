@@ -14,7 +14,7 @@
 #endif
 
 #ifndef NDEBUG
-    #if defined(_WIN32)
+    #if defined(_MSC_VER)
         #define DEBUGGER() __debugbreak()
     #elif defined(__linux__)
         #include <signal.h>
