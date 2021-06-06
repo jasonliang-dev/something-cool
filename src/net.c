@@ -68,8 +68,10 @@ void ServerPollEvents(void)
             enet_peer_send(event.peer, 0, packet);
             break;
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf("%s disconnected.\n", event.peer->data);
+            printf("%s disconnected.\n", (char *)event.peer->data);
             event.peer->data = NULL;
+        default:
+            break;
         }
     }
 }
@@ -145,8 +147,10 @@ void ClientPollEvents(void)
             enet_packet_destroy(event.packet);
             break;
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf("%s disconnected.\n", event.peer->data);
+            printf("%s disconnected.\n", (char *)event.peer->data);
             event.peer->data = NULL;
+        default:
+            break;
         }
     }
 }

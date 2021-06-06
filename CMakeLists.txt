@@ -32,7 +32,10 @@ add_library(cimgui STATIC
 
 set(IMGUI_LIBRARIES glfw)
 
-target_compile_definitions(cimgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1)
+target_compile_definitions(cimgui PUBLIC
+  IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1
+  IMGUI_IMPL_OPENGL_LOADER_GLAD2
+)
 if (WIN32)
   target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
   list(APPEND IMGUI_LIBRARIES imm32)

@@ -17,6 +17,9 @@
     #pragma warning(disable : 4245)
 
     #include <windows.h>
+#elif defined(__linux__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
 #include <GLFW/glfw3.h>
@@ -30,6 +33,8 @@
 
 #if defined(_MSC_VER)
     #pragma warning(pop)
+#elif defined(__linux__)
+    #pragma GCC diagnostic pop
 #endif
 
 #include "audio.h"
