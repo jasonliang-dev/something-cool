@@ -4,9 +4,16 @@
 
 static struct
 {
-    ENetHost *server;
-    ENetHost *client;
-    ENetPeer *peer;
+    struct
+    {
+        ENetHost *host;
+    } server;
+
+    struct
+    {
+        ENetHost *host;
+        ENetPeer *peer;
+    } client;
 } g_Net;
 
 void InitNet(void)
@@ -21,7 +28,7 @@ void InitNet(void)
 
 void InitServer(u16 port)
 {
-    if (g_Net.server)
+    if (g_Net.server.host)
     {
         return;
     }
@@ -30,10 +37,18 @@ void InitServer(u16 port)
     address.host = ENET_HOST_ANY;
     address.port = port;
 
-    // 32 connections, 2 channels, 0 and 1
-    g_Net.server = enet_host_create(&address, 32, 2, 0, 0);
+    enum
+    {
+        NUM_CLIENTS = 32,
+        NUM_CHANNELS = 2,
+        DOWNSTREAM_BANDWIDTH = 0,
+        UPSTREAM_BANDWIDTH = 0,
+    };
 
-    if (!g_Net.server)
+    g_Net.server.host = enet_host_create(&address, NUM_CLIENTS, NUM_CHANNELS,
+                                         DOWNSTREAM_BANDWIDTH, UPSTREAM_BANDWIDTH);
+
+    if (!g_Net.server.host)
     {
         Fatal("Can't create server host");
     }
@@ -45,19 +60,19 @@ void InitServer(u16 port)
 
 void ServerPollEvents(void)
 {
-    if (!g_Net.server)
+    if (!g_Net.server.host)
     {
         return;
     }
 
     ENetEvent event;
-    while (enet_host_service(g_Net.server, &event, 0) > 0)
+    while (enet_host_service(g_Net.server.host, &event, 0) > 0)
     {
         switch (event.type)
         {
         case ENET_EVENT_TYPE_CONNECT:
-            printf("A new client connected from %x:%u.\n", event.peer->address.host,
-                   event.peer->address.port);
+            printf("[Server] A new client connected from %x:%u.\n",
+                   event.peer->address.host, event.peer->address.port);
             event.peer->data = "Client information";
             break;
         case ENET_EVENT_TYPE_RECEIVE:
@@ -68,7 +83,7 @@ void ServerPollEvents(void)
             enet_peer_send(event.peer, 0, packet);
             break;
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf("%s disconnected.\n", (char *)event.peer->data);
+            printf("[Server] %s disconnected.\n", (char *)event.peer->data);
             event.peer->data = NULL;
         default:
             break;
@@ -78,14 +93,23 @@ void ServerPollEvents(void)
 
 void InitClient(void)
 {
-    if (g_Net.client)
+    if (g_Net.client.host)
     {
         return;
     }
 
-    g_Net.client = enet_host_create(NULL, 1, 2, 0, 0);
+    enum
+    {
+        NUM_PEERS = 1,
+        NUM_CHANNELS = 2,
+        DOWNSTREAM_BANDWIDTH = 0,
+        UPSTREAM_BANDWIDTH = 0,
+    };
 
-    if (!g_Net.client)
+    g_Net.client.host = enet_host_create(NULL, NUM_PEERS, NUM_CHANNELS,
+                                         DOWNSTREAM_BANDWIDTH, UPSTREAM_BANDWIDTH);
+
+    if (!g_Net.client.host)
     {
         Fatal("Can't create client host");
     }
@@ -95,22 +119,22 @@ void InitClient(void)
     }
 }
 
-NetError ClientConnect(const char *host, u16 port)
+NetError ClientConnect(const char *hostAddress, u16 port)
 {
-    if (g_Net.peer)
+    if (g_Net.client.peer)
     {
         return "Already connected to another peer";
     }
 
     ENetAddress address;
-    if (enet_address_set_host(&address, host) != 0)
+    if (enet_address_set_host(&address, hostAddress) != 0)
     {
         return "Could not resolve host";
     }
     address.port = port;
 
-    g_Net.peer = enet_host_connect(g_Net.client, &address, 2, 0);
-    if (!g_Net.peer)
+    g_Net.client.peer = enet_host_connect(g_Net.client.host, &address, 2, 0);
+    if (!g_Net.client.peer)
     {
         return "Could not connect to peer";
     }
@@ -122,7 +146,7 @@ NetError ClientSend(const char *message)
 {
     ENetPacket *packet = enet_packet_create(message, strlen(message) + 1, 0);
 
-    if (enet_peer_send(g_Net.peer, 0, packet) != 0)
+    if (enet_peer_send(g_Net.client.peer, 0, packet) != 0)
     {
         return "Cannot queue the packet to be sent";
     }
@@ -133,12 +157,12 @@ NetError ClientSend(const char *message)
 void ClientPollEvents(void)
 {
     ENetEvent event;
-    while (enet_host_service(g_Net.client, &event, 0) > 0)
+    while (enet_host_service(g_Net.client.host, &event, 0) > 0)
     {
         switch (event.type)
         {
         case ENET_EVENT_TYPE_CONNECT:
-            printf("connected to host %x:%u.\n", event.peer->address.host,
+            printf("[Client] connected to host %x:%u.\n", event.peer->address.host,
                    event.peer->address.port);
             event.peer->data = "Host information";
             break;
@@ -147,7 +171,7 @@ void ClientPollEvents(void)
             enet_packet_destroy(event.packet);
             break;
         case ENET_EVENT_TYPE_DISCONNECT:
-            printf("%s disconnected.\n", (char *)event.peer->data);
+            printf("[Client] %s disconnected.\n", (char *)event.peer->data);
             event.peer->data = NULL;
         default:
             break;

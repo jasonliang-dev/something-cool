@@ -33,7 +33,7 @@ struct TilemapMovement
 };
 
 Tilemap CreateTilemap(const char *jsonFile, Texture atlas);
-void DrawTilemap(const Tilemap *map);
+void DrawTilemap(Tilemap map);
 
 TilemapMovement MoveWithTilemap(const Tilemap *map, v2 pos, v2 vel, v4 rect);
 b32 TilemapVersusV2(const Tilemap *map, v2 pos);

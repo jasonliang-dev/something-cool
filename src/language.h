@@ -16,7 +16,7 @@
 #ifndef NDEBUG
     #if defined(_MSC_VER)
         #define DEBUGGER() __debugbreak()
-    #elif defined(__linux__)
+    #elif defined(__GNUC__)
         #include <signal.h>
         #define DEBUGGER() raise(SIGTRAP)
     #endif

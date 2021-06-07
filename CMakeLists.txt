@@ -12,11 +12,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
-add_subdirectory(third/enet)
-
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(third/enet)
 add_subdirectory(third/glfw)
 
 add_library(cimgui STATIC
@@ -53,6 +53,7 @@ target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
 set(SOURCES
   src/audio.c
+  src/font.c
   src/geometry.c
   src/input.c
   src/memory.c

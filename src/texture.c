@@ -35,7 +35,6 @@ Texture CreateTexture(const char *filePath)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -74,6 +73,5 @@ void DrawTextureRectExt(v2 pos, v4 rect, v2 scale, v4 color)
         (rect.y + rect.w) / atlas.height,
     };
 
-    Quad *quads = AllocateQuads(1);
-    quads[0] = CreateQuad(transform, texCoords, color);
+    *AllocateQuads(1) = CreateQuad(transform, texCoords, color);
 }

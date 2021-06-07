@@ -1,43 +1,48 @@
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#define GLFW_INCLUDE_NONE
-#define WIN32_LEAN_AND_MEAN
-#define _CRT_SECURE_NO_WARNINGS
-#define _WINSOCKAPI_
-
-#define CUTE_TILED_IMPLEMENTATION
-#define GLAD_GL_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define MINIAUDIO_IMPLEMENTATION
-
 #if defined(_MSC_VER)
     #pragma warning(push)
-    #pragma warning(disable : 4100)
-    #pragma warning(disable : 4214)
-    #pragma warning(disable : 4244)
-    #pragma warning(disable : 4245)
-
-    #include <windows.h>
-#elif defined(__linux__)
+    #pragma warning(disable : 4100) // unreferenced formal parameter
+    #pragma warning(disable : 4214) // bit field types other than int
+    #pragma warning(disable : 4244) // narrowing conversion, possible loss of data
+    #pragma warning(disable : 4245) // signed/unsigned mismatch
+    #pragma warning(disable : 4996) // deprecated api
+#elif defined(__GNUC__)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-#include <GLFW/glfw3.h>
+// ws2 complains about macro redefinitions
+// include windows.h to fix this
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
+
+#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 #include <cimgui.h>
 #include <cimgui/generator/output/cimgui_impl.h>
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+#define CUTE_TILED_IMPLEMENTATION
 #include <cute_tiled.h>
+#define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
-#include <miniaudio.h>
+#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_TRUETYPE_IMPLEMENTATION
+#include <stb_truetype.h>
+#define MINIAUDIO_IMPLEMENTATION
+#include <miniaudio.h>
+#undef STB_VORBIS_HEADER_ONLY
 #include <stb_vorbis.c>
 
 #if defined(_MSC_VER)
     #pragma warning(pop)
-#elif defined(__linux__)
+#elif defined(__GNUC__)
     #pragma GCC diagnostic pop
 #endif
 
 #include "audio.h"
+#include "font.h"
 #include "input.h"
 #include "language.h"
 #include "memory.h"
@@ -138,6 +143,7 @@ static Application InitApplication(void)
 
 static void RunApplication(Application app)
 {
+    Font font = CreateFontFace("data/Kenney Mini Square.ttf", 32.0f);
     Texture atlas = CreateTexture("data/atlas.png");
     Tilemap map = CreateTilemap("data/test.json", atlas);
     Player player = CreatePlayer(v2(50, 50));
@@ -222,9 +228,13 @@ static void RunApplication(Application app)
         m4 view = M4Scale(m4(1), v3(3, 3, 1));
 
         BeginDraw(atlas, M4xM4(projection, view));
-        DrawTilemap(&map);
+        DrawTilemap(map);
         DrawSpriteAnimation(&ani, v2(100, 100));
         DrawPlayer(&player);
+        EndDraw();
+
+        BeginDraw(font.texture, projection);
+        DrawFont("Hello World", font, v2(50, 50), v4(1, 1, 1, 1));
         EndDraw();
 
         igRender();

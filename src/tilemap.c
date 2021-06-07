@@ -126,14 +126,14 @@ Tilemap CreateTilemap(const char *jsonFile, Texture atlas)
     return result;
 }
 
-void DrawTilemap(const Tilemap *map)
+void DrawTilemap(Tilemap map)
 {
-    assert(g_Renderer.currentAtlas.id == map->atlas.id);
+    assert(g_Renderer.currentAtlas.id == map.atlas.id);
 
-    for (u32 i = 0; i < ArrayCount(map->layers); ++i)
+    for (u32 i = 0; i < ArrayCount(map.layers); ++i)
     {
-        Quad *quads = AllocateQuads(map->layers[i].quadCount);
-        memcpy(quads, map->layers[i].quads, sizeof(Quad) * map->layers[i].quadCount);
+        memcpy(AllocateQuads(map.layers[i].quadCount), map.layers[i].quads,
+               sizeof(Quad) * map.layers[i].quadCount);
     }
 }
 
@@ -144,7 +144,7 @@ TilemapMovement MoveWithTilemap(const Tilemap *map, v2 pos, v2 vel, v4 rect)
         SUB_STEP = 8,
     };
 
-    const v2 subVel = v2(vel.x / SUB_STEP, vel.y / SUB_STEP);
+    v2 subVel = v2(vel.x / SUB_STEP, vel.y / SUB_STEP);
 
     v2 oldPosition;
     for (i32 i = 0; i < SUB_STEP; ++i)
