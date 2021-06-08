@@ -26,13 +26,6 @@ struct UpdateContext
     f32 deltaTime;
 };
 
-typedef struct StateVTable StateVTable;
-struct StateVTable
-{
-    void (*EnterState)(Player *player);
-    i32 (*Update)(UpdateContext context);
-};
-
 static void EnterIdle(Player *player)
 {
     player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
@@ -41,12 +34,21 @@ static void EnterIdle(Player *player)
 
 static i32 UpdateIdle(UpdateContext context)
 {
-    (void)context;
+    Player *player = context.player;
 
-    if (KeyDown(GLFW_KEY_D) || KeyDown(GLFW_KEY_A) || KeyDown(GLFW_KEY_S) ||
-        KeyDown(GLFW_KEY_W))
+    player->vel.x = (f32)KeyDown(GLFW_KEY_D) - KeyDown(GLFW_KEY_A);
+    player->vel.y = (f32)KeyDown(GLFW_KEY_S) - KeyDown(GLFW_KEY_W);
+    player->vel = V2Normalize(player->vel);
+
+    if (player->vel.x != 0.0f || player->vel.y != 0.0f)
     {
         return PLAYER_RUN;
+    }
+
+    if (KeyPressed(GLFW_KEY_SPACE))
+    {
+        player->vel = v2((player->flags & PLAYER_FACING_LEFT) ? -1.0f : 1.0f, 0);
+        return PLAYER_DASH;
     }
 
     return PLAYER_IDLE;
@@ -100,6 +102,8 @@ static i32 UpdateRun(UpdateContext context)
 
 static void EnterDash(Player *player)
 {
+    player->vel = V2Normalize(player->vel);
+
     player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
     player->animation.msPerFrame = 50;
     player->moveSpeed = 300;
@@ -147,6 +151,13 @@ static i32 UpdateDash(UpdateContext context)
     return PLAYER_DASH;
 }
 
+typedef struct StateVTable StateVTable;
+struct StateVTable
+{
+    void (*EnterState)(Player *player);
+    i32 (*Update)(UpdateContext context);
+};
+
 static StateVTable g_States[PLAYER_STATE_MAX] = {
     [PLAYER_IDLE] = {EnterIdle, UpdateIdle},
     [PLAYER_RUN] = {EnterRun, UpdateRun},
@@ -155,22 +166,21 @@ static StateVTable g_States[PLAYER_STATE_MAX] = {
 
 Player CreatePlayer(v2 pos)
 {
-    Player player;
+    Player player = {
+        .flags = 0,
+        .state = PLAYER_IDLE,
+        .pos = pos,
+        .vel = v2(0, 0),
+        .moveSpeed = 0,
+        .dashTime = 0.0f,
+    };
 
-    player.flags = 0;
-    player.state = PLAYER_IDLE;
-    player.pos = pos;
-    player.vel = v2(0, 0);
-    player.moveSpeed = 0;
-    player.dashTime = 0.0f;
     memset(player.ghosts, 0, sizeof(player.ghosts));
 
     g_States[player.state].EnterState(&player);
 
-    player.rect.x = -player.animation.rect.z / 2;
-    player.rect.y = player.animation.rect.w * 0.4f;
-    player.rect.z = player.animation.rect.z;
-    player.rect.w = player.animation.rect.w * 0.2f;
+    player.rect = v4(-player.animation.rect.z / 2, player.animation.rect.w * 0.4f,
+                     player.animation.rect.z, player.animation.rect.w * 0.2f);
 
     return player;
 }

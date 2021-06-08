@@ -82,6 +82,11 @@ void TestDrawScene(m4 projection)
     EndDraw();
 
     BeginDraw(font.texture, projection);
+
+    m4 transform =
+        M4Scale(m4(1), v3((f32)font.texture.width, (f32)font.texture.height, 1));
+    *AllocateQuads(1) = CreateQuad(transform, v4(0, 0, 1, 1), v4(1, 0, 0, 1));
+
     DrawFont("Hello World", font, v2(50, 50), v4(1, 1, 1, 1));
     EndDraw();
 }

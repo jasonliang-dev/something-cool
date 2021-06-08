@@ -8,24 +8,22 @@ Renderer g_Renderer;
 
 Quad CreateQuad(m4 transform, v4 texCoords, v4 color)
 {
-    Quad result;
+    return (Quad){
+        .vertices[0].a_Position = M4xV4(transform, v4(0.0f, 1.0f, 0.0f, 1.0f)).xyz,
+        .vertices[1].a_Position = M4xV4(transform, v4(1.0f, 0.0f, 0.0f, 1.0f)).xyz,
+        .vertices[2].a_Position = M4xV4(transform, v4(0.0f, 0.0f, 0.0f, 1.0f)).xyz,
+        .vertices[3].a_Position = M4xV4(transform, v4(1.0f, 1.0f, 0.0f, 1.0f)).xyz,
 
-    result.vertices[0].a_Position = M4xV4(transform, v4(0.0f, 1.0f, 0.0f, 1.0f)).xyz;
-    result.vertices[1].a_Position = M4xV4(transform, v4(1.0f, 0.0f, 0.0f, 1.0f)).xyz;
-    result.vertices[2].a_Position = M4xV4(transform, v4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
-    result.vertices[3].a_Position = M4xV4(transform, v4(1.0f, 1.0f, 0.0f, 1.0f)).xyz;
+        .vertices[0].a_TexCoord = v2(texCoords.x, texCoords.w),
+        .vertices[1].a_TexCoord = v2(texCoords.z, texCoords.y),
+        .vertices[2].a_TexCoord = v2(texCoords.x, texCoords.y),
+        .vertices[3].a_TexCoord = v2(texCoords.z, texCoords.w),
 
-    result.vertices[0].a_TexCoord = v2(texCoords.x, texCoords.w);
-    result.vertices[1].a_TexCoord = v2(texCoords.z, texCoords.y);
-    result.vertices[2].a_TexCoord = v2(texCoords.x, texCoords.y);
-    result.vertices[3].a_TexCoord = v2(texCoords.z, texCoords.w);
-
-    result.vertices[0].a_Color = color;
-    result.vertices[1].a_Color = color;
-    result.vertices[2].a_Color = color;
-    result.vertices[3].a_Color = color;
-
-    return result;
+        .vertices[0].a_Color = color,
+        .vertices[1].a_Color = color,
+        .vertices[2].a_Color = color,
+        .vertices[3].a_Color = color,
+    };
 }
 
 static GLuint CompileGLSL(GLuint type, const char *source)

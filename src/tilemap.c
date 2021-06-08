@@ -77,8 +77,6 @@ TilemapLayer InitializeTiles(Tilemap *out, cute_tiled_layer_t *layer, i32 firstg
 
 Tilemap CreateTilemap(const char *jsonFile, Texture atlas)
 {
-    Tilemap result;
-
     cute_tiled_map_t *map = cute_tiled_load_map_from_file(jsonFile, NULL);
 
     if (!map)
@@ -86,17 +84,19 @@ Tilemap CreateTilemap(const char *jsonFile, Texture atlas)
         Fatal("Could not load tilemap: %s", cute_tiled_error_reason);
     }
 
-    result.atlas = atlas;
-
     // should only have one tileset
     assert(map->tilesets);
     assert(map->tilesets->next == NULL);
 
-    result.width = map->width;
-    result.height = map->height;
+    Tilemap result = {
+        .atlas = atlas,
 
-    result.tileWidth = map->tilewidth;
-    result.tileHeight = map->tileheight;
+        .width = map->width,
+        .height = map->height,
+
+        .tileWidth = map->tilewidth,
+        .tileHeight = map->tileheight,
+    };
 
     i32 i = 0;
     for (cute_tiled_layer_t *layer = map->layers; layer; layer = layer->next)

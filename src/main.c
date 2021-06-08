@@ -9,8 +9,8 @@
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-// complaints about macro redefinitions
-// include windows.h to fix this
+// complaints about macro redefinitions because of enet and glfw
+// include windows.h beforehand to fix this
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
@@ -27,6 +27,8 @@
 #include <glad/gl.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#define STB_RECT_PACK_IMPLEMENTATION
+#include <stb_rect_pack.h>
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
 #define STB_VORBIS_HEADER_ONLY

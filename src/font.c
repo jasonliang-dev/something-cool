@@ -1,15 +1,10 @@
 #include "font.h"
 #include "memory.h"
 #include "renderer.h"
+#include <string.h>
 
 Font CreateFontFace(const char *file, f32 height)
 {
-    enum
-    {
-        BITMAP_WIDTH = 512,
-        BITMAP_HEIGHT = 512,
-    };
-
     FILE *handle = fopen(file, "rb");
     if (!handle)
     {
@@ -24,14 +19,39 @@ Font CreateFontFace(const char *file, f32 height)
     fread(ttf, 1, fileSize, handle);
     fclose(handle);
 
-    Font result;
-    result.height = height;
-    result.texture.width = BITMAP_WIDTH;
-    result.texture.height = BITMAP_HEIGHT;
+    enum
+    {
+        BITMAP_WIDTH = 512,
+        BITMAP_HEIGHT = 512,
+
+        STRIDE = 0,
+        PADDING = 2,
+        H_OVERSAMPLE = 1,
+        V_OVERSAMPLE = 1,
+    };
+
+    Font result = {
+        .height = height,
+        .texture.width = BITMAP_WIDTH,
+        .texture.height = BITMAP_HEIGHT,
+    };
 
     u8 *bitmap = ScratchAlloc(BITMAP_WIDTH * BITMAP_HEIGHT);
-    stbtt_BakeFontBitmap(ttf, 0, height, bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, ' ',
-                         ArrayCount(result.characters), result.characters);
+
+    stbtt_pack_context spc;
+    stbtt_PackBegin(&spc, bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, STRIDE, PADDING, NULL);
+    stbtt_PackSetOversampling(&spc, H_OVERSAMPLE, V_OVERSAMPLE);
+
+    stbtt_pack_range range = {
+        .font_size = result.height,
+        .first_unicode_codepoint_in_range = FONT_FIRST_CHARACTER,
+        .array_of_unicode_codepoints = NULL,
+        .num_chars = FONT_CHARACTER_COUNT,
+    };
+    range.chardata_for_range = result.characters,
+    stbtt_PackFontRanges(&spc, ttf, 0, &range, 1);
+
+    stbtt_PackEnd(&spc);
 
     u8 *rgba = ScratchAlloc(BITMAP_WIDTH * BITMAP_HEIGHT * 4);
     for (i32 i = 0; i < BITMAP_WIDTH * BITMAP_HEIGHT; ++i)
@@ -65,12 +85,13 @@ void DrawFont(const char *text, Font font, v2 pos, v4 color)
     {
         enum
         {
-            IS_OPENGL = 1,
+            ALIGN_TO_INT = false,
         };
 
         stbtt_aligned_quad quad;
-        stbtt_GetBakedQuad(font.characters, font.texture.width, font.texture.height,
-                           *text - ' ', &pos.x, &pos.y, &quad, IS_OPENGL);
+        stbtt_GetPackedQuad(font.characters, font.texture.width, font.texture.height,
+                            *text - FONT_FIRST_CHARACTER, &pos.x, &pos.y, &quad,
+                            ALIGN_TO_INT);
 
         v4 rect = v4(quad.x0, quad.y0, quad.x1 - quad.x0, quad.y1 - quad.y0);
         m4 transform = M4Translate(m4(1), v3(rect.x, rect.y + font.height, 0.0f));
