@@ -18,21 +18,30 @@ enum
     PLAYER_FACING_LEFT = 1 << 0,
 };
 
+typedef struct UpdateContext UpdateContext;
+struct UpdateContext
+{
+    Player *player;
+    const Tilemap *map;
+    f32 deltaTime;
+};
+
+typedef struct StateVTable StateVTable;
+struct StateVTable
+{
+    void (*EnterState)(Player *player);
+    i32 (*Update)(UpdateContext context);
+};
+
 static void EnterIdle(Player *player)
 {
     player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
     player->animation.msPerFrame = 150;
-    player->rect.x = -player->animation.rect.z / 2;
-    player->rect.y = player->animation.rect.w * 0.4f;
-    player->rect.z = player->animation.rect.z;
-    player->rect.w = player->animation.rect.w * 0.2f;
 }
 
-static i32 UpdateIdle(Player *player, const Tilemap *map, f32 deltaTime)
+static i32 UpdateIdle(UpdateContext context)
 {
-    (void)player;
-    (void)map;
-    (void)deltaTime;
+    (void)context;
 
     if (KeyDown(GLFW_KEY_D) || KeyDown(GLFW_KEY_A) || KeyDown(GLFW_KEY_S) ||
         KeyDown(GLFW_KEY_W))
@@ -49,8 +58,11 @@ static void EnterRun(Player *player)
     player->moveSpeed = 80;
 }
 
-static i32 UpdateRun(Player *player, const Tilemap *map, f32 deltaTime)
+static i32 UpdateRun(UpdateContext context)
 {
+    Player *player = context.player;
+    f32 deltaTime = context.deltaTime;
+
     player->vel.x = (f32)KeyDown(GLFW_KEY_D) - KeyDown(GLFW_KEY_A);
     player->vel.y = (f32)KeyDown(GLFW_KEY_S) - KeyDown(GLFW_KEY_W);
     player->vel = V2Normalize(player->vel);
@@ -75,7 +87,7 @@ static i32 UpdateRun(Player *player, const Tilemap *map, f32 deltaTime)
     }
 
     TilemapMovement movement =
-        MoveWithTilemap(map, player->pos,
+        MoveWithTilemap(context.map, player->pos,
                         v2(player->vel.x * player->moveSpeed * deltaTime,
                            player->vel.y * player->moveSpeed * deltaTime),
                         player->rect);
@@ -91,12 +103,15 @@ static void EnterDash(Player *player)
     player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
     player->animation.msPerFrame = 50;
     player->moveSpeed = 300;
-    player->dashTime = 0.2f;
+    player->dashTime = 0.15f;
     player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;
 }
 
-static i32 UpdateDash(Player *player, const Tilemap *map, f32 deltaTime)
+static i32 UpdateDash(UpdateContext context)
 {
+    Player *player = context.player;
+    f32 deltaTime = context.deltaTime;
+
     player->dashTime -= deltaTime;
 
     if (player->dashTime <= 0.0f)
@@ -122,7 +137,7 @@ static i32 UpdateDash(Player *player, const Tilemap *map, f32 deltaTime)
     }
 
     TilemapMovement movement =
-        MoveWithTilemap(map, player->pos,
+        MoveWithTilemap(context.map, player->pos,
                         v2(player->vel.x * player->moveSpeed * deltaTime,
                            player->vel.y * player->moveSpeed * deltaTime),
                         player->rect);
@@ -132,17 +147,10 @@ static i32 UpdateDash(Player *player, const Tilemap *map, f32 deltaTime)
     return PLAYER_DASH;
 }
 
-static void (*EnterState[PLAYER_STATE_MAX])(Player *player) = {
-    [PLAYER_IDLE] = EnterIdle,
-    [PLAYER_RUN] = EnterRun,
-    [PLAYER_DASH] = EnterDash,
-};
-
-static i32 (*Update[PLAYER_STATE_MAX])(Player *player, const Tilemap *map,
-                                       f32 deltaTime) = {
-    [PLAYER_IDLE] = UpdateIdle,
-    [PLAYER_RUN] = UpdateRun,
-    [PLAYER_DASH] = UpdateDash,
+static StateVTable g_States[PLAYER_STATE_MAX] = {
+    [PLAYER_IDLE] = {EnterIdle, UpdateIdle},
+    [PLAYER_RUN] = {EnterRun, UpdateRun},
+    [PLAYER_DASH] = {EnterDash, UpdateDash},
 };
 
 Player CreatePlayer(v2 pos)
@@ -157,7 +165,12 @@ Player CreatePlayer(v2 pos)
     player.dashTime = 0.0f;
     memset(player.ghosts, 0, sizeof(player.ghosts));
 
-    EnterState[player.state](&player);
+    g_States[player.state].EnterState(&player);
+
+    player.rect.x = -player.animation.rect.z / 2;
+    player.rect.y = player.animation.rect.w * 0.4f;
+    player.rect.z = player.animation.rect.z;
+    player.rect.w = player.animation.rect.w * 0.2f;
 
     return player;
 }
@@ -169,11 +182,16 @@ void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime)
         player->ghosts[i].lifeTime -= deltaTime;
     }
 
-    i32 nextState = Update[player->state](player, map, deltaTime);
+    UpdateContext context;
+    context.player = player;
+    context.map = map;
+    context.deltaTime = deltaTime;
+
+    i32 nextState = g_States[player->state].Update(context);
     if (nextState != player->state)
     {
         player->state = nextState;
-        EnterState[player->state](player);
+        g_States[player->state].EnterState(player);
     }
 
     UpdateSpriteAnimation(&player->animation, deltaTime);

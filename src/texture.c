@@ -25,9 +25,8 @@ Texture CreateTexture(const char *filePath)
     case 4:
         format = GL_RGBA;
         break;
-    default: {
+    default:
         Fatal("Can't handle image with %d channels", channels);
-    }
     }
 
     glGenTextures(1, &result.id);

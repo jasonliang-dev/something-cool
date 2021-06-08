@@ -110,6 +110,87 @@ static GLuint CreateShaderProgram(const char *vert, const char *frag)
     return program;
 }
 
+typedef struct VertexBufferObjects VertexBufferObjects;
+struct VertexBufferObjects
+{
+    GLuint vao;
+    GLuint vbo;
+    GLuint ebo;
+};
+
+static VertexBufferObjects CreateDynamicVertexBuffer(void)
+{
+    VertexBufferObjects result;
+
+    glGenVertexArrays(1, &result.vao);
+    glBindVertexArray(result.vao);
+
+    glGenBuffers(1, &result.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, result.vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * RENDERER_MAX_QUADS * 4, NULL,
+                 GL_DYNAMIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                          (void *)offsetof(Vertex, a_Position));
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                          (void *)offsetof(Vertex, a_TexCoord));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                          (void *)offsetof(Vertex, a_Color));
+
+    u32 indices[RENDERER_MAX_QUADS * 6];
+    for (i32 i = 0, stride = 0; i < RENDERER_MAX_QUADS * 6; i += 6, stride += 4)
+    {
+        indices[i + 0] = stride + 0; // 0, 1
+        indices[i + 1] = stride + 1; // 1, 0
+        indices[i + 2] = stride + 2; // 0, 0
+
+        indices[i + 3] = stride + 0; // 0, 1
+        indices[i + 4] = stride + 3; // 1, 1
+        indices[i + 5] = stride + 1; // 1, 0
+    }
+
+    glGenBuffers(1, &result.ebo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, result.ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, RENDERER_MAX_QUADS * 6 * sizeof(u32), indices,
+                 GL_STATIC_DRAW);
+
+    return result;
+}
+
+static Texture CreateWhiteTexture(void)
+{
+    enum
+    {
+        WIDTH = 1,
+        HEIGHT = 1,
+    };
+
+    Texture result;
+    result.width = WIDTH;
+    result.height = HEIGHT;
+
+    u8 rgba[4 * WIDTH * HEIGHT];
+    memset(rgba, 255, sizeof(rgba));
+
+    glGenTextures(1, &result.id);
+    glBindTexture(GL_TEXTURE_2D, result.id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, rgba);
+
+    return result;
+}
+
 void InitRenderer(void)
 {
     const char *vert = "                                 \n\
@@ -146,42 +227,12 @@ void InitRenderer(void)
 
     g_Renderer.program = CreateShaderProgram(vert, frag);
 
-    glGenVertexArrays(1, &g_Renderer.vao);
-    glBindVertexArray(g_Renderer.vao);
+    VertexBufferObjects bufferObjects = CreateDynamicVertexBuffer();
+    g_Renderer.vao = bufferObjects.vao;
+    g_Renderer.vbo = bufferObjects.vbo;
+    g_Renderer.ebo = bufferObjects.ebo;
 
-    glGenBuffers(1, &g_Renderer.vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, g_Renderer.vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * RENDERER_MAX_QUADS * 4, NULL,
-                 GL_DYNAMIC_DRAW);
-
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, a_Position));
-
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, a_TexCoord));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                          (void *)offsetof(Vertex, a_Color));
-
-    u32 indices[RENDERER_MAX_QUADS * 6];
-    for (i32 i = 0, stride = 0; i < RENDERER_MAX_QUADS * 6; i += 6, stride += 4)
-    {
-        indices[i + 0] = stride + 0; // 0, 1
-        indices[i + 1] = stride + 1; // 1, 0
-        indices[i + 2] = stride + 2; // 0, 0
-
-        indices[i + 3] = stride + 0; // 0, 1
-        indices[i + 4] = stride + 3; // 1, 1
-        indices[i + 5] = stride + 1; // 1, 0
-    }
-
-    glGenBuffers(1, &g_Renderer.ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_Renderer.ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, RENDERER_MAX_QUADS * 6 * sizeof(u32), indices,
-                 GL_STATIC_DRAW);
+    g_Renderer.whiteTexture = CreateWhiteTexture();
 
     memset(g_Renderer.quads, 0, sizeof(g_Renderer.quads));
 

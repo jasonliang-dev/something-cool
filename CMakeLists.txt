@@ -60,6 +60,9 @@ set(SOURCES
   src/net.c
   src/player.c
   src/renderer.c
+  src/scene_main_menu.c
+  src/scene_test.c
+  src/scenes.c
   src/sprite_animation.c
   src/texture.c
   src/tilemap.c
@@ -78,10 +81,11 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # 4505: unreferenced local function has been removed
 # 4201: nameless struct/union
+# 4214: bit field types other than int
 target_compile_options(${PROJECT_NAME} PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:
     /W4 /WX /Wv:18
-    /wd4505 /wd4201
+    /wd4505 /wd4201 /wd4214
   >
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
     -Wall -Wextra -Werror -pedantic

@@ -39,6 +39,7 @@ struct Renderer
     Quad quads[RENDERER_MAX_QUADS];
     i32 quadCount;
 
+    Texture whiteTexture;
     Texture currentAtlas;
 };
 

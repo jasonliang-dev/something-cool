@@ -2,6 +2,11 @@
 
 #define GLFW_INCLUDE_NONE
 
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+#endif
+
 #include "language.h"
 #include <GLFW/glfw3.h>
 

@@ -1,7 +1,6 @@
 #if defined(_MSC_VER)
     #pragma warning(push)
     #pragma warning(disable : 4100) // unreferenced formal parameter
-    #pragma warning(disable : 4214) // bit field types other than int
     #pragma warning(disable : 4244) // narrowing conversion, possible loss of data
     #pragma warning(disable : 4245) // signed/unsigned mismatch
     #pragma warning(disable : 4996) // deprecated api
@@ -10,7 +9,7 @@
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-// ws2 complains about macro redefinitions
+// complaints about macro redefinitions
 // include windows.h to fix this
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -30,6 +29,8 @@
 #include <stb_image.h>
 #define STB_TRUETYPE_IMPLEMENTATION
 #include <stb_truetype.h>
+#define STB_VORBIS_HEADER_ONLY
+#include <stb_vorbis.c>
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 #undef STB_VORBIS_HEADER_ONLY
@@ -42,36 +43,21 @@
 #endif
 
 #include "audio.h"
-#include "font.h"
 #include "input.h"
-#include "language.h"
 #include "memory.h"
 #include "net.h"
 #include "opengl_debug.h"
 #include "os.h"
-#include "player.h"
 #include "renderer.h"
-#include "sprite_animation.h"
-#include "texture.h"
-#include "tilemap.h"
-
-typedef struct Application Application;
-struct Application
-{
-    GLFWwindow *window;
-    ImGuiContext *guiCTX;
-    ImGuiIO *guiIO;
-};
+#include "scenes.h"
 
 static void ErrorCallback(int code, const char *msg)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", code, msg);
 }
 
-static Application InitApplication(void)
+static GLFWwindow *InitWindow(void)
 {
-    Application app = {0};
-
     glfwSetErrorCallback(ErrorCallback);
     if (!glfwInit())
     {
@@ -93,16 +79,16 @@ static Application InitApplication(void)
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-    app.window = glfwCreateWindow(1366, 768, "This is a title", NULL, NULL);
-    if (!app.window)
+    GLFWwindow *window = glfwCreateWindow(1366, 768, "This is a title", NULL, NULL);
+    if (!window)
     {
         Fatal("Cannot create window");
     }
 
     printf("Created window\n");
 
-    glfwSetKeyCallback(app.window, InputKeyCallback);
-    glfwMakeContextCurrent(app.window);
+    glfwSetKeyCallback(window, InputKeyCallback);
+    glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // vsync
 
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
@@ -128,32 +114,23 @@ static Application InitApplication(void)
     }
 #endif
 
-    app.guiCTX = igCreateContext(NULL);
-    app.guiIO = igGetIO();
-    app.guiIO->ConfigFlags |=
+    igCreateContext(NULL);
+    ImGuiIO *guiIO = igGetIO();
+    guiIO->ConfigFlags |=
         ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
 
     igStyleColorsDark(NULL);
 
-    ImGui_ImplGlfw_InitForOpenGL(app.window, true);
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
-    return app;
+    return window;
 }
 
-static void RunApplication(Application app)
+static void RunApplication(GLFWwindow *window)
 {
-    Font font = CreateFontFace("data/Kenney Mini Square.ttf", 32.0f);
-    Texture atlas = CreateTexture("data/atlas.png");
-    Tilemap map = CreateTilemap("data/test.json", atlas);
-    Player player = CreatePlayer(v2(50, 50));
-    SpriteAnimation ani = CreateSpriteAnimation(BIG_DEMON_IDLE_ANIM);
-    InitClient();
-
-    ScratchReset();
-
     f64 lastTime = glfwGetTime();
-    while (!glfwWindowShouldClose(app.window))
+    while (!glfwWindowShouldClose(window))
     {
         f64 now = glfwGetTime();
         f32 deltaTime = (f32)(now - lastTime);
@@ -163,58 +140,11 @@ static void RunApplication(Application app)
         ImGui_ImplGlfw_NewFrame();
         igNewFrame();
 
-        //
-
-        if (KeyPressed(GLFW_KEY_F4))
-        {
-            ClientSend("packet");
-        }
-
-        UpdatePlayer(&player, &map, deltaTime);
-        UpdateSpriteAnimation(&ani, deltaTime);
-
-        //
-
-        static bool s_Demo = false;
-        static char s_ServerPort[16] = "4242";
-        static char s_RemoteHost[256] = "127.0.0.1";
-        static char s_RemotePort[16] = "4242";
-
-        igBegin("Debug Window", NULL, 0);
-
-        igInputText("Server Port", s_ServerPort, ArrayCount(s_ServerPort),
-                    ImGuiInputTextFlags_CharsDecimal, 0, 0);
-        if (igButton("Create server host", (ImVec2){0, 0}))
-        {
-            InitServer((u16)atoi(s_ServerPort));
-        }
-
-        igInputText("Remote Host", s_RemoteHost, ArrayCount(s_RemoteHost), 0, 0, 0);
-        igInputText("Port", s_RemotePort, ArrayCount(s_RemotePort),
-                    ImGuiInputTextFlags_CharsDecimal, 0, 0);
-        if (igButton("Connect to host", (ImVec2){0, 0}))
-        {
-            NetError err = ClientConnect(s_RemoteHost, (u16)atoi(s_RemotePort));
-            if (err)
-            {
-                fprintf(stderr, "error: %s\n", err);
-            }
-        }
-
-        igCheckbox("Demo Window", &s_Demo);
-        igText("Application average %.4f ms/frame (%.1f FPS)", deltaTime, 1 / deltaTime);
-        igEnd();
-
-        if (s_Demo)
-        {
-            igShowDemoWindow(&s_Demo);
-        }
-
-        //
+        UpdateScene(deltaTime);
 
         i32 windowWidth;
         i32 windowHeight;
-        glfwGetFramebufferSize(app.window, &windowWidth, &windowHeight);
+        glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
         glViewport(0, 0, windowWidth, windowHeight);
 
         glEnable(GL_BLEND);
@@ -225,22 +155,15 @@ static void RunApplication(Application app)
 
         m4 projection =
             M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
-        m4 view = M4Scale(m4(1), v3(3, 3, 1));
 
-        BeginDraw(atlas, M4xM4(projection, view));
-        DrawTilemap(map);
-        DrawSpriteAnimation(&ani, v2(100, 100));
-        DrawPlayer(&player);
-        EndDraw();
-
-        BeginDraw(font.texture, projection);
-        DrawFont("Hello World", font, v2(50, 50), v4(1, 1, 1, 1));
-        EndDraw();
+        DrawScene(projection);
 
         igRender();
         ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 
-        glfwSwapBuffers(app.window);
+        glfwSwapBuffers(window);
+
+        SceneFinishFrame();
 
         UpdateInput();
         glfwPollEvents();
@@ -258,8 +181,11 @@ int main(void)
     InitInput();
     InitAudio();
     InitNet();
-    Application app = InitApplication();
+    GLFWwindow *window = InitWindow();
     InitRenderer();
+    InitScenes(SCENE_MAIN_MENU);
 
-    RunApplication(app);
+    ScratchReset();
+
+    RunApplication(window);
 }

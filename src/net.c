@@ -24,6 +24,31 @@ void InitNet(void)
     }
 
     memset(&g_Net, 0, sizeof(g_Net));
+
+    if (g_Net.client.host)
+    {
+        return;
+    }
+
+    enum
+    {
+        NUM_PEERS = 1,
+        NUM_CHANNELS = 2,
+        DOWNSTREAM_BANDWIDTH = 0,
+        UPSTREAM_BANDWIDTH = 0,
+    };
+
+    g_Net.client.host = enet_host_create(NULL, NUM_PEERS, NUM_CHANNELS,
+                                         DOWNSTREAM_BANDWIDTH, UPSTREAM_BANDWIDTH);
+
+    if (!g_Net.client.host)
+    {
+        Fatal("Can't create client host");
+    }
+    else
+    {
+        printf("Created net client\n");
+    }
 }
 
 void InitServer(u16 port)
@@ -91,34 +116,6 @@ void ServerPollEvents(void)
     }
 }
 
-void InitClient(void)
-{
-    if (g_Net.client.host)
-    {
-        return;
-    }
-
-    enum
-    {
-        NUM_PEERS = 1,
-        NUM_CHANNELS = 2,
-        DOWNSTREAM_BANDWIDTH = 0,
-        UPSTREAM_BANDWIDTH = 0,
-    };
-
-    g_Net.client.host = enet_host_create(NULL, NUM_PEERS, NUM_CHANNELS,
-                                         DOWNSTREAM_BANDWIDTH, UPSTREAM_BANDWIDTH);
-
-    if (!g_Net.client.host)
-    {
-        Fatal("Can't create client host");
-    }
-    else
-    {
-        printf("Created client\n");
-    }
-}
-
 NetError ClientConnect(const char *hostAddress, u16 port)
 {
     if (g_Net.client.peer)
@@ -144,6 +141,11 @@ NetError ClientConnect(const char *hostAddress, u16 port)
 
 NetError ClientSend(const char *message)
 {
+    if (!g_Net.client.peer)
+    {
+        return "Not connected to a peer";
+    }
+
     ENetPacket *packet = enet_packet_create(message, strlen(message) + 1, 0);
 
     if (enet_peer_send(g_Net.client.peer, 0, packet) != 0)
