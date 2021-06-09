@@ -86,6 +86,8 @@ union v4
     f32 elements[4];
 };
 
+b32 RectVersusV2(v4 rect, v2 point);
+
 #define v4(x, y, z, w)                                                                   \
     (v4)                                                                                 \
     {                                                                                    \

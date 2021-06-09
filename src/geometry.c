@@ -12,6 +12,12 @@ v2 V2Normalize(v2 v)
     return (v2){v.x / len, v.y / len};
 }
 
+b32 RectVersusV2(v4 rect, v2 point)
+{
+    return rect.x <= point.x && point.x <= rect.x + rect.z && rect.y <= point.y &&
+           point.y <= rect.y + rect.w;
+}
+
 m4 M4Translate(m4 m, v3 translate)
 {
     m4 result = m;

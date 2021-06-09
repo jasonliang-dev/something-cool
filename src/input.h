@@ -18,6 +18,9 @@ void CursorPositionCallback(GLFWwindow* window, double x, double y);
 void InitInput(void);
 void UpdateInput(void);
 
+i32 *GetKeyStack(i32 *n);
+b32 IsKeyCharacter(i32 key);
+
 b32 KeyPressed(i32 key);
 b32 KeyReleased(i32 key);
 b32 KeyDown(i32 key);

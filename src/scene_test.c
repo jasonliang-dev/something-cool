@@ -1,11 +1,8 @@
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-
 #include "input.h"
 #include "assets.h"
 #include "net.h"
 #include "player.h"
 #include "scenes.h"
-#include <cimgui.h>
 
 static Player player;
 static SpriteAnimation ani;
@@ -35,6 +32,7 @@ i32 TestUpdateScene(f32 deltaTime)
 
     //
 
+    /*
     static bool s_Demo = false;
     static char s_ServerPort[16] = "4242";
     static char s_RemoteHost[256] = "127.0.0.1";
@@ -69,6 +67,7 @@ i32 TestUpdateScene(f32 deltaTime)
     {
         igShowDemoWindow(&s_Demo);
     }
+    */
 
     return scene;
 }

@@ -1,6 +1,7 @@
 #include "font.h"
 #include "memory.h"
 #include "renderer.h"
+#include <stdlib.h>
 #include <string.h>
 
 #define FONT_FIRST_CHARACTER ' '
@@ -26,8 +27,8 @@ Font CreateFontFace(const char *file, f32 height)
         BITMAP_WIDTH = 512,
         BITMAP_HEIGHT = 512,
 
-        STRIDE = 0,
-        PADDING = 2,
+        PACK_STRIDE = 0,
+        PACK_PADDING = 2,
         H_OVERSAMPLE = 1,
         V_OVERSAMPLE = 1,
     };
@@ -41,7 +42,8 @@ Font CreateFontFace(const char *file, f32 height)
     u8 *bitmap = ScratchAlloc(BITMAP_WIDTH * BITMAP_HEIGHT);
 
     stbtt_pack_context spc;
-    stbtt_PackBegin(&spc, bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, STRIDE, PADDING, NULL);
+    stbtt_PackBegin(&spc, bitmap, BITMAP_WIDTH, BITMAP_HEIGHT, PACK_STRIDE, PACK_PADDING,
+                    NULL);
     stbtt_PackSetOversampling(&spc, H_OVERSAMPLE, V_OVERSAMPLE);
 
     stbtt_pack_range range = {
@@ -85,15 +87,9 @@ void DrawFont(const char *text, Font font, v2 pos, v4 color)
 {
     while (*text)
     {
-        enum
-        {
-            ALIGN_TO_INT = false,
-        };
-
         stbtt_aligned_quad quad;
         stbtt_GetPackedQuad(font.characters, font.texture.width, font.texture.height,
-                            *text - FONT_FIRST_CHARACTER, &pos.x, &pos.y, &quad,
-                            ALIGN_TO_INT);
+                            *text - FONT_FIRST_CHARACTER, &pos.x, &pos.y, &quad, 0);
 
         v4 rect = v4(quad.x0, quad.y0, quad.x1 - quad.x0, quad.y1 - quad.y0);
         m4 transform = M4Translate(m4(1), v3(rect.x, rect.y + font.height, 0.0f));
@@ -104,4 +100,18 @@ void DrawFont(const char *text, Font font, v2 pos, v4 color)
         *AllocateQuads(1) = CreateQuad(transform, texCoords, color);
         text++;
     }
+}
+
+f32 CalculateTextWidth(const char *text, Font font)
+{
+    f32 result = 0;
+
+    while (*text)
+    {
+        stbtt_packedchar *packed = font.characters + *text - FONT_FIRST_CHARACTER;
+        result += packed->xadvance;
+        text++;
+    }
+
+    return result;
 }

@@ -4,6 +4,8 @@
     #pragma warning(disable : 4244) // narrowing conversion, possible loss of data
     #pragma warning(disable : 4245) // signed/unsigned mismatch
     #pragma warning(disable : 4996) // deprecated api
+    #pragma warning(disable : 4127) // conditional is constant
+    #pragma warning(disable : 4701) // potentially uninitialized local variable
 #elif defined(__GNUC__)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -16,9 +18,6 @@
     #include <windows.h>
 #endif
 
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-#include <cimgui.h>
-#include <cimgui/generator/output/cimgui_impl.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #define CUTE_TILED_IMPLEMENTATION
@@ -122,16 +121,6 @@ static GLFWwindow *InitWindow(void)
     }
 #endif
 
-    igCreateContext(NULL);
-    ImGuiIO *guiIO = igGetIO();
-    guiIO->ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-
-    igStyleColorsDark(NULL);
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
-
     return window;
 }
 
@@ -143,10 +132,6 @@ static void RunApplication(GLFWwindow *window)
         f64 now = glfwGetTime();
         f32 deltaTime = (f32)(now - lastTime);
         lastTime = now;
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        igNewFrame();
 
         UpdateScene(deltaTime);
 
@@ -165,9 +150,6 @@ static void RunApplication(GLFWwindow *window)
             M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
 
         DrawScene(projection);
-
-        igRender();
-        ImGui_ImplOpenGL3_RenderDrawData(igGetDrawData());
 
         glfwSwapBuffers(window);
 

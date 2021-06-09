@@ -18,3 +18,4 @@ struct Font
 
 Font CreateFontFace(const char *file, f32 height);
 void DrawFont(const char *text, Font font, v2 pos, v4 color);
+f32 CalculateTextWidth(const char *text, Font font);

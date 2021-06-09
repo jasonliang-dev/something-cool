@@ -9,8 +9,8 @@ struct SceneVTable
     void (*Exit)(void);
 };
 
-#define X(en, name)                                                                      \
-    [en] = {                                                                             \
+#define X(index, name)                                                                   \
+    [index] = {                                                                          \
         .Enter = name##EnterScene,                                                       \
         .Update = name##UpdateScene,                                                     \
         .Draw = name##DrawScene,                                                         \

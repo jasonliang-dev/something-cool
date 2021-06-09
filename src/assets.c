@@ -6,7 +6,7 @@ Tilemap map_Test;
 
 void InitPermanentAssets(void)
 {
-    fnt_Primary = CreateFontFace("data/Kenney Mini Square.ttf", 32.0f);
+    fnt_Primary = CreateFontFace("data/Kenney Pixel Square.ttf", 32.0f);
     tex_Atlas = CreateTexture("data/atlas.png");
     map_Test = CreateTilemap("data/test.json", tex_Atlas);
 }

@@ -1,14 +1,26 @@
 #include "input.h"
+#include <assert.h>
 #include <string.h>
+
+#define KEY_STACK_MAX 32
 
 static struct
 {
+    i32 keyStack[KEY_STACK_MAX];
+    i32 keyStackCount;
+
     b8 keysDown[GLFW_KEY_LAST];
     b8 prevKeysDown[GLFW_KEY_LAST];
     b8 mouseButtonsDown[GLFW_MOUSE_BUTTON_LAST];
     b8 prevMouseButtonsDown[GLFW_MOUSE_BUTTON_LAST];
     v2 mousePos;
 } g_Input;
+
+static void AddToKeyStack(int key)
+{
+    assert(g_Input.keyStackCount < KEY_STACK_MAX);
+    g_Input.keyStack[g_Input.keyStackCount++] = key;
+}
 
 void KeyboardCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
@@ -24,12 +36,15 @@ void KeyboardCallback(GLFWwindow *window, int key, int scancode, int action, int
     switch (action)
     {
     case GLFW_PRESS:
+        AddToKeyStack(key);
         g_Input.keysDown[key] = true;
         break;
     case GLFW_RELEASE:
         g_Input.keysDown[key] = false;
         break;
     case GLFW_REPEAT:
+        AddToKeyStack(key);
+        break;
     default:
         break;
     }
@@ -67,9 +82,22 @@ void InitInput(void)
 
 void UpdateInput(void)
 {
+    g_Input.keyStackCount = 0;
+
     memcpy(g_Input.prevKeysDown, g_Input.keysDown, sizeof(g_Input.keysDown));
     memcpy(g_Input.prevMouseButtonsDown, g_Input.mouseButtonsDown,
            sizeof(g_Input.mouseButtonsDown));
+}
+
+i32 *GetKeyStack(i32 *n)
+{
+    *n = g_Input.keyStackCount;
+    return g_Input.keyStack;
+}
+
+b32 IsKeyCharacter(i32 key)
+{
+    return GLFW_KEY_SPACE <= key && key <= GLFW_KEY_GRAVE_ACCENT;
 }
 
 b32 KeyPressed(i32 key)

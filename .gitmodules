@@ -4,6 +4,3 @@
 [submodule "third/enet"]
 	path = third/enet
 	url = https://github.com/lsalzman/enet.git
-[submodule "third/cimgui"]
-	path = third/cimgui
-	url = https://github.com/cimgui/cimgui.git

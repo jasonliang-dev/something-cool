@@ -19,37 +19,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(third/enet)
 add_subdirectory(third/glfw)
 
-add_library(cimgui STATIC
-  third/cimgui/cimgui.cpp
-  third/cimgui/imgui/imgui.cpp
-  third/cimgui/imgui/imgui_demo.cpp
-  third/cimgui/imgui/imgui_draw.cpp
-  third/cimgui/imgui/imgui_tables.cpp
-  third/cimgui/imgui/imgui_widgets.cpp
-  third/cimgui/imgui/backends/imgui_impl_glfw.cpp
-  third/cimgui/imgui/backends/imgui_impl_opengl3.cpp
-)
-
 set(IMGUI_LIBRARIES glfw)
-
-target_compile_definitions(cimgui PUBLIC
-  IMGUI_DISABLE_OBSOLETE_FUNCTIONS=1
-  IMGUI_IMPL_OPENGL_LOADER_GLAD2
-)
-if (WIN32)
-  target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t__declspec\(dllexport\))
-  list(APPEND IMGUI_LIBRARIES imm32)
-else()
-  target_compile_definitions(cimgui PUBLIC IMGUI_IMPL_API=extern\t\"C\"\t)
-endif()
-
-target_include_directories(cimgui PUBLIC
-  third/
-  third/cimgui
-  third/cimgui/imgui
-)
-
-target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
 set(SOURCES
   src/assets.c
@@ -61,7 +31,10 @@ set(SOURCES
   src/net.c
   src/player.c
   src/renderer.c
+  src/scene_join_server.c
+  src/scene_lobby.c
   src/scene_main_menu.c
+  src/scene_options.c
   src/scene_setup_port.c
   src/scene_test.c
   src/scenes.c
@@ -102,7 +75,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-  cimgui
   enet
   glfw
   OpenGL::GL

@@ -5,6 +5,9 @@
 #define SCENE_LIST                                                                       \
     X(SCENE_MAIN_MENU, MainMenu)                                                         \
     X(SCENE_SETUP_PORT, SetupPort)                                                       \
+    X(SCENE_JOIN_SERVER, JoinServer)                                                     \
+    X(SCENE_LOBBY, Lobby)                                                                \
+    X(SCENE_OPTIONS, Options)                                                            \
     X(SCENE_TEST, Test)
 
 #define X(en, _) en,
