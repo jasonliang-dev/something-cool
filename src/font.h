@@ -7,7 +7,6 @@
 #include <stb_truetype.h>
 
 #define FONT_CHARACTER_COUNT 96
-#define FONT_FIRST_CHARACTER ' '
 
 typedef struct Font Font;
 struct Font

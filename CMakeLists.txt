@@ -52,6 +52,7 @@ target_include_directories(cimgui PUBLIC
 target_link_libraries(cimgui ${IMGUI_LIBRARIES})
 
 set(SOURCES
+  src/assets.c
   src/audio.c
   src/font.c
   src/geometry.c
@@ -61,11 +62,13 @@ set(SOURCES
   src/player.c
   src/renderer.c
   src/scene_main_menu.c
+  src/scene_setup_port.c
   src/scene_test.c
   src/scenes.c
   src/sprite_animation.c
   src/texture.c
   src/tilemap.c
+  src/ui.c
   src/main.c
 )
 

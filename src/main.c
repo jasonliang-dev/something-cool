@@ -44,6 +44,9 @@
     #pragma GCC diagnostic pop
 #endif
 
+#include <time.h>
+
+#include "assets.h"
 #include "audio.h"
 #include "input.h"
 #include "memory.h"
@@ -52,6 +55,7 @@
 #include "os.h"
 #include "renderer.h"
 #include "scenes.h"
+#include "ui.h"
 
 static void ErrorCallback(int code, const char *msg)
 {
@@ -89,7 +93,9 @@ static GLFWwindow *InitWindow(void)
 
     printf("Created window\n");
 
-    glfwSetKeyCallback(window, InputKeyCallback);
+    glfwSetKeyCallback(window, KeyboardCallback);
+    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    glfwSetCursorPosCallback(window, CursorPositionCallback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // vsync
 
@@ -179,13 +185,17 @@ int main(void)
 {
     printf("OS page size: %d\n", GetSystemPageSize());
 
+    srand((u32)time(NULL));
+
     InitMemoryArenas();
     InitInput();
     InitAudio();
     InitNet();
     GLFWwindow *window = InitWindow();
     InitRenderer();
+    InitPermanentAssets();
     InitScenes(SCENE_MAIN_MENU);
+    InitUI();
 
     ScratchReset();
 

@@ -3,6 +3,8 @@
 #include "renderer.h"
 #include <string.h>
 
+#define FONT_FIRST_CHARACTER ' '
+
 Font CreateFontFace(const char *file, f32 height)
 {
     FILE *handle = fopen(file, "rb");

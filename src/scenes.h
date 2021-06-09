@@ -1,26 +1,30 @@
 #pragma once
 
-#include "language.h"
 #include "geometry.h"
 
+#define SCENE_LIST                                                                       \
+    X(SCENE_MAIN_MENU, MainMenu)                                                         \
+    X(SCENE_SETUP_PORT, SetupPort)                                                       \
+    X(SCENE_TEST, Test)
+
+#define X(en, _) en,
 enum
 {
-    SCENE_MAIN_MENU,
-    SCENE_TEST,
-    SCENE_MAX,
+    SCENE_LIST
 };
+#undef X
 
 void InitScenes(i32 initialScene);
 void UpdateScene(f32 deltaTime);
 void DrawScene(m4 projection);
 void SceneFinishFrame(void);
 
-void MainMenuEnterScene(void);
-i32 MainMenuUpdateScene(f32 deltaTime);
-void MainMenuDrawScene(m4 projection);
-void MainMenuExitScene(void);
+#define X(_, name)                                                                       \
+    void name##EnterScene(void);                                                         \
+    i32 name##UpdateScene(f32 deltaTime);                                                \
+    void name##DrawScene(m4 projection);                                                 \
+    void name##ExitScene(void);
 
-void TestEnterScene(void);
-i32 TestUpdateScene(f32 deltaTime);
-void TestDrawScene(m4 projection);
-void TestExitScene(void);
+SCENE_LIST
+
+#undef X

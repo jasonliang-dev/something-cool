@@ -1,36 +1,36 @@
 #define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
 
-#include "font.h"
 #include "input.h"
+#include "assets.h"
 #include "net.h"
 #include "player.h"
 #include "scenes.h"
-#include "tilemap.h"
 #include <cimgui.h>
 
-static Font font;
-static Texture atlas;
-static Tilemap map;
 static Player player;
 static SpriteAnimation ani;
 
 void TestEnterScene(void)
 {
-    font = CreateFontFace("data/Kenney Mini Square.ttf", 32.0f);
-    atlas = CreateTexture("data/atlas.png");
-    map = CreateTilemap("data/test.json", atlas);
     player = CreatePlayer(v2(50, 50));
     ani = CreateSpriteAnimation(BIG_DEMON_IDLE_ANIM);
 }
 
 i32 TestUpdateScene(f32 deltaTime)
 {
+    i32 scene = SCENE_TEST;
+
+    if (KeyPressed(GLFW_KEY_ESCAPE))
+    {
+        scene = SCENE_MAIN_MENU;
+    }
+
     if (KeyPressed(GLFW_KEY_F4))
     {
         ClientSend("packet");
     }
 
-    UpdatePlayer(&player, &map, deltaTime);
+    UpdatePlayer(&player, &map_Test, deltaTime);
     UpdateSpriteAnimation(&ani, deltaTime);
 
     //
@@ -70,24 +70,24 @@ i32 TestUpdateScene(f32 deltaTime)
         igShowDemoWindow(&s_Demo);
     }
 
-    return SCENE_TEST;
+    return scene;
 }
 
 void TestDrawScene(m4 projection)
 {
-    BeginDraw(atlas, M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
-    DrawTilemap(map);
+    BeginDraw(tex_Atlas, M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
+    DrawTilemap(map_Test);
     DrawSpriteAnimation(&ani, v2(100, 100));
     DrawPlayer(&player);
     EndDraw();
 
-    BeginDraw(font.texture, projection);
+    BeginDraw(fnt_Primary.texture, projection);
 
-    m4 transform =
-        M4Scale(m4(1), v3((f32)font.texture.width, (f32)font.texture.height, 1));
+    m4 transform = M4Scale(
+        m4(1), v3((f32)fnt_Primary.texture.width, (f32)fnt_Primary.texture.height, 1));
     *AllocateQuads(1) = CreateQuad(transform, v4(0, 0, 1, 1), v4(1, 0, 0, 1));
 
-    DrawFont("Hello World", font, v2(50, 50), v4(1, 1, 1, 1));
+    DrawFont("Hello World", fnt_Primary, v2(50, 50), v4(1, 1, 1, 1));
     EndDraw();
 }
 

@@ -9,22 +9,17 @@ struct SceneVTable
     void (*Exit)(void);
 };
 
-static SceneVTable g_SceneVTables[SCENE_MAX] = {
-    [SCENE_MAIN_MENU] =
-        {
-            .Enter = MainMenuEnterScene,
-            .Update = MainMenuUpdateScene,
-            .Draw = MainMenuDrawScene,
-            .Exit = MainMenuExitScene,
-        },
-    [SCENE_TEST] =
-        {
-            .Enter = TestEnterScene,
-            .Update = TestUpdateScene,
-            .Draw = TestDrawScene,
-            .Exit = TestExitScene,
-        },
-};
+#define X(en, name)                                                                      \
+    [en] = {                                                                             \
+        .Enter = name##EnterScene,                                                       \
+        .Update = name##UpdateScene,                                                     \
+        .Draw = name##DrawScene,                                                         \
+        .Exit = name##ExitScene,                                                         \
+    },
+
+static SceneVTable g_SceneVTables[] = {SCENE_LIST};
+
+#undef X
 
 static struct
 {
@@ -35,7 +30,7 @@ static struct
 void InitScenes(i32 initialScene)
 {
     g_Scene.current = initialScene;
-    g_Scene.next = SCENE_MAX;
+    g_Scene.next = initialScene;
 
     g_SceneVTables[g_Scene.current].Enter();
 }

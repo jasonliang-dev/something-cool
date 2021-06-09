@@ -72,6 +72,7 @@ enum
     LIZARD_M_IDLE_ANIM,
     LIZARD_M_RUN_ANIM,
     LIZARD_M_HIT_ANIM,
+    SPRITE_ANIMATION_MAX,
 };
 
 typedef struct SpriteAnimationEntry SpriteAnimationEntry;

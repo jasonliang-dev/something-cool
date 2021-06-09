@@ -1,8 +1,5 @@
-#define CIMGUI_DEFINE_ENUMS_AND_STRUCTS
-
 #include "scenes.h"
-#include "input.h"
-#include <cimgui.h>
+#include "ui.h"
 
 void MainMenuEnterScene(void)
 {
@@ -14,24 +11,50 @@ i32 MainMenuUpdateScene(f32 deltaTime)
 
     i32 scene = SCENE_MAIN_MENU;
 
-    if (KeyPressed(GLFW_KEY_SPACE) || KeyPressed(GLFW_KEY_ENTER))
+    enum
     {
-        scene = SCENE_TEST;
+        PAD_X = 0,
+        GAP_Y = 50,
+    };
+
+    UIBegin();
+
+    f32 y = 0.0f;
+    if (UITextButton(UIID(), "Host", v2(PAD_X, y)))
+    {
+        scene = SCENE_SETUP_PORT;
     }
 
-    igBegin("Main Menu", NULL, 0);
-    if (igButton("Go to test scene", (ImVec2){0, 0}))
+    y += GAP_Y;
+    if (UITextButton(UIID(), "Join", v2(PAD_X, y)))
+    {
+        //
+    }
+
+    y += GAP_Y;
+    if (UITextButton(UIID(), "Options", v2(PAD_X, y)))
+    {
+        //
+    }
+
+    y += GAP_Y;
+    if (UITextButton(UIID(), "Quit", v2(PAD_X, y)))
+    {
+        exit(0);
+    }
+
+    y += GAP_Y;
+    if (UITextButton(UIID(), "Test Scene", v2(PAD_X, y)))
     {
         scene = SCENE_TEST;
     }
-    igEnd();
 
     return scene;
 }
 
 void MainMenuDrawScene(m4 projection)
 {
-    (void)projection;
+    DrawUI(projection);
 }
 
 void MainMenuExitScene(void)
