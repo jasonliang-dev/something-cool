@@ -4,14 +4,12 @@
     #pragma warning(disable : 4244) // narrowing conversion, possible loss of data
     #pragma warning(disable : 4245) // signed/unsigned mismatch
     #pragma warning(disable : 4996) // deprecated api
-    #pragma warning(disable : 4127) // conditional is constant
-    #pragma warning(disable : 4701) // potentially uninitialized local variable
 #elif defined(__GNUC__)
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
-// complaints about macro redefinitions because of enet and glfw
+// complaints about macro redefinitions because of glfw (maybe enet? getting ws2 errors)
 // include windows.h beforehand to fix this
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN

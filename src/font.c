@@ -97,7 +97,7 @@ void DrawFont(const char *text, Font font, v2 pos, v4 color)
 
         v4 texCoords = v4(quad.s0, quad.t0, quad.s1, quad.t1);
 
-        *AllocateQuads(1) = CreateQuad(transform, texCoords, color);
+        DrawQuad(transform, texCoords, font.texture.id, color);
         text++;
     }
 }

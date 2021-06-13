@@ -1,7 +1,10 @@
 #pragma once
 
+#define STB_TEXTEDIT_CHARTYPE char
+
 #include "geometry.h"
 #include "language.h"
+// #include <stb_textedit.h>
 
 typedef u64 UIID;
 
@@ -23,6 +26,18 @@ enum
     UI_INPUT_NUMERIC = 1 << 0,
     UI_INPUT_ALPHA = 1 << 1,
 };
+
+// typedef struct UIText UIText;
+// struct UIText
+// {
+//     char *cstr;
+//     i32 capacity;
+//     Font font;
+// };
+//
+// UIText CreateText(char *str, i32 capacity);
+// i32 TextLength(UIText *text);
+// char TextCharAt(UIText *text, i32 i);
 
 void InitUI(void);
 

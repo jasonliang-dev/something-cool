@@ -1,27 +1,35 @@
 // #define STB_TEXTEDIT_IMPLEMENTATION
 
-//    STB_TEXTEDIT_STRING               the type of object representing a string being edited,
-//                                      typically this is a wrapper object with other data you need
-// #define STB_TEXTEDIT_STRING char *
+//    STB_TEXTEDIT_STRING               the type of object representing a string being
+//    edited,
+//                                      typically this is a wrapper object with other data
+//                                      you need
+// #define STB_TEXTEDIT_STRING UIText
 //    STB_TEXTEDIT_STRINGLEN(obj)       the length of the string (ideally O(1))
-// #define STB_TEXTEDIT_STRINGLEN(obj) strlen(obj)
-//    STB_TEXTEDIT_LAYOUTROW(&r,obj,n)  returns the results of laying out a line of characters
-//                                        starting from character #n (see discussion below)
-// #define STB_TEXTEDIT_LAYOUTROW
-//    STB_TEXTEDIT_GETWIDTH(obj,n,i)    returns the pixel delta from the xpos of the i'th character
-//                                        to the xpos of the i+1'th char for a line of characters
-//                                        starting at character #n (i.e. accounts for kerning
-//                                        with previous char)
+// #define STB_TEXTEDIT_STRINGLEN(obj) TextLength(obj)
+//    STB_TEXTEDIT_LAYOUTROW(&r,obj,n)  returns the results of laying out a line of
+//    characters
+//                                        starting from character #n (see discussion
+//                                        below)
+//    STB_TEXTEDIT_GETWIDTH(obj,n,i)    returns the pixel delta from the xpos of the i'th
+//    character
+//                                        to the xpos of the i+1'th char for a line of
+//                                        characters starting at character #n (i.e.
+//                                        accounts for kerning with previous char)
 //    STB_TEXTEDIT_KEYTOTEXT(k)         maps a keyboard input to an insertable character
-//                                        (return type is int, -1 means not valid to insert)
+//                                        (return type is int, -1 means not valid to
+//                                        insert)
 //    STB_TEXTEDIT_GETCHAR(obj,i)       returns the i'th character of obj, 0-based
 //    STB_TEXTEDIT_NEWLINE              the character returned by _GETCHAR() we recognize
-//                                        as manually wordwrapping for end-of-line positioning
+//                                        as manually wordwrapping for end-of-line
+//                                        positioning
 //
 //    STB_TEXTEDIT_DELETECHARS(obj,i,n)      delete n characters starting at i
-//    STB_TEXTEDIT_INSERTCHARS(obj,i,c*,n)   insert n characters at i (pointed to by STB_TEXTEDIT_CHARTYPE*)
+//    STB_TEXTEDIT_INSERTCHARS(obj,i,c*,n)   insert n characters at i (pointed to by
+//    STB_TEXTEDIT_CHARTYPE*)
 //
-//    STB_TEXTEDIT_K_SHIFT       a power of two that is or'd in to a keyboard input to represent the shift key
+//    STB_TEXTEDIT_K_SHIFT       a power of two that is or'd in to a keyboard input to
+//    represent the shift key
 
 #include "ui.h"
 #include "assets.h"
@@ -172,7 +180,7 @@ void UIPopAutoLayout(void)
 
 void DrawUI(m4 projection)
 {
-    BeginDraw(g_Renderer.whiteTexture, projection);
+    BeginDraw(projection);
     for (i32 i = 0; i < g_UI.elementCount; ++i)
     {
         UIElement *element = g_UI.elements + i;
@@ -187,8 +195,8 @@ void DrawUI(m4 projection)
             m4 transform = M4Translate(m4(1), v3(element->rect.x, element->rect.y, 1));
             transform = M4Scale(transform, v3(element->rect.z, element->rect.w, 1));
 
-            *AllocateQuads(1) =
-                CreateQuad(transform, v4(0, 0, 1, 1), element->background);
+            DrawQuad(transform, v4(0, 0, 1, 1), g_Renderer.whiteTexture.id,
+                     element->background);
         }
 
         if (element->flags & UI_TEXT_CURSOR && element->id == g_UI.active &&
@@ -205,12 +213,14 @@ void DrawUI(m4 projection)
                                       element->rect.y + CURSOR_MARGIN_Y, 0));
             transform =
                 M4Scale(transform, v3(2, element->rect.w - (CURSOR_MARGIN_Y * 2), 1));
-            *AllocateQuads(1) = CreateQuad(transform, v4(0, 0, 1, 1), v4(1, 1, 1, 1));
+
+            DrawQuad(transform, v4(0, 0, 1, 1), g_Renderer.whiteTexture.id,
+                     v4(1, 1, 1, 1));
         }
     }
     EndDraw();
 
-    BeginDraw(fnt_Primary.texture, projection);
+    BeginDraw(projection);
     for (i32 i = 0; i < g_UI.elementCount; ++i)
     {
         UIElement *element = g_UI.elements + i;
@@ -236,7 +246,7 @@ void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
         AllocateUIElement(id,
                           UI_TEXT_VISIBLE | UI_BACKGROUND_VISIBLE | UI_HOT_COLOR |
                               UI_ACTIVE_COLOR | UI_TEXT_CURSOR,
-                          v4(pos.x, pos.y, 300, 48));
+                          v4(pos.x, pos.y, 300, 42));
 
     if (pos.x == 0.0f && pos.y == 0.0f)
     {

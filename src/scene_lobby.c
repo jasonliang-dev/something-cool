@@ -24,7 +24,7 @@ i32 LobbyUpdateScene(f32 deltaTime)
 
 void LobbyDrawScene(m4 projection)
 {
-    BeginDraw(tex_Atlas, M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
+    BeginDraw(M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
     DrawTilemap(map_Test);
     EndDraw();
 }

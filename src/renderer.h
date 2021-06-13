@@ -4,13 +4,15 @@
 #include "texture.h"
 #include <glad/gl.h>
 
-#define RENDERER_MAX_QUADS 20000
+#define RENDERER_MAX_QUADS 8192
+#define RENDERER_MAX_TEXTURE_SLOTS 4
 
 typedef struct Vertex Vertex;
 struct Vertex
 {
     v3 a_Position;
     v2 a_TexCoord;
+    f32 a_TexIndex;
     v4 a_Color;
 };
 
@@ -19,8 +21,6 @@ struct Quad
 {
     Vertex vertices[4];
 };
-
-Quad CreateQuad(m4 transform, v4 texCoords, v4 color);
 
 //
 
@@ -33,20 +33,22 @@ struct Renderer
     GLuint vbo;
     GLuint ebo;
 
-    GLint u_Texture;
+    GLint u_Textures;
     GLint u_MVP;
+
+    Texture whiteTexture;
+
+    GLuint textureSlots[RENDERER_MAX_TEXTURE_SLOTS];
+    i32 textureSlotCount;
 
     Quad quads[RENDERER_MAX_QUADS];
     i32 quadCount;
-
-    Texture whiteTexture;
-    Texture currentAtlas;
 };
 
 extern Renderer g_Renderer;
 
 void InitRenderer(void);
 
-void BeginDraw(Texture atlas, m4 mvp);
+void BeginDraw(m4 mvp);
 void EndDraw(void);
-Quad *AllocateQuads(i32 count);
+void DrawQuad(m4 transform, v4 texCoords, GLuint texId, v4 color);

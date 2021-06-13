@@ -6,9 +6,6 @@ set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
@@ -57,11 +54,10 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # 4505: unreferenced local function has been removed
 # 4201: nameless struct/union
-# 4214: bit field types other than int
 target_compile_options(${PROJECT_NAME} PRIVATE
   $<$<CXX_COMPILER_ID:MSVC>:
     /W4 /WX /Wv:18
-    /wd4505 /wd4201 /wd4214
+    /wd4505 /wd4201
   >
   $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:
     -Wall -Wextra -Werror -pedantic

@@ -13,9 +13,3 @@ struct Texture
 };
 
 Texture CreateTexture(const char *filePath);
-
-// drawn with origin in center
-// because scaling (/shrug)
-void DrawTexture(v2 pos);
-void DrawTextureRect(v2 pos, v4 rect);
-void DrawTextureRectExt(v2 pos, v4 rect, v2 scale, v4 color);

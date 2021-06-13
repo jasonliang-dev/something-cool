@@ -1,4 +1,5 @@
 #include "tilemap.h"
+#include "assets.h"
 #include "memory.h"
 #include <assert.h>
 #include <cute_tiled.h>
@@ -19,9 +20,10 @@ TilemapLayer InitializeTiles(Tilemap *out, cute_tiled_layer_t *layer, i32 firstg
         }
     }
 
-    result.quads = PermanentAlloc(sizeof(Quad) * result.quadCount);
-    Quad *iter = result.quads;
+    result.transforms = PermanentAlloc(sizeof(m4) * result.quadCount);
+    result.texCoords = PermanentAlloc(sizeof(v4) * result.quadCount);
 
+    i32 i = 0;
     for (i32 y = 0; y < out->height; ++y)
     {
         for (i32 x = 0; x < out->width; ++x)
@@ -68,7 +70,9 @@ TilemapLayer InitializeTiles(Tilemap *out, cute_tiled_layer_t *layer, i32 firstg
                 (atlasPos.y + 1.0f) * out->tileHeight / (f32)out->atlas.height,
             };
 
-            *iter++ = CreateQuad(transform, texCoords, v4(1, 1, 1, 1));
+            result.transforms[i] = transform;
+            result.texCoords[i] = texCoords;
+            i++;
         }
     }
 
@@ -128,12 +132,13 @@ Tilemap CreateTilemap(const char *jsonFile, Texture atlas)
 
 void DrawTilemap(Tilemap map)
 {
-    assert(g_Renderer.currentAtlas.id == map.atlas.id);
-
     for (u32 i = 0; i < ArrayCount(map.layers); ++i)
     {
-        memcpy(AllocateQuads(map.layers[i].quadCount), map.layers[i].quads,
-               sizeof(Quad) * map.layers[i].quadCount);
+        for (i32 j = 0; j < map.layers[i].quadCount; ++j)
+        {
+            DrawQuad(map.layers[i].transforms[j], map.layers[i].texCoords[j],
+                     map.atlas.id, v4(1, 1, 1, 1));
+        }
     }
 }
 

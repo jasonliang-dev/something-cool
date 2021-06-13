@@ -45,32 +45,3 @@ Texture CreateTexture(const char *filePath)
 
     return result;
 }
-
-void DrawTexture(v2 pos)
-{
-    Texture atlas = g_Renderer.currentAtlas;
-    DrawTextureRect(pos, v4(0.0f, 0.0f, (f32)atlas.width, (f32)atlas.height));
-}
-
-void DrawTextureRect(v2 pos, v4 rect)
-{
-    DrawTextureRectExt(pos, rect, v2(1, 1), v4(1, 1, 1, 1));
-}
-
-void DrawTextureRectExt(v2 pos, v4 rect, v2 scale, v4 color)
-{
-    Texture atlas = g_Renderer.currentAtlas;
-
-    m4 transform = M4Translate(m4(1), v3(pos.x - (rect.z * scale.x * 0.5f),
-                                         pos.y - (rect.w * scale.y * 0.5f), 0.0f));
-    transform = M4Scale(transform, v3(rect.z * scale.x, rect.w * scale.y, 1.0f));
-
-    v4 texCoords = {
-        rect.x / atlas.width,
-        rect.y / atlas.height,
-        (rect.x + rect.z) / atlas.width,
-        (rect.y + rect.w) / atlas.height,
-    };
-
-    *AllocateQuads(1) = CreateQuad(transform, texCoords, color);
-}

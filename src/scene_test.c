@@ -1,5 +1,5 @@
-#include "input.h"
 #include "assets.h"
+#include "input.h"
 #include "net.h"
 #include "player.h"
 #include "scenes.h"
@@ -74,17 +74,17 @@ i32 TestUpdateScene(f32 deltaTime)
 
 void TestDrawScene(m4 projection)
 {
-    BeginDraw(tex_Atlas, M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
+    BeginDraw(M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
     DrawTilemap(map_Test);
     DrawSpriteAnimation(&ani, v2(100, 100));
     DrawPlayer(&player);
     EndDraw();
 
-    BeginDraw(fnt_Primary.texture, projection);
+    BeginDraw(projection);
 
     m4 transform = M4Scale(
         m4(1), v3((f32)fnt_Primary.texture.width, (f32)fnt_Primary.texture.height, 1));
-    *AllocateQuads(1) = CreateQuad(transform, v4(0, 0, 1, 1), v4(1, 0, 0, 1));
+    DrawQuad(transform, v4(0, 0, 1, 1), fnt_Primary.texture.id, v4(1, 0, 0, 1));
 
     DrawFont("Hello World", fnt_Primary, v2(50, 50), v4(1, 1, 1, 1));
     EndDraw();

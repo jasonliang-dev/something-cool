@@ -1,4 +1,6 @@
 #include "sprite_animation.h"
+#include "assets.h"
+#include "renderer.h"
 #include "texture.h"
 #include <math.h>
 #include <string.h>
@@ -33,11 +35,27 @@ void DrawSpriteAnimation(const SpriteAnimation *animation, v2 pos)
     DrawSpriteAnimationExt(animation, pos, v2(1, 1), v4(1, 1, 1, 1));
 }
 
+static void DrawTextureRectExt(Texture texture, v2 pos, v4 rect, v2 scale, v4 color)
+{
+    m4 transform = M4Translate(m4(1), v3(pos.x - (rect.z * scale.x * 0.5f),
+                                         pos.y - (rect.w * scale.y * 0.5f), 0.0f));
+    transform = M4Scale(transform, v3(rect.z * scale.x, rect.w * scale.y, 1.0f));
+
+    v4 texCoords = {
+        rect.x / texture.width,
+        rect.y / texture.height,
+        (rect.x + rect.z) / texture.width,
+        (rect.y + rect.w) / texture.height,
+    };
+
+    DrawQuad(transform, texCoords, texture.id, color);
+}
+
 void DrawSpriteAnimationExt(const SpriteAnimation *animation, v2 pos, v2 scale, v4 color)
 {
     v4 frameRect = animation->rect;
     i32 frame = (i32)(animation->elapsedTime / animation->msPerFrame);
     frameRect.x += frameRect.z * frame;
 
-    DrawTextureRectExt(pos, frameRect, scale, color);
+    DrawTextureRectExt(tex_Atlas, pos, frameRect, scale, color);
 }

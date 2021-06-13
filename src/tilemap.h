@@ -7,7 +7,8 @@
 typedef struct TilemapLayer TilemapLayer;
 struct TilemapLayer
 {
-    Quad *quads;
+    m4 *transforms;
+    v4 *texCoords;
     i32 quadCount;
 };
 
