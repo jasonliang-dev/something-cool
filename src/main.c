@@ -163,8 +163,6 @@ static void RunApplication(GLFWwindow *window)
 
 int main(void)
 {
-    printf("OS page size: %d\n", GetSystemPageSize());
-
     srand((u32)time(NULL));
 
     InitMemoryArenas();

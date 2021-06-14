@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FONT_FIRST_CHARACTER ' '
-
 Font CreateFontFace(const char *file, f32 height)
 {
     FILE *handle = fopen(file, "rb");
@@ -102,15 +100,14 @@ void DrawFont(const char *text, Font font, v2 pos, v4 color)
     }
 }
 
-f32 CalculateTextWidth(const char *text, Font font)
+f32 CalculateTextWidth(const char *text, i32 n, Font font)
 {
     f32 result = 0;
 
-    while (*text)
+    for (i32 i = 0; i < n; ++i)
     {
-        stbtt_packedchar *packed = font.characters + *text - FONT_FIRST_CHARACTER;
+        stbtt_packedchar *packed = font.characters + text[i] - FONT_FIRST_CHARACTER;
         result += packed->xadvance;
-        text++;
     }
 
     return result;

@@ -36,8 +36,6 @@ struct Renderer
     GLint u_Textures;
     GLint u_MVP;
 
-    Texture whiteTexture;
-
     GLuint textureSlots[RENDERER_MAX_TEXTURE_SLOTS];
     i32 textureSlotCount;
 

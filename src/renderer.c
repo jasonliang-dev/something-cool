@@ -144,35 +144,6 @@ static VertexBufferObjects CreateDynamicVertexBuffer(void)
     return result;
 }
 
-static Texture CreateWhiteTexture(void)
-{
-    enum
-    {
-        WIDTH = 1,
-        HEIGHT = 1,
-    };
-
-    Texture result;
-    result.width = WIDTH;
-    result.height = HEIGHT;
-
-    u8 rgba[4 * WIDTH * HEIGHT];
-    memset(rgba, 255, sizeof(rgba));
-
-    glGenTextures(1, &result.id);
-    glBindTexture(GL_TEXTURE_2D, result.id);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WIDTH, HEIGHT, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, rgba);
-
-    return result;
-}
-
 void InitRenderer(void)
 {
     const char *vert = "                                 \n\
@@ -231,8 +202,6 @@ void InitRenderer(void)
     g_Renderer.vao = bufferObjects.vao;
     g_Renderer.vbo = bufferObjects.vbo;
     g_Renderer.ebo = bufferObjects.ebo;
-
-    g_Renderer.whiteTexture = CreateWhiteTexture();
 
     memset(g_Renderer.textureSlots, 0, sizeof(g_Renderer.textureSlots));
     memset(g_Renderer.quads, 0, sizeof(g_Renderer.quads));

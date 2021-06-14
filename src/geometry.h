@@ -20,8 +20,6 @@ union v2
         x, y                                                                             \
     }
 
-v2 V2Normalize(v2 v);
-
 typedef union v3 v3;
 union v3
 {
@@ -86,8 +84,6 @@ union v4
     f32 elements[4];
 };
 
-b32 RectVersusV2(v4 rect, v2 point);
-
 #define v4(x, y, z, w)                                                                   \
     (v4)                                                                                 \
     {                                                                                    \
@@ -108,6 +104,10 @@ union m4
             {d, 0, 0, 0}, {0, d, 0, 0}, {0, 0, d, 0}, {0, 0, 0, d},                      \
         }                                                                                \
     }
+
+v2 V2Normalize(v2 v);
+
+b32 RectVersusV2(v4 rect, v2 point);
 
 m4 M4Translate(m4 m, v3 translate);
 m4 M4Scale(m4 m, v3 scale);

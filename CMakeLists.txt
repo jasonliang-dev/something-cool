@@ -16,8 +16,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(third/enet)
 add_subdirectory(third/glfw)
 
-set(IMGUI_LIBRARIES glfw)
-
 set(SOURCES
   src/assets.c
   src/audio.c

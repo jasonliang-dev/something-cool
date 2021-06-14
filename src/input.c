@@ -102,6 +102,9 @@ b32 IsKeyCharacter(i32 key)
 
 b32 KeyPressed(i32 key)
 {
+    static_assert(GLFW_KEY_SPACE == ' ' && GLFW_KEY_0 == '0' && GLFW_KEY_A == 'A',
+                  "Expected GLFW keys map to ASCII");
+
     return !g_Input.prevKeysDown[key] && g_Input.keysDown[key];
 }
 

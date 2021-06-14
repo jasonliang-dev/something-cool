@@ -4,6 +4,7 @@
 #include "tilemap.h"
 
 extern Font fnt_Primary;
+extern Texture tex_White;
 extern Texture tex_Atlas;
 extern Tilemap map_Test;
 

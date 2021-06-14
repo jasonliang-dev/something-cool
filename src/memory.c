@@ -74,6 +74,8 @@ void ArenaFree(MemoryArena *a)
 
 void InitMemoryArenas(void)
 {
+    assert(GetSystemPageSize() == Kilobytes(4));
+
     g_Memory.permanent = CreateArena(Gigabytes(4));
     g_Memory.scratch = CreateArena(Gigabytes(4));
 }
