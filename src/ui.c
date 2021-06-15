@@ -2,7 +2,9 @@
 #include "assets.h"
 #include "font.h"
 #include "input.h"
+#include "memory.h"
 #include "renderer.h"
+#include "window.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -342,39 +344,45 @@ void DrawUI(m4 projection)
                 CURSOR_MARGIN_Y = 4,
             };
 
-            m4 transform = M4Translate(
-                m4(1), v3(element->rect.x + CalculateTextWidth(element->text,
-                                                               g_UI.textState.stb.cursor,
-                                                               fnt_Primary),
-                          element->rect.y + CURSOR_MARGIN_Y, 0));
-            transform =
-                M4Scale(transform, v3(2, element->rect.w - (CURSOR_MARGIN_Y * 2), 1));
+            { // selection region
+                i32 min;
+                i32 max;
+                if (g_UI.textState.stb.select_start < g_UI.textState.stb.select_end)
+                {
+                    min = g_UI.textState.stb.select_start;
+                    max = g_UI.textState.stb.select_end;
+                }
+                else
+                {
+                    min = g_UI.textState.stb.select_end;
+                    max = g_UI.textState.stb.select_start;
+                }
 
-            DrawQuad(transform, v4(0, 0, 1, 1), tex_White.id, v4(1, 1, 1, 1));
+                m4 transform = M4Translate(
+                    m4(1), v3(element->rect.x +
+                                  CalculateTextWidth(element->text, min, fnt_Primary),
+                              element->rect.y + CURSOR_MARGIN_Y, 0));
+                transform = M4Scale(
+                    transform,
+                    v3(CalculateTextWidth(element->text + min, max - min, fnt_Primary),
+                       element->rect.w - (CURSOR_MARGIN_Y * 2), 1));
 
-            i32 min;
-            i32 max;
-            if (g_UI.textState.stb.select_start < g_UI.textState.stb.select_end)
-            {
-                min = g_UI.textState.stb.select_start;
-                max = g_UI.textState.stb.select_end;
+                DrawQuad(transform, v4(0, 0, 1, 1), tex_White.id,
+                         v4(0.4f, 0.4f, 0.6f, 0.4f));
             }
-            else
-            {
-                min = g_UI.textState.stb.select_end;
-                max = g_UI.textState.stb.select_start;
+
+            { // cursor
+                m4 transform = M4Translate(
+                    m4(1),
+                    v3(element->rect.x + CalculateTextWidth(element->text,
+                                                            g_UI.textState.stb.cursor,
+                                                            fnt_Primary),
+                       element->rect.y + CURSOR_MARGIN_Y, 0));
+                transform =
+                    M4Scale(transform, v3(2, element->rect.w - (CURSOR_MARGIN_Y * 2), 1));
+
+                DrawQuad(transform, v4(0, 0, 1, 1), tex_White.id, v4(1, 1, 1, 1));
             }
-
-            transform = M4Translate(
-                m4(1),
-                v3(element->rect.x + CalculateTextWidth(element->text, min, fnt_Primary),
-                   element->rect.y + CURSOR_MARGIN_Y, 0));
-            transform = M4Scale(
-                transform,
-                v3(CalculateTextWidth(element->text + min, max - min, fnt_Primary),
-                   element->rect.w - (CURSOR_MARGIN_Y * 2), 1));
-
-            DrawQuad(transform, v4(0, 0, 1, 1), tex_White.id, v4(0.6f, 0.6f, 1, 0.2f));
         }
 
         if (element->flags & UI_TEXT_VISIBLE)
@@ -384,6 +392,67 @@ void DrawUI(m4 projection)
         }
     }
     EndDraw();
+}
+
+static void HandleInputTextKeyPress(UITextState *textState, i32 mods, i32 key, i32 flags)
+{
+    if (mods & UI_KEY_CTRL && (key == GLFW_KEY_X || key == GLFW_KEY_C))
+    {
+        i32 min;
+        i32 max;
+        if (textState->stb.select_start < textState->stb.select_end)
+        {
+            min = textState->stb.select_start;
+            max = textState->stb.select_end;
+        }
+        else
+        {
+            min = textState->stb.select_end;
+            max = textState->stb.select_start;
+        }
+
+        char *buf = ScratchAlloc(max - min);
+        memcpy(buf, textState->cstr + min, max - min);
+        buf[max - min] = 0;
+        glfwSetClipboardString(g_Window.handle, buf);
+
+        if (key == GLFW_KEY_X)
+        {
+            stb_textedit_cut(textState, &textState->stb);
+        }
+
+        return;
+    }
+
+    if (mods & UI_KEY_CTRL && key == GLFW_KEY_V)
+    {
+        const char *clipboard = glfwGetClipboardString(g_Window.handle);
+        stb_textedit_paste(textState, &textState->stb, clipboard, (i32)strlen(clipboard));
+
+        return;
+    }
+
+    if (IsKeyCharacter(key))
+    {
+        if (flags & UI_INPUT_NUMERIC)
+        {
+            if (!isdigit(key))
+            {
+                return;
+            }
+            else if (mods & UI_KEY_SHIFT)
+            {
+                return;
+            }
+        }
+
+        if (flags & UI_INPUT_ALPHA && !isalpha(key))
+        {
+            return;
+        }
+    }
+
+    stb_textedit_key(textState, &textState->stb, mods | key);
 }
 
 void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
@@ -405,10 +474,10 @@ void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
     element->background = v4(0.1f, 0.1f, 0.1f, 1.0f);
 
     element->foregroundHot = element->foreground;
-    element->backgroundHot = v4(0.2f, 0.2f, 0.2f, 1.0f);
+    element->backgroundHot = v4(0.15f, 0.15f, 0.15f, 1.0f);
 
     element->foregroundActive = v4(1, 1, 1, 1);
-    element->backgroundActive = v4(0.2f, 0.2f, 0.2f, 1.0f);
+    element->backgroundActive = v4(0.15f, 0.15f, 0.15f, 1.0f);
 
     v2 mousePos = MousePos();
     b32 hover = RectVersusV2(element->rect, mousePos);
@@ -458,23 +527,23 @@ void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
 
     if (g_UI.active == id)
     {
-        i32 keyCount;
-        i32 *stack = GetKeyStack(&keyCount);
+        KeyStack stack = GetKeyStack();
 
         i32 mods = 0;
+
         if (KeyDown(GLFW_KEY_LEFT_SHIFT) || KeyDown(GLFW_KEY_RIGHT_SHIFT))
         {
             mods |= UI_KEY_SHIFT;
         }
+
         if (KeyDown(GLFW_KEY_LEFT_CONTROL) || KeyDown(GLFW_KEY_RIGHT_CONTROL))
         {
             mods |= UI_KEY_CTRL;
         }
 
-        for (i32 i = 0; i < keyCount; ++i)
+        for (i32 *it = stack.begin; it != stack.end; ++it)
         {
-            (void)flags;
-            stb_textedit_key(textState, &textState->stb, mods | stack[i]);
+            HandleInputTextKeyPress(textState, mods, *it, flags);
         }
     }
 }

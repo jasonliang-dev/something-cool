@@ -37,6 +37,7 @@ set(SOURCES
   src/texture.c
   src/tilemap.c
   src/ui.c
+  src/window.c
   src/main.c
 )
 

@@ -48,118 +48,10 @@
 #include "input.h"
 #include "memory.h"
 #include "net.h"
-#include "opengl_debug.h"
-#include "os.h"
 #include "renderer.h"
 #include "scenes.h"
 #include "ui.h"
-
-static void ErrorCallback(int code, const char *msg)
-{
-    fprintf(stderr, "GLFW Error %d: %s\n", code, msg);
-}
-
-static GLFWwindow *InitWindow(void)
-{
-    glfwSetErrorCallback(ErrorCallback);
-    if (!glfwInit())
-    {
-        Fatal("Cannot initialize glfw");
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    // Required on Mac
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-#ifndef NDEBUG
-    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
-#endif
-
-    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-
-    GLFWwindow *window = glfwCreateWindow(1366, 768, "This is a title", NULL, NULL);
-    if (!window)
-    {
-        Fatal("Cannot create window");
-    }
-
-    printf("Created window\n");
-
-    glfwSetKeyCallback(window, KeyboardCallback);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    glfwSetCursorPosCallback(window, CursorPositionCallback);
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1); // vsync
-
-    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
-    {
-        Fatal("Cannot load OpenGL procs");
-    }
-
-    printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
-
-#ifndef NDEBUG
-    i32 flags;
-    glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-
-    if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) && glDebugMessageCallback)
-    {
-        glEnable(GL_DEBUG_OUTPUT);
-        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-        glDebugMessageCallback(GLDebugMessageCallback, 0);
-        glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION,
-                              0, NULL, GL_FALSE);
-
-        printf("Enabled OpenGL debug output\n");
-    }
-#endif
-
-    return window;
-}
-
-static void RunApplication(GLFWwindow *window)
-{
-    f64 lastTime = glfwGetTime();
-    while (!glfwWindowShouldClose(window))
-    {
-        f64 now = glfwGetTime();
-        f32 deltaTime = (f32)(now - lastTime);
-        lastTime = now;
-
-        UpdateScene(deltaTime);
-
-        i32 windowWidth;
-        i32 windowHeight;
-        glfwGetFramebufferSize(window, &windowWidth, &windowHeight);
-        glViewport(0, 0, windowWidth, windowHeight);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        m4 projection =
-            M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
-
-        DrawScene(projection);
-
-        glfwSwapBuffers(window);
-
-        SceneFinishFrame();
-
-        UpdateInput();
-        glfwPollEvents();
-
-        ServerPollEvents();
-        ClientPollEvents();
-    }
-}
+#include "window.h"
 
 int main(void)
 {
@@ -169,13 +61,47 @@ int main(void)
     InitInput();
     InitAudio();
     InitNet();
-    GLFWwindow *window = InitWindow();
+    InitWindow();
     InitRenderer();
     InitPermanentAssets();
     InitScenes(SCENE_MAIN_MENU);
     InitUI();
 
-    ScratchReset();
+    f64 lastTime = glfwGetTime();
+    while (!glfwWindowShouldClose(g_Window.handle))
+    {
+        f64 now = glfwGetTime();
+        f32 deltaTime = (f32)(now - lastTime);
+        lastTime = now;
 
-    RunApplication(window);
+        ScratchReset();
+
+        UpdateScene(deltaTime);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        i32 windowWidth;
+        i32 windowHeight;
+        glfwGetFramebufferSize(g_Window.handle, &windowWidth, &windowHeight);
+        glViewport(0, 0, windowWidth, windowHeight);
+
+        m4 projection =
+            M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
+
+        DrawScene(projection);
+
+        glfwSwapBuffers(g_Window.handle);
+
+        SceneFinishFrame();
+
+        UpdateInput();
+        glfwPollEvents();
+
+        ServerPollEvents();
+        ClientPollEvents();
+    }
 }

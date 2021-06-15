@@ -89,10 +89,12 @@ void UpdateInput(void)
            sizeof(g_Input.mouseButtonsDown));
 }
 
-i32 *GetKeyStack(i32 *n)
+KeyStack GetKeyStack(void)
 {
-    *n = g_Input.keyStackCount;
-    return g_Input.keyStack;
+    return (KeyStack){
+        .begin = g_Input.keyStack,
+        .end = g_Input.keyStack + g_Input.keyStackCount,
+    };
 }
 
 b32 IsKeyCharacter(i32 key)

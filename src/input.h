@@ -18,7 +18,14 @@ void CursorPositionCallback(GLFWwindow* window, double x, double y);
 void InitInput(void);
 void UpdateInput(void);
 
-i32 *GetKeyStack(i32 *n);
+typedef struct KeyStack KeyStack;
+struct KeyStack
+{
+    i32 *begin;
+    i32 *end;
+};
+
+KeyStack GetKeyStack(void);
 b32 IsKeyCharacter(i32 key);
 
 b32 KeyPressed(i32 key);
