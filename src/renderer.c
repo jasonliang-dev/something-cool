@@ -1,10 +1,48 @@
 #include "renderer.h"
 #include "language.h"
 #include "memory.h"
+#include "texture.h"
 #include <stddef.h>
 #include <string.h>
 
-Renderer g_Renderer;
+#define RENDERER_MAX_QUADS 8192
+#define RENDERER_MAX_TEXTURE_SLOTS 4
+
+typedef struct Vertex Vertex;
+struct Vertex
+{
+    v3 a_Position;
+    v2 a_TexCoord;
+    f32 a_TexIndex;
+    v4 a_Color;
+};
+
+typedef struct Quad Quad;
+struct Quad
+{
+    Vertex vertices[4];
+};
+
+typedef struct Renderer Renderer;
+struct Renderer
+{
+    GLuint program;
+
+    GLuint vao;
+    GLuint vbo;
+    GLuint ebo;
+
+    GLint u_Textures;
+    GLint u_MVP;
+
+    GLuint textureSlots[RENDERER_MAX_TEXTURE_SLOTS];
+    i32 textureSlotCount;
+
+    Quad quads[RENDERER_MAX_QUADS];
+    i32 quadCount;
+};
+
+static Renderer g_Renderer;
 
 static GLuint CompileGLSL(GLuint type, const char *source)
 {

@@ -65,3 +65,4 @@ void DrawUI(m4 projection);
 
 void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags);
 b32 UITextButton(UIID id, const char *text, v2 pos);
+void UILabel(UIID id, const char *text, v2 pos);

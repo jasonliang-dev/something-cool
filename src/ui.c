@@ -527,8 +527,6 @@ void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
 
     if (g_UI.active == id)
     {
-        KeyStack stack = GetKeyStack();
-
         i32 mods = 0;
 
         if (KeyDown(GLFW_KEY_LEFT_SHIFT) || KeyDown(GLFW_KEY_RIGHT_SHIFT))
@@ -541,6 +539,7 @@ void UIInputText(UIID id, char *text, i32 bufferSize, v2 pos, i32 flags)
             mods |= UI_KEY_CTRL;
         }
 
+        KeyStack stack = GetKeyStack();
         for (i32 *it = stack.begin; it != stack.end; ++it)
         {
             HandleInputTextKeyPress(textState, mods, *it, flags);
@@ -583,4 +582,18 @@ b32 UITextButton(UIID id, const char *text, v2 pos)
     }
 
     return false;
+}
+
+void UILabel(UIID id, const char *text, v2 pos)
+{
+    UIElement *element =
+        AllocateUIElement(id, UI_TEXT_VISIBLE, v4(pos.x, pos.y, 150, 32));
+
+    if (pos.x == 0.0f && pos.y == 0.0f)
+    {
+        GetNextLayoutPosition(&element->rect);
+    }
+
+    element->text = text;
+    element->foreground = v4(0.6f, 0.6f, 0.6f, 1);
 }

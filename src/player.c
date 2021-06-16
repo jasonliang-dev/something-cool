@@ -2,9 +2,10 @@
 #include "input.h"
 #include <assert.h>
 #include <string.h>
+#include <math.h>
 
 // state
-enum
+enum PlayerState
 {
     PLAYER_IDLE,
     PLAYER_RUN,
@@ -13,7 +14,7 @@ enum
 };
 
 // flags
-enum
+enum PlayerFlags
 {
     PLAYER_FACING_LEFT = 1 << 0,
 };
@@ -83,7 +84,7 @@ static i32 UpdateRun(UpdateContext context)
         player->flags &= ~PLAYER_FACING_LEFT;
     }
 
-    if (KeyPressed(GLFW_KEY_SPACE))
+    if (MouseClicked(GLFW_MOUSE_BUTTON_RIGHT))
     {
         return PLAYER_DASH;
     }

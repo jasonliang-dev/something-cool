@@ -11,7 +11,10 @@ NetError InitServer(u16 port);
 void CloseServer(void);
 void ServerPollEvents(void);
 
-NetError ClientConnect(const char *hostAddress, u16 port);
+void ClientConnect(const char *hostAddress, u16 port, void (*OnConnect)(NetError));
 void ClientDisconnect(void);
+void ClientForceDisconnect(void);
 NetError ClientSend(const char *message);
+void ClientOnReceive(void (*OnReceive)(ENetEvent));
+void ClientOnDisconnect(void (*OnDisconnect)(void));
 void ClientPollEvents(void);

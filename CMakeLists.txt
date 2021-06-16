@@ -19,11 +19,13 @@ add_subdirectory(third/glfw)
 set(SOURCES
   src/assets.c
   src/audio.c
+  src/cursor.c
   src/font.c
   src/geometry.c
   src/input.c
   src/memory.c
   src/net.c
+  src/net_server.c
   src/player.c
   src/renderer.c
   src/scene_join_server.c

@@ -6,7 +6,7 @@
 #include "tilemap.h"
 
 #define PLAYER_MAX_GHOSTS 8
-#define PLAYER_GHOST_SPAWN_TIME 0.02f
+#define PLAYER_GHOST_SPAWN_TIME 0.03f
 #define PLAYER_GHOST_LIFE_TIME 0.2f
 
 typedef struct PlayerGhost PlayerGhost;
