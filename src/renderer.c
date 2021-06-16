@@ -162,6 +162,18 @@ static VertexBufferObjects CreateDynamicVertexBuffer(void)
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex),
                           (void *)offsetof(Vertex, a_Color));
 
+    /* top left == (0, 0), bottom right (1, 1)
+     *
+     * (2) +------------+ (1)
+     *     |          _-|
+     *     |        _-  |
+     *     |      _-    |
+     *     |    _-      |
+     *     |  _-        |
+     *     |_-          |
+     * (0) +------------+ (3)
+     */
+
     u32 indices[RENDERER_MAX_QUADS * 6];
     for (i32 i = 0, stride = 0; i < RENDERER_MAX_QUADS * 6; i += 6, stride += 4)
     {
