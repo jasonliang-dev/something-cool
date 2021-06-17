@@ -1,8 +1,9 @@
 #include "player.h"
 #include "input.h"
+#include "net.h"
 #include <assert.h>
-#include <string.h>
 #include <math.h>
+#include <string.h>
 
 // state
 enum PlayerState
@@ -27,9 +28,40 @@ struct UpdateContext
     f32 deltaTime;
 };
 
+typedef struct PlayerAppearance PlayerAppearance;
+struct PlayerAppearance
+{
+    i32 idle;
+    i32 run;
+};
+
+static PlayerAppearance g_PlayerAppearances[] = {
+    [PLAYER_ELF] =
+        {
+            .idle = ELF_M_IDLE_ANIM,
+            .run = ELF_M_RUN_ANIM,
+        },
+    [PLAYER_KNIGHT] =
+        {
+            .idle = KNIGHT_M_IDLE_ANIM,
+            .run = KNIGHT_M_RUN_ANIM,
+        },
+    [PLAYER_WIZZARD] =
+        {
+            .idle = WIZZARD_M_IDLE_ANIM,
+            .run = WIZZARD_M_RUN_ANIM,
+        },
+    [PLAYER_LIZARD] =
+        {
+            .idle = LIZARD_M_IDLE_ANIM,
+            .run = LIZARD_M_RUN_ANIM,
+        },
+};
+
 static void EnterIdle(Player *player)
 {
-    player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
+    player->animation =
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].idle);
     player->animation.msPerFrame = 150;
 }
 
@@ -57,7 +89,8 @@ static i32 UpdateIdle(UpdateContext context)
 
 static void EnterRun(Player *player)
 {
-    player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
+    player->animation =
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run);
     player->moveSpeed = 80;
 }
 
@@ -105,7 +138,8 @@ static void EnterDash(Player *player)
 {
     player->vel = V2Normalize(player->vel);
 
-    player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
+    player->animation =
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run);
     player->animation.msPerFrame = 50;
     player->moveSpeed = 300;
     player->dashTime = 0.15f;
@@ -174,6 +208,7 @@ Player CreatePlayer(v2 pos)
         .vel = v2(0, 0),
         .moveSpeed = 0,
         .dashTime = 0.0f,
+        .appearanceType = PLAYER_KNIGHT,
     };
 
     memset(player.ghosts, 0, sizeof(player.ghosts));
@@ -206,6 +241,12 @@ void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime)
     }
 
     UpdateSpriteAnimation(&player->animation, deltaTime);
+    ClientSend((NetMessage){.type = TO_SERVER_PLAYER_INFO,
+                            .playerInfo = {
+                                .state = player->state,
+                                .pos = player->pos,
+                                .vel = player->vel,
+                            }});
 }
 
 void DrawPlayer(const Player *player)

@@ -27,6 +27,7 @@ set(SOURCES
   src/net.c
   src/net_server.c
   src/player.c
+  src/remote_player.c
   src/renderer.c
   src/scene_join_server.c
   src/scene_lobby.c

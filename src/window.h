@@ -7,6 +7,8 @@ typedef struct Window Window;
 struct Window
 {
     GLFWwindow *handle;
-} g_Window;
+};
 
-void InitWindow(void);
+extern Window g_Window;
+
+void InitWindow(i32 width, i32 height);

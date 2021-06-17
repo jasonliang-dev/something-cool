@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string.h>
+#include <ctype.h>
 
 #define STB_TEXTEDIT_STRING UITextState
 #define STB_TEXTEDIT_STRINGLEN(obj) TextStateLength(obj)

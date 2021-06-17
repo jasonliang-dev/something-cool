@@ -24,7 +24,7 @@ i32 TestUpdateScene(f32 deltaTime)
 
     if (KeyPressed(GLFW_KEY_F4))
     {
-        ClientSend("packet");
+        // ClientSend("packet");
     }
 
     UpdatePlayer(&player, &map_Test, deltaTime);

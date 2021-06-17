@@ -61,7 +61,8 @@ int main(void)
     InitInput();
     InitAudio();
     InitNet();
-    InitWindow();
+    InitWindow(1366, 768);
+    glfwSwapInterval(1); // vsync
     InitRenderer();
     InitPermanentAssets();
     InitScenes(SCENE_MAIN_MENU);

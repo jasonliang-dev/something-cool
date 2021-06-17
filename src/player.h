@@ -16,6 +16,15 @@ struct PlayerGhost
     f32 lifeTime;
 };
 
+enum PlayerAppearanceType
+{
+    PLAYER_ELF,
+    PLAYER_KNIGHT,
+    PLAYER_WIZZARD,
+    PLAYER_LIZARD,
+    PLAYER_APPEARANCE_MAX,
+};
+
 typedef struct Player Player;
 struct Player
 {
@@ -27,6 +36,7 @@ struct Player
     f32 moveSpeed;
     f32 dashTime;
     SpriteAnimation animation;
+    i32 appearanceType;
     PlayerGhost ghosts[PLAYER_MAX_GHOSTS];
     f32 ghostSpawnTime;
 };

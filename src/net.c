@@ -51,7 +51,7 @@ void InitNet(void)
     }
     else
     {
-        printf("Created net client\n");
+        printf("[Client] Created net client\n");
     }
 }
 
@@ -93,7 +93,7 @@ void CloseServer(void)
         return;
     }
 
-    for (i32 i = 0; i < g_Net.server.host->peerCount; ++i)
+    for (size_t i = 0; i < g_Net.server.host->peerCount; ++i)
     {
         ENetPeer *peer = g_Net.server.host->peers + i;
         enet_peer_disconnect(peer, 0);
@@ -102,7 +102,7 @@ void CloseServer(void)
     enet_host_flush(g_Net.server.host);
     enet_host_destroy(g_Net.server.host);
     g_Net.server.host = NULL;
-    printf("Closed server\n");
+    printf("[Server] Closed server\n");
 }
 
 void ServerPollEvents(void)
@@ -118,13 +118,13 @@ void ServerPollEvents(void)
         switch (event.type)
         {
         case ENET_EVENT_TYPE_CONNECT:
-            ServerHandleConnect(event);
+            ServerHandleConnect(g_Net.server.host, event);
             break;
         case ENET_EVENT_TYPE_RECEIVE:
-            ServerHandleRecieve(event);
+            ServerHandleReceive(g_Net.server.host, event);
             break;
         case ENET_EVENT_TYPE_DISCONNECT:
-            ServerHandleDisconnect(event);
+            ServerHandleDisconnect(g_Net.server.host, event);
         default:
             break;
         }
@@ -180,14 +180,14 @@ void ClientForceDisconnect(void)
     printf("[Client] Forceful disconnect from peer\n");
 }
 
-NetError ClientSend(const char *message)
+NetError ClientSend(NetMessage msg)
 {
     if (!g_Net.client.peer)
     {
         return "Not connected to a peer";
     }
 
-    ENetPacket *packet = enet_packet_create(message, strlen(message) + 1, 0);
+    ENetPacket *packet = enet_packet_create(&msg, sizeof(NetMessage), 0);
 
     if (enet_peer_send(g_Net.client.peer, 0, packet) != 0)
     {
@@ -197,7 +197,7 @@ NetError ClientSend(const char *message)
     return NULL;
 }
 
-void ClientOnReceive(void (*OnReceive)(ENetEvent))
+void ClientReceiveCallback(void (*OnReceive)(ENetEvent))
 {
     g_Net.client.OnReceive = OnReceive;
 }
@@ -214,7 +214,7 @@ void ClientPollEvents(void)
     {
         switch (event.type)
         {
-        case ENET_EVENT_TYPE_CONNECT:
+        case ENET_EVENT_TYPE_CONNECT: {
             printf("[Client] connected to host %x:%u.\n", event.peer->address.host,
                    event.peer->address.port);
             event.peer->data = "Host";
@@ -228,8 +228,11 @@ void ClientPollEvents(void)
                 printf("[Client] Warning: expected an OnConnect callback");
             }
             break;
-        case ENET_EVENT_TYPE_RECEIVE:
-            printf("[Client] Received: %s\n", event.packet->data);
+        }
+        case ENET_EVENT_TYPE_RECEIVE: {
+            NetMessage *msg = (NetMessage *)event.packet->data;
+            printf("[Server] Received: %d\n", msg->type);
+
             if (g_Net.client.OnReceive)
             {
                 g_Net.client.OnReceive(event);
@@ -238,9 +241,11 @@ void ClientPollEvents(void)
             {
                 printf("[Client] Warning: expected an OnRecieve callback");
             }
+
             enet_packet_destroy(event.packet);
             break;
-        case ENET_EVENT_TYPE_DISCONNECT:
+        }
+        case ENET_EVENT_TYPE_DISCONNECT: {
             printf("[Client] %s disconnected.\n", (char *)event.peer->data);
             if (g_Net.client.OnDisconnect)
             {
@@ -249,6 +254,8 @@ void ClientPollEvents(void)
             }
             event.peer->data = NULL;
             g_Net.client.peer = NULL;
+            break;
+        }
         default:
             break;
         }

@@ -3,7 +3,7 @@
 #include "geometry.h"
 #include "language.h"
 
-enum
+enum SpriteAnimationType
 {
     WALL_FOUNTAIN_MID_RED_ANIM,
     WALL_FOUNTAIN_BASIN_RED_ANIM,

@@ -2,6 +2,6 @@
 
 #include <enet/enet.h>
 
-void ServerHandleConnect(ENetEvent event);
-void ServerHandleRecieve(ENetEvent event);
-void ServerHandleDisconnect(ENetEvent event);
+void ServerHandleConnect(ENetHost *host, ENetEvent event);
+void ServerHandleReceive(ENetHost *host, ENetEvent event);
+void ServerHandleDisconnect(ENetHost *host, ENetEvent event);

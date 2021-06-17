@@ -10,12 +10,14 @@
 #include <glad/gl.h>
 #include <stdio.h>
 
+Window g_Window;
+
 static void ErrorCallback(int code, const char *msg)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", code, msg);
 }
 
-void InitWindow(void)
+void InitWindow(i32 width, i32 height)
 {
     glfwSetErrorCallback(ErrorCallback);
     if (!glfwInit())
@@ -38,7 +40,7 @@ void InitWindow(void)
 
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
-    g_Window.handle = glfwCreateWindow(1366, 768, "This is a title", NULL, NULL);
+    g_Window.handle = glfwCreateWindow(width, height, "This is a title", NULL, NULL);
     if (!g_Window.handle)
     {
         Fatal("Cannot create window");
@@ -50,7 +52,6 @@ void InitWindow(void)
     glfwSetMouseButtonCallback(g_Window.handle, MouseButtonCallback);
     glfwSetCursorPosCallback(g_Window.handle, CursorPositionCallback);
     glfwMakeContextCurrent(g_Window.handle);
-    glfwSwapInterval(1); // vsync
 
     if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
     {
