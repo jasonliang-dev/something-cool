@@ -2,8 +2,8 @@
 #include "net_message.h"
 #include <stdio.h>
 
-typedef struct ClientData ClientData;
-struct ClientData
+typedef struct PeerData PeerData;
+struct PeerData
 {
     u32 connectID;
 };
@@ -22,8 +22,8 @@ void ServerHandleConnect(ENetHost *host, ENetEvent event)
 {
     printf("[Server] A new client connected from %x:%u.\n", event.peer->address.host,
            event.peer->address.port);
-    event.peer->data = malloc(sizeof(ClientData));
-    ClientData *data = event.peer->data;
+    event.peer->data = malloc(sizeof(PeerData));
+    PeerData *data = event.peer->data;
     data->connectID = event.peer->connectID;
 
     for (size_t i = 0; i < host->peerCount; ++i)

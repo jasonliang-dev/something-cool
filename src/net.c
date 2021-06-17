@@ -96,6 +96,10 @@ void CloseServer(void)
     for (size_t i = 0; i < g_Net.server.host->peerCount; ++i)
     {
         ENetPeer *peer = g_Net.server.host->peers + i;
+        if (peer->data)
+        {
+            free(peer->data);
+        }
         enet_peer_disconnect(peer, 0);
     }
 
@@ -161,6 +165,7 @@ void ClientDisconnect(void)
     if (!g_Net.client.peer)
     {
         printf("[Client] Cannot disconnect to peer. Not connected.");
+        return;
     }
 
     enet_peer_disconnect(g_Net.client.peer, 0);
@@ -173,6 +178,7 @@ void ClientForceDisconnect(void)
     if (!g_Net.client.peer)
     {
         printf("[Client] Cannot reset peer. Not connected.");
+        return;
     }
 
     enet_peer_reset(g_Net.client.peer);
@@ -230,9 +236,6 @@ void ClientPollEvents(void)
             break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
-            NetMessage *msg = (NetMessage *)event.packet->data;
-            printf("[Server] Received: %d\n", msg->type);
-
             if (g_Net.client.OnReceive)
             {
                 g_Net.client.OnReceive(event);

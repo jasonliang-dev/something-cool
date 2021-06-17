@@ -11,12 +11,12 @@ RemotePlayer CreateRemotePlayer(u32 id)
     result.id = id;
     result.flags = 0;
     result.state = NET_PLAYER_IDLE;
-    result.animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
+    result.animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM, 150);
     result.pos = v2(0, 0);
     return result;
 }
 
-void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info)
+void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info, f32 deltaTime)
 {
     if (player->state != info.state)
     {
@@ -24,14 +24,13 @@ void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info)
         switch (player->state)
         {
         case NET_PLAYER_IDLE:
-            player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM);
+            player->animation = CreateSpriteAnimation(ELF_M_IDLE_ANIM, 150);
             break;
         case NET_PLAYER_RUN:
-            player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
+            player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM, 100);
             break;
         case NET_PLAYER_DASH:
-            player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM);
-            player->animation.msPerFrame = 50;
+            player->animation = CreateSpriteAnimation(ELF_M_RUN_ANIM, 50);
             break;
         }
     }
@@ -46,6 +45,8 @@ void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info)
     {
         player->flags &= ~REMOTE_PLAYER_FACING_LEFT;
     }
+
+    UpdateSpriteAnimation(&player->animation, deltaTime);
 }
 
 void DrawRemotePlayer(const RemotePlayer *player)

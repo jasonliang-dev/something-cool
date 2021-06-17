@@ -161,7 +161,7 @@ struct SpriteAnimation
     f32 elapsedTime;
 };
 
-SpriteAnimation CreateSpriteAnimation(i32 name);
+SpriteAnimation CreateSpriteAnimation(i32 name, i32 msPerFrame);
 void ResetSpriteAnimation(SpriteAnimation *animation);
 void UpdateSpriteAnimation(SpriteAnimation *animation, f32 deltaTime);
 void DrawSpriteAnimation(const SpriteAnimation *animation, v2 pos);

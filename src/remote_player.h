@@ -15,5 +15,5 @@ struct RemotePlayer
 };
 
 RemotePlayer CreateRemotePlayer(u32 id);
-void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info);
+void UpdateRemotePlayer(RemotePlayer *player, NetPlayerInfo info, f32 deltaTime);
 void DrawRemotePlayer(const RemotePlayer *player);

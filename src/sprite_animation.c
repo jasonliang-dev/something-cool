@@ -5,7 +5,7 @@
 #include <math.h>
 #include <string.h>
 
-SpriteAnimation CreateSpriteAnimation(i32 name)
+SpriteAnimation CreateSpriteAnimation(i32 name, i32 msPerFrame)
 {
     SpriteAnimationEntry entry = ANIMATION_TABLE[name];
 
@@ -13,7 +13,7 @@ SpriteAnimation CreateSpriteAnimation(i32 name)
 
     result.rect = entry.rect;
     result.frames = entry.frames;
-    result.msPerFrame = 100;
+    result.msPerFrame = msPerFrame;
     result.elapsedTime = 0;
 
     return result;

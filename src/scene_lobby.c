@@ -11,9 +11,11 @@
 
 #define MAX_REMOTE_PLAYERS 32
 
-static u32 s_ID;
-static Player s_Player;
-static RemotePlayer s_RemotePlayers[MAX_REMOTE_PLAYERS];
+static b32 g_Connected;
+static u32 g_ID;
+static Player g_Player;
+static RemotePlayer g_RemotePlayers[MAX_REMOTE_PLAYERS];
+static NetPlayerInfo g_RemoteInfo[MAX_REMOTE_PLAYERS];
 
 static void OnRecieve(ENetEvent event)
 {
@@ -22,16 +24,16 @@ static void OnRecieve(ENetEvent event)
     {
     case TO_CLIENT_PLAYER_ID:
         printf("playerID: %d\n", msg->id);
-        s_ID = msg->id;
+        g_ID = msg->id;
         break;
     case TO_CLIENT_PLAYER_LIST:
         printf("Player List:");
 
-        RemotePlayer *begin = s_RemotePlayers;
+        RemotePlayer *begin = g_RemotePlayers;
         for (i32 i = 0; i < msg->playerList.count; ++i)
         {
             printf(" %d", msg->playerList.ids[i]);
-            if (msg->playerList.ids[i] != s_ID)
+            if (msg->playerList.ids[i] != g_ID)
             {
                 *begin++ = CreateRemotePlayer(msg->playerList.ids[i]);
             }
@@ -42,9 +44,9 @@ static void OnRecieve(ENetEvent event)
     case TO_CLIENT_PLAYER_INFO:
         for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
         {
-            if (s_RemotePlayers[i].id == msg->id)
+            if (g_RemotePlayers[i].id == msg->id)
             {
-                UpdateRemotePlayer(s_RemotePlayers + i, msg->playerInfo);
+                g_RemoteInfo[i] = msg->playerInfo;
                 break;
             }
         }
@@ -54,9 +56,9 @@ static void OnRecieve(ENetEvent event)
 
         for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
         {
-            if (!s_RemotePlayers[i].id)
+            if (!g_RemotePlayers[i].id)
             {
-                s_RemotePlayers[i] = CreateRemotePlayer(msg->id);
+                g_RemotePlayers[i] = CreateRemotePlayer(msg->id);
             }
         }
         break;
@@ -66,14 +68,23 @@ static void OnRecieve(ENetEvent event)
     }
 }
 
+static void OnDisconnect(void)
+{
+    g_Connected = false;
+}
+
 void LobbyEnterScene(void)
 {
+    g_Connected = true;
+    g_ID = 0;
+    g_Player = CreatePlayer(v2(50, 50));
+    memset(g_RemotePlayers, 0, sizeof(g_RemotePlayers));
+
     ClientReceiveCallback(OnRecieve);
+    ClientOnDisconnect(OnDisconnect);
     ClientSend((NetMessage){.type = TO_SERVER_PLAYER_ID});
     ClientSend((NetMessage){.type = TO_SERVER_PLAYER_LIST});
-    s_ID = 0;
-    s_Player = CreatePlayer(v2(50, 50));
-    memset(s_RemotePlayers, 0, sizeof(s_RemotePlayers));
+
     glfwSetInputMode(g_Window.handle, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
@@ -86,7 +97,20 @@ i32 LobbyUpdateScene(f32 deltaTime)
         scene = SCENE_MAIN_MENU;
     }
 
-    UpdatePlayer(&s_Player, &map_Test, deltaTime);
+    if (!g_Connected)
+    {
+        scene = SCENE_MAIN_MENU;
+    }
+
+    for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
+    {
+        if (g_RemotePlayers[i].id)
+        {
+            UpdateRemotePlayer(g_RemotePlayers + i, g_RemoteInfo[i], deltaTime);
+        }
+    }
+
+    UpdatePlayer(&g_Player, &map_Test, deltaTime);
 
     return scene;
 }
@@ -98,13 +122,13 @@ void LobbyDrawScene(m4 projection)
 
     for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
     {
-        if (s_RemotePlayers[i].id)
+        if (g_RemotePlayers[i].id)
         {
-            DrawRemotePlayer(s_RemotePlayers + i);
+            DrawRemotePlayer(g_RemotePlayers + i);
         }
     }
 
-    DrawPlayer(&s_Player);
+    DrawPlayer(&g_Player);
 
     DrawCursor(v2(3, 3));
     EndDraw();

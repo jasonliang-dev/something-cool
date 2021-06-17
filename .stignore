@@ -1,0 +1,16 @@
+build/.vs
+build/app.dir
+build/cimgui.dir
+build/CMakeFiles
+build/Debug
+build/third
+build/x64
+build/*.vcxproj
+build/*.vcxproj.*
+build/*.cmake
+build/CMakeCache.txt
+build/imgui.ini
+build/Makefile
+build/app
+build/app.sln
+.git

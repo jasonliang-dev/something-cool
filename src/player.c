@@ -61,8 +61,7 @@ static PlayerAppearance g_PlayerAppearances[] = {
 static void EnterIdle(Player *player)
 {
     player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].idle);
-    player->animation.msPerFrame = 150;
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].idle, 150);
 }
 
 static i32 UpdateIdle(UpdateContext context)
@@ -90,7 +89,7 @@ static i32 UpdateIdle(UpdateContext context)
 static void EnterRun(Player *player)
 {
     player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run);
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run, 100);
     player->moveSpeed = 80;
 }
 
@@ -139,8 +138,7 @@ static void EnterDash(Player *player)
     player->vel = V2Normalize(player->vel);
 
     player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run);
-    player->animation.msPerFrame = 50;
+        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run, 50);
     player->moveSpeed = 300;
     player->dashTime = 0.15f;
     player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;

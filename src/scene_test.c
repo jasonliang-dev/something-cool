@@ -10,7 +10,7 @@ static SpriteAnimation ani;
 void TestEnterScene(void)
 {
     player = CreatePlayer(v2(50, 50));
-    ani = CreateSpriteAnimation(BIG_DEMON_IDLE_ANIM);
+    ani = CreateSpriteAnimation(BIG_DEMON_IDLE_ANIM, 100);
 }
 
 i32 TestUpdateScene(f32 deltaTime)
