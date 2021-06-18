@@ -1,6 +1,7 @@
 #include "player.h"
 #include "input.h"
 #include "net.h"
+#include "player_appearance.h"
 #include <assert.h>
 #include <math.h>
 #include <string.h>
@@ -28,40 +29,9 @@ struct UpdateContext
     f32 deltaTime;
 };
 
-typedef struct PlayerAppearance PlayerAppearance;
-struct PlayerAppearance
-{
-    i32 idle;
-    i32 run;
-};
-
-static PlayerAppearance g_PlayerAppearances[] = {
-    [PLAYER_ELF] =
-        {
-            .idle = ELF_M_IDLE_ANIM,
-            .run = ELF_M_RUN_ANIM,
-        },
-    [PLAYER_KNIGHT] =
-        {
-            .idle = KNIGHT_M_IDLE_ANIM,
-            .run = KNIGHT_M_RUN_ANIM,
-        },
-    [PLAYER_WIZZARD] =
-        {
-            .idle = WIZZARD_M_IDLE_ANIM,
-            .run = WIZZARD_M_RUN_ANIM,
-        },
-    [PLAYER_LIZARD] =
-        {
-            .idle = LIZARD_M_IDLE_ANIM,
-            .run = LIZARD_M_RUN_ANIM,
-        },
-};
-
 static void EnterIdle(Player *player)
 {
-    player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].idle, 150);
+    player->animation = PlayerAnimateIdle(player->appearanceType);
 }
 
 static i32 UpdateIdle(UpdateContext context)
@@ -88,8 +58,7 @@ static i32 UpdateIdle(UpdateContext context)
 
 static void EnterRun(Player *player)
 {
-    player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run, 100);
+    player->animation = PlayerAnimateRun(player->appearanceType);
     player->moveSpeed = 80;
 }
 
@@ -137,11 +106,9 @@ static void EnterDash(Player *player)
 {
     player->vel = V2Normalize(player->vel);
 
-    player->animation =
-        CreateSpriteAnimation(g_PlayerAppearances[player->appearanceType].run, 50);
+    player->animation = PlayerAnimateDash(player->appearanceType);
     player->moveSpeed = 300;
     player->dashTime = 0.15f;
-    player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;
 }
 
 static i32 UpdateDash(UpdateContext context)
@@ -156,22 +123,7 @@ static i32 UpdateDash(UpdateContext context)
         return PLAYER_IDLE;
     }
 
-    player->ghostSpawnTime -= deltaTime;
-
-    if (player->ghostSpawnTime <= 0.0f)
-    {
-        player->ghostSpawnTime = PLAYER_GHOST_SPAWN_TIME;
-
-        for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
-        {
-            if (player->ghosts[i].lifeTime <= 0.0f)
-            {
-                player->ghosts[i].pos = player->pos;
-                player->ghosts[i].lifeTime = PLAYER_GHOST_LIFE_TIME;
-                break;
-            }
-        }
-    }
+    MaybeSpawnPlayerGhost(&player->ghosts, player->pos, deltaTime);
 
     TilemapMovement movement =
         MoveWithTilemap(context.map, player->pos,
@@ -206,10 +158,10 @@ Player CreatePlayer(v2 pos)
         .vel = v2(0, 0),
         .moveSpeed = 0,
         .dashTime = 0.0f,
-        .appearanceType = PLAYER_KNIGHT,
+        .appearanceType = PLAYER_APPEARANCE_KNIGHT_M,
     };
 
-    memset(player.ghosts, 0, sizeof(player.ghosts));
+    player.ghosts = InitPlayerGhosts();
 
     g_States[player.state].EnterState(&player);
 
@@ -221,11 +173,6 @@ Player CreatePlayer(v2 pos)
 
 void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime)
 {
-    for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
-    {
-        player->ghosts[i].lifeTime -= deltaTime;
-    }
-
     UpdateContext context;
     context.player = player;
     context.map = map;
@@ -238,7 +185,9 @@ void UpdatePlayer(Player *player, const Tilemap *map, f32 deltaTime)
         g_States[player->state].EnterState(player);
     }
 
+    UpdatePlayerGhostLifetimes(&player->ghosts, deltaTime);
     UpdateSpriteAnimation(&player->animation, deltaTime);
+
     ClientSend((NetMessage){.type = TO_SERVER_PLAYER_INFO,
                             .playerInfo = {
                                 .state = player->state,
@@ -251,16 +200,7 @@ void DrawPlayer(const Player *player)
 {
     v2 scale = v2(player->flags & PLAYER_FACING_LEFT ? -1.0f : 1.0f, 1);
 
-    for (i32 i = 0; i < PLAYER_MAX_GHOSTS; ++i)
-    {
-        if (player->ghosts[i].lifeTime > 0.0f)
-        {
-            DrawSpriteAnimationExt(
-                &player->animation, player->ghosts[i].pos, scale,
-                v4(0.5f, 0.5f, 1,
-                   (player->ghosts[i].lifeTime / PLAYER_GHOST_LIFE_TIME) * 0.9f));
-        }
-    }
+    DrawPlayerGhosts(&player->ghosts, &player->animation, scale);
 
     switch (player->state)
     {

@@ -7,6 +7,8 @@ typedef struct Window Window;
 struct Window
 {
     GLFWwindow *handle;
+    i32 width;
+    i32 height;
 };
 
 extern Window g_Window;

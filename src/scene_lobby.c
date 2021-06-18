@@ -11,9 +11,12 @@
 
 #define MAX_REMOTE_PLAYERS 32
 
+static const v3 SCALE = {3, 3, 1};
+
 static b32 g_Connected;
 static u32 g_ID;
 static Player g_Player;
+static v2 g_Camera;
 static RemotePlayer g_RemotePlayers[MAX_REMOTE_PLAYERS];
 static NetPlayerInfo g_RemoteInfo[MAX_REMOTE_PLAYERS];
 
@@ -59,6 +62,18 @@ static void OnRecieve(ENetEvent event)
             if (!g_RemotePlayers[i].id)
             {
                 g_RemotePlayers[i] = CreateRemotePlayer(msg->id);
+                break;
+            }
+        }
+        break;
+    case TO_CLIENT_PLAYER_LEAVE:
+        printf("Player with id %d left\n", msg->id);
+        for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
+        {
+            if (g_RemotePlayers[i].id == msg->id)
+            {
+                g_RemotePlayers[i].id = 0;
+                break;
             }
         }
         break;
@@ -78,6 +93,7 @@ void LobbyEnterScene(void)
     g_Connected = true;
     g_ID = 0;
     g_Player = CreatePlayer(v2(50, 50));
+    g_Camera = g_Player.pos;
     memset(g_RemotePlayers, 0, sizeof(g_RemotePlayers));
 
     ClientReceiveCallback(OnRecieve);
@@ -112,12 +128,26 @@ i32 LobbyUpdateScene(f32 deltaTime)
 
     UpdatePlayer(&g_Player, &map_Test, deltaTime);
 
+    v2 mouse = MousePos();
+    v2 halfWin = v2(g_Window.width / 2.0f, g_Window.height / 2.0f);
+    v2 target =
+        v2((g_Player.pos.x * SCALE.x) + ((mouse.x - halfWin.x) / SCALE.x) - halfWin.x,
+           (g_Player.pos.y * SCALE.y) + ((mouse.y - halfWin.y) / SCALE.y * 1.1f) -
+               halfWin.y);
+
+    static const f32 CAMERA_SPEED = 4.0f;
+    g_Camera.x += (target.x - g_Camera.x) * CAMERA_SPEED * deltaTime;
+    g_Camera.y += (target.y - g_Camera.y) * CAMERA_SPEED * deltaTime;
+
     return scene;
 }
 
 void LobbyDrawScene(m4 projection)
 {
-    BeginDraw(M4xM4(projection, M4Scale(m4(1), v3(3, 3, 1))));
+    m4 view = M4Translate(m4(1), v3(-g_Camera.x, -g_Camera.y, 0));
+    view = M4Scale(view, SCALE);
+
+    BeginDraw(M4xM4(projection, view));
     DrawTilemap(map_Test);
 
     for (i32 i = 0; i < MAX_REMOTE_PLAYERS; ++i)
@@ -129,8 +159,10 @@ void LobbyDrawScene(m4 projection)
     }
 
     DrawPlayer(&g_Player);
+    EndDraw();
 
-    DrawCursor(v2(3, 3));
+    BeginDraw(M4Scale(projection, SCALE));
+    DrawCursor(v2(SCALE.x, SCALE.y));
     EndDraw();
 }
 

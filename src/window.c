@@ -45,6 +45,8 @@ void InitWindow(i32 width, i32 height)
     {
         Fatal("Cannot create window");
     }
+    g_Window.width = width;
+    g_Window.height = height;
 
     printf("Created window\n");
 

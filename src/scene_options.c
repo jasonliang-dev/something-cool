@@ -19,6 +19,11 @@ i32 OptionsUpdateScene(f32 deltaTime)
         scene = SCENE_TEST;
     }
 
+    if (UITextButton(UIID(), "Customize", v2(0, 0)))
+    {
+        scene = SCENE_CUSTOMIZE;
+    }
+
     if (UITextButton(UIID(), "Back", v2(0, 0)))
     {
         scene = SCENE_MAIN_MENU;

@@ -65,8 +65,9 @@ int main(void)
     glfwSwapInterval(1); // vsync
     InitRenderer();
     InitPermanentAssets();
-    InitScenes(SCENE_MAIN_MENU);
     InitUI();
+    InitScenes(SCENE_MAIN_MENU);
+    // InitScenes(SCENE_CUSTOMIZE);
 
     f64 lastTime = glfwGetTime();
     while (!glfwWindowShouldClose(g_Window.handle))
@@ -85,13 +86,11 @@ int main(void)
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        i32 windowWidth;
-        i32 windowHeight;
-        glfwGetFramebufferSize(g_Window.handle, &windowWidth, &windowHeight);
-        glViewport(0, 0, windowWidth, windowHeight);
+        glfwGetFramebufferSize(g_Window.handle, &g_Window.width, &g_Window.height);
+        glViewport(0, 0, g_Window.width, g_Window.height);
 
-        m4 projection =
-            M4Orthographic(0.0f, (f32)windowWidth, (f32)windowHeight, 0.0f, -1.0f, 1.0f);
+        m4 projection = M4Orthographic(0.0f, (f32)g_Window.width, (f32)g_Window.height,
+                                       0.0f, -1.0f, 1.0f);
 
         DrawScene(projection);
 

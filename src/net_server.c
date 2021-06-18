@@ -89,15 +89,18 @@ void ServerHandleReceive(ENetHost *host, ENetEvent event)
 
 void ServerHandleDisconnect(ENetHost *host, ENetEvent event)
 {
-    printf("[Server] client with id %d disconnected.\n", event.peer->connectID);
+    // use peer data to get connectID because event.peer->connectID is
+    // 0 when client disconnects
+    PeerData *data = event.peer->data;
+    printf("[Server] client with id %d disconnected.\n", data->connectID);
 
     for (size_t i = 0; i < host->peerCount; ++i)
     {
-        if (host->peers[i].connectID != event.peer->connectID && host->peers[i].data)
+        if (host->peers[i].connectID != data->connectID && host->peers[i].data)
         {
             ServerSend(host->peers + i, (NetMessage){
                                             .type = TO_CLIENT_PLAYER_LEAVE,
-                                            .id = event.peer->connectID,
+                                            .id = data->connectID,
                                         });
         }
     }

@@ -27,8 +27,10 @@ set(SOURCES
   src/net.c
   src/net_server.c
   src/player.c
+  src/player_ghosts.c
   src/remote_player.c
   src/renderer.c
+  src/scene_customize.c
   src/scene_join_server.c
   src/scene_lobby.c
   src/scene_main_menu.c

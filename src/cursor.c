@@ -1,11 +1,11 @@
 #include "cursor.h"
-#include "renderer.h"
-#include "input.h"
 #include "assets.h"
+#include "input.h"
+#include "renderer.h"
 
 void DrawCursor(v2 scale)
 {
-    static const v4 s_Rect = {32.0f, 480.0f, 16.0f, 16.0f};
+    static const v4 s_Rect = {32.0f, 480.0f, 32.0f + 16.0f, 480.0f + 16.0f};
 
     v2 pos = MousePos();
     pos.x /= scale.x;
@@ -18,8 +18,8 @@ void DrawCursor(v2 scale)
     v4 texCoords = {
         s_Rect.x / tex_Atlas.width,
         s_Rect.y / tex_Atlas.height,
-        (s_Rect.x + s_Rect.z) / tex_Atlas.width,
-        (s_Rect.y + s_Rect.w) / tex_Atlas.height,
+        s_Rect.z / tex_Atlas.width,
+        s_Rect.w / tex_Atlas.height,
     };
 
     DrawQuad(transform, texCoords, tex_Atlas.id, v4(1, 1, 1, 1));

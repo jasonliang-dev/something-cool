@@ -3,6 +3,7 @@
 #include "net_message.h"
 #include "sprite_animation.h"
 #include "tilemap.h"
+#include "player_ghosts.h"
 
 typedef struct RemotePlayer RemotePlayer;
 struct RemotePlayer
@@ -10,8 +11,10 @@ struct RemotePlayer
     u32 id;
     i32 flags;
     i32 state;
+    i32 appearanceType;
     v2 pos;
     SpriteAnimation animation;
+    PlayerGhosts ghosts;
 };
 
 RemotePlayer CreateRemotePlayer(u32 id);

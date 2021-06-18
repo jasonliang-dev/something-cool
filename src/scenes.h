@@ -3,6 +3,7 @@
 #include "geometry.h"
 
 #define SCENE_LIST                                                                       \
+    X(SCENE_CUSTOMIZE, Customize)                                                        \
     X(SCENE_MAIN_MENU, MainMenu)                                                         \
     X(SCENE_SETUP_PORT, SetupPort)                                                       \
     X(SCENE_JOIN_SERVER, JoinServer)                                                     \
@@ -11,8 +12,9 @@
     X(SCENE_TEST, Test)
 
 #define X(en, _) en,
-enum
+enum SceneType
 {
+    SCENE_NULL,
     SCENE_LIST
 };
 #undef X
