@@ -412,7 +412,7 @@ static void HandleInputTextKeyPress(UITextState *textState, i32 mods, i32 key, i
             max = textState->stb.select_start;
         }
 
-        char *buf = ScratchAlloc(max - min);
+        char *buf = ScratchAlloc(max - min + 1);
         memcpy(buf, textState->cstr + min, max - min);
         buf[max - min] = 0;
         glfwSetClipboardString(g_Window.handle, buf);
