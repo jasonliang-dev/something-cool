@@ -7,8 +7,6 @@ i32 GetSystemPageSize(void)
     return sysconf(_SC_PAGESIZE);
 }
 
-// can't I just use malloc and depend on linux overcommit?
-
 void *MemReserve(size_t size)
 {
     void *memory = mmap(0, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

@@ -246,12 +246,12 @@ void InitRenderer(void)
         }                                                               \n\
     ";
 
-    g_Renderer.program = CreateShaderProgram(vert, frag);
-
     VertexBufferObjects bufferObjects = CreateDynamicVertexBuffer();
     g_Renderer.vao = bufferObjects.vao;
     g_Renderer.vbo = bufferObjects.vbo;
     g_Renderer.ebo = bufferObjects.ebo;
+
+    g_Renderer.program = CreateShaderProgram(vert, frag);
 
     memset(g_Renderer.textureSlots, 0, sizeof(g_Renderer.textureSlots));
     memset(g_Renderer.quads, 0, sizeof(g_Renderer.quads));

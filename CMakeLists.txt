@@ -50,8 +50,8 @@ if(WIN32)
   set(SOURCES ${SOURCES} src/os_win32.c)
 endif()
 
-if(UNIX AND NOT APPLE)
-  set(SOURCES ${SOURCES} src/os_linux.c)
+if(UNIX)
+  set(SOURCES ${SOURCES} src/os_unix.c)
 endif()
 
 add_executable(${PROJECT_NAME} ${SOURCES})
